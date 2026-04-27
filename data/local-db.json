@@ -1,0 +1,287 @@
+{
+  "vendors": [
+    {
+      "id": "2f57ab4a-1a17-44d7-9d7d-000000000001",
+      "name": "TechStaff Solutions",
+      "contactPerson": "Rajesh Kumar",
+      "email": "rajesh@techstaff.com",
+      "phone": "+91 9876543210",
+      "category": "General",
+      "totalSubmissions": 45,
+      "successfulPlacements": 32,
+      "qualityScore": 85.5,
+      "slaScore": 92,
+      "status": "Active",
+      "createdAt": "2026-04-23T12:21:06.101Z",
+      "updatedAt": "2026-04-23T12:21:06.101Z",
+      "requirementsAssigned": 4,
+      "assignedBy": "Neha Iyer"
+    },
+    {
+      "id": "2f57ab4a-1a17-44d7-9d7d-000000000002",
+      "name": "HireRight India",
+      "contactPerson": "Priya Sharma",
+      "email": "priya@hireright.in",
+      "phone": "+91 9876543211",
+      "category": "General",
+      "totalSubmissions": 38,
+      "successfulPlacements": 25,
+      "qualityScore": 78,
+      "slaScore": 85,
+      "status": "Active",
+      "createdAt": "2026-04-23T12:21:06.101Z",
+      "updatedAt": "2026-04-23T12:21:06.101Z",
+      "requirementsAssigned": 3,
+      "assignedBy": "Priya Sharma"
+    },
+    {
+      "id": "2f57ab4a-1a17-44d7-9d7d-000000000003",
+      "name": "QuickHire Consultancy",
+      "contactPerson": "Amit Patel",
+      "email": "amit@quickhire.co.in",
+      "phone": "+91 9876543212",
+      "category": "General",
+      "totalSubmissions": 52,
+      "successfulPlacements": 41,
+      "qualityScore": 90,
+      "slaScore": 95,
+      "status": "Active",
+      "createdAt": "2026-04-23T12:21:06.101Z",
+      "updatedAt": "2026-04-23T12:21:06.101Z",
+      "requirementsAssigned": 6,
+      "assignedBy": "Amit Patel"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "3f57ab4a-1a17-44d7-9d7d-000000000001",
+      "vendorId": "2f57ab4a-1a17-44d7-9d7d-000000000001",
+      "firstName": "Rahul",
+      "lastName": "Verma",
+      "email": "rahul.verma@example.com",
+      "phone": "+91 9876543213",
+      "currentRole": "Software Engineer",
+      "currentCompany": "TCS",
+      "yearsOfExperience": 6,
+      "skills": [
+        "C#",
+        ".NET Core",
+        "Azure",
+        "SQL Server"
+      ],
+      "currentSalary": 18,
+      "stage": "L2",
+      "daysInPipeline": 15,
+      "dropoutRisk": 25,
+      "resumeScore": 87.5,
+      "submissionDate": "2026-04-08T12:21:06.101Z",
+      "createdAt": "2026-04-23T12:21:06.101Z"
+    },
+    {
+      "id": "3f57ab4a-1a17-44d7-9d7d-000000000002",
+      "vendorId": "2f57ab4a-1a17-44d7-9d7d-000000000002",
+      "firstName": "Priya",
+      "lastName": "Desai",
+      "email": "priya.desai@example.com",
+      "phone": "+91 9876543214",
+      "currentRole": "Senior Software Engineer",
+      "currentCompany": "Infosys",
+      "yearsOfExperience": 7,
+      "skills": [
+        "C#",
+        ".NET Core",
+        "AWS",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "currentSalary": 20,
+      "stage": "Selected",
+      "daysInPipeline": 10,
+      "dropoutRisk": 15,
+      "resumeScore": 92,
+      "submissionDate": "2026-04-13T12:45:25.766Z",
+      "createdAt": "2026-04-23T12:45:25.766Z"
+    },
+    {
+      "id": "3f57ab4a-1a17-44d7-9d7d-000000000003",
+      "vendorId": "2f57ab4a-1a17-44d7-9d7d-000000000003",
+      "firstName": "Ankit",
+      "lastName": "Sharma",
+      "email": "ankit.sharma@example.com",
+      "phone": "+91 9876543215",
+      "currentRole": "Tech Lead",
+      "currentCompany": "Wipro",
+      "yearsOfExperience": 8,
+      "skills": [
+        "Azure",
+        "Microservices",
+        "Kubernetes",
+        "System Design"
+      ],
+      "currentSalary": 24,
+      "stage": "Submitted",
+      "daysInPipeline": 5,
+      "dropoutRisk": 72,
+      "resumeScore": 95,
+      "submissionDate": "2026-04-18T12:45:25.766Z",
+      "createdAt": "2026-04-23T12:45:25.766Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "u-super-admin",
+      "fullName": "Bhaumik Patel",
+      "email": "admin@decypher.app",
+      "password": "Admin@2024",
+      "role": "SuperAdmin",
+      "initials": "BP",
+      "access": [
+        "dashboard",
+        "vendors",
+        "recruiters",
+        "cvDatabase",
+        "aiTools",
+        "users"
+      ],
+      "status": "Active"
+    },
+    {
+      "id": "u-recruiter",
+      "fullName": "Demo Recruiter",
+      "email": "recruiter@decypher.app",
+      "password": "Recruiter@2024",
+      "role": "Recruiter",
+      "initials": "DR",
+      "access": [
+        "dashboard",
+        "vendors",
+        "cvDatabase",
+        "aiTools"
+      ],
+      "status": "Active"
+    },
+    {
+      "id": "u-guest",
+      "fullName": "Guest User",
+      "email": "guest@decypher.app",
+      "password": "",
+      "role": "Viewer",
+      "initials": "GU",
+      "access": [
+        "dashboard",
+        "vendors",
+        "cvDatabase"
+      ],
+      "status": "Active"
+    },
+    {
+      "id": "f3c84157-a0e8-4a5a-bd9e-9888662337a7",
+      "fullName": "Demo Recruiter 2",
+      "email": "recruiter2@decypher.app",
+      "password": "Demo@12",
+      "role": "Recruiter",
+      "initials": "DR",
+      "access": [
+        "dashboard",
+        "cvDatabase",
+        "vendors",
+        "aiTools",
+        "recruiters",
+        "users"
+      ],
+      "status": "Active"
+    }
+  ],
+  "recruiters": [
+    {
+      "id": "r1",
+      "name": "Priya Sharma",
+      "role": "Senior Recruiter",
+      "submissions": 42,
+      "selections": 18,
+      "joinings": 12,
+      "selectionRatio": 43
+    },
+    {
+      "id": "r2",
+      "name": "Amit Patel",
+      "role": "Recruiter",
+      "submissions": 36,
+      "selections": 16,
+      "joinings": 9,
+      "selectionRatio": 44
+    },
+    {
+      "id": "r3",
+      "name": "Neha Iyer",
+      "role": "Team Lead",
+      "submissions": 54,
+      "selections": 25,
+      "joinings": 17,
+      "selectionRatio": 46
+    }
+  ],
+  "cvs": [
+    {
+      "id": "cv1",
+      "name": "Rahul Verma",
+      "email": "rahul.verma@example.com",
+      "currentRole": "Software Engineer",
+      "company": "TCS",
+      "experience": 6,
+      "skills": [
+        "C#",
+        ".NET Core",
+        "Azure",
+        "SQL Server"
+      ],
+      "summary": "Backend engineer with cloud migration, APIs, and enterprise .NET experience.",
+      "cvText": "C# .NET Core Azure SQL Server microservices REST API recruitment platform",
+      "fileName": "Rahul-Verma-CV.pdf",
+      "fileType": "application/pdf",
+      "fileData": "",
+      "interviewedEarlier": true
+    },
+    {
+      "id": "cv2",
+      "name": "Priya Desai",
+      "email": "priya.desai@example.com",
+      "currentRole": "Senior Software Engineer",
+      "company": "Infosys",
+      "experience": 7,
+      "skills": [
+        "C#",
+        ".NET Core",
+        "AWS",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "summary": "Senior engineer with AWS, containers, PostgreSQL, and distributed systems work.",
+      "cvText": "C# .NET Core AWS PostgreSQL Docker distributed systems candidate matching",
+      "fileName": "Priya-Desai-Resume.docx",
+      "fileType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "fileData": "",
+      "interviewedEarlier": true
+    },
+    {
+      "id": "cv3",
+      "name": "Ankit Sharma",
+      "email": "ankit.sharma@example.com",
+      "currentRole": "Tech Lead",
+      "company": "Wipro",
+      "experience": 8,
+      "skills": [
+        "Azure",
+        "Microservices",
+        "Kubernetes",
+        "System Design"
+      ],
+      "summary": "Technical lead focused on Azure, Kubernetes, microservices, and architecture.",
+      "cvText": "Azure Kubernetes microservices architecture system design team leadership",
+      "fileName": "Ankit-Sharma-CV.pdf",
+      "fileType": "application/pdf",
+      "fileData": "",
+      "interviewedEarlier": false
+    }
+  ]
+}

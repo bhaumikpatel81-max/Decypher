@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+*.lock
+package-lock.json
+yarn.lock
+
+# Generated files
+dist/
+out-tsc/
+.next/
+.nuxt/
+build/
+coverage/
+
+# IDE configs
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+*.o
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+*.map
+*.js.map
+*.ts.map
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Angular
+.angular/

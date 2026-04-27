@@ -1,0 +1,51 @@
+# Backend .gitignore for .NET
+
+# Build results
+bin/
+obj/
+[Oo]ut/
+
+# Visual Studio
+.vs/
+.vscode/
+*.sln.iml
+*.user
+*.suo
+*.userprefs
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Logs
+logs/
+*.log
+*.txt
+
+# Environment
+.env
+.env.local
+appsettings.local.json
+launchSettings.json
+
+# Dependencies
+packages/
+node_modules/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.mdf
+*.ldf
+
+# Certificates
+*.pfx
+*.pem

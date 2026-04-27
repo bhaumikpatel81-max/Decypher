@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "serve:local": "node local-single-port-server.js"
+  }
+}

@@ -1,0 +1,304 @@
+/**
+ * Decypher Design System
+ * Version: 2.0
+ * 
+ * This file contains all design tokens from Design.md
+ * Use CSS variables for consistent theming
+ */
+
+:root {
+  /* === BRAND COLORS === */
+  
+  /* Violet primary */
+  --brand-violet-50: #f4f1ff;
+  --brand-violet-100: #e8e2ff;
+  --brand-violet-200: #d0c4ff;
+  --brand-violet-300: #a98fff;
+  --brand-violet-400: #8a6bff;
+  --brand-violet-500: #6b4df0;  /* PRIMARY */
+  --brand-violet-600: #5a3edb;
+  --brand-violet-700: #4a32b8;
+  --brand-violet-800: #3a2791;
+  --brand-violet-900: #2a1d6b;
+  
+  /* Accent colors */
+  --brand-cyan-400: #3bbdea;
+  --brand-cyan-500: #22a3d2;
+  --brand-magenta-400: #c56bff;
+  --brand-magenta-500: #a94ee6;
+  
+  /* Gradients */
+  --brand-gradient: linear-gradient(135deg, #6b4df0 0%, #a94ee6 50%, #3bbdea 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #f4f1ff 0%, #ecfbff 100%);
+  
+  /* === NEUTRALS === */
+  --n-0: #ffffff;
+  --n-25: #fbfbfd;
+  --n-50: #f6f7fa;
+  --n-100: #eef0f4;
+  --n-200: #e1e4eb;
+  --n-300: #cbd0da;
+  --n-400: #9aa2b2;
+  --n-500: #6e7686;
+  --n-600: #4b5262;
+  --n-700: #343a48;
+  --n-800: #1f2430;
+  --n-900: #0f1320;
+  
+  /* === SEMANTIC COLORS === */
+  
+  /* Success */
+  --success-50: #e8f7ee;
+  --success-500: #16a34a;
+  --success-600: #0f6e32;
+  
+  /* Warning */
+  --warning-50: #fff6e5;
+  --warning-500: #e8912a;
+  --warning-600: #c37416;
+  
+  /* Danger */
+  --danger-50: #fdecec;
+  --danger-500: #dc2626;
+  --danger-600: #b81c1c;
+  
+  /* Info */
+  --info-50: #e7f1ff;
+  --info-500: #2563eb;
+  --info-600: #1d4ed8;
+  
+  /* === SURFACES === */
+  --surface: var(--n-0);
+  --surface-alt: var(--n-25);
+  --canvas: var(--n-50);
+  --border: var(--n-200);
+  --border-strong: var(--n-300);
+  
+  /* === TEXT === */
+  --text: var(--n-900);
+  --text-2: var(--n-600);
+  --text-3: var(--n-500);
+  
+  /* === SPACING === */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  
+  /* === RADIUS === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* === SHADOWS === */
+  --shadow-xs: 0 1px 2px rgba(17,20,45,.04);
+  --shadow-sm: 0 1px 2px rgba(17,20,45,.04), 0 1px 3px rgba(17,20,45,.06);
+  --shadow-md: 0 2px 4px rgba(17,20,45,.04), 0 4px 12px rgba(17,20,45,.06);
+  --shadow-lg: 0 4px 8px rgba(17,20,45,.05), 0 12px 32px rgba(17,20,45,.08);
+  --shadow-brand: 0 4px 16px rgba(107,77,240,.18);
+  
+  /* === LAYOUT === */
+  --sidebar-width: 248px;
+  --sidebar-collapsed: 68px;
+  --header-height: 64px;
+  --max-content-width: 1440px;
+  
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms cubic-bezier(.4, 0, .2, 1);
+  --transition-base: 200ms cubic-bezier(.4, 0, .2, 1);
+  --transition-slow: 300ms cubic-bezier(.4, 0, .2, 1);
+  --transition-drawer: 250ms cubic-bezier(.4, 0, .2, 1);
+}
+
+/* === TYPOGRAPHY === */
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Base typography */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography utilities */
+.text-display-xl {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.text-display-l {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.text-page-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.text-card-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.text-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-small {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.text-micro {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.text-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Numeric text */
+.text-numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/* === RESET & BASE STYLES === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* === UTILITY CLASSES === */
+
+/* Flexbox */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+
+/* Spacing */
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+
+/* Width */
+.w-full { width: 100%; }
+
+/* Text colors */
+.text-primary { color: var(--text); }
+.text-secondary { color: var(--text-2); }
+.text-tertiary { color: var(--text-3); }
+.text-brand { color: var(--brand-violet-500); }
+.text-success { color: var(--success-500); }
+.text-warning { color: var(--warning-500); }
+.text-danger { color: var(--danger-500); }
+
+/* Background colors */
+.bg-surface { background: var(--surface); }
+.bg-surface-alt { background: var(--surface-alt); }
+.bg-canvas { background: var(--canvas); }
+.bg-brand { background: var(--brand-violet-500); }
+
+/* Borders */
+.border { border: 1px solid var(--border); }
+.border-strong { border: 1px solid var(--border-strong); }
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* Shadows */
+.shadow-xs { box-shadow: var(--shadow-xs); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-brand { box-shadow: var(--shadow-brand); }
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--brand-violet-400);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === PAGE ENTRY ANIMATION === */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter var(--transition-slow) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}

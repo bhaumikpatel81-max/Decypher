@@ -1,0 +1,36 @@
+services:
+  # Database (PostgreSQL via Render)
+  - type: pserv
+    name: decypher-db
+    ipAllowList: []
+    postgresVersion: "15"
+    
+  # Single web app: ASP.NET Core serves Angular static files and API on one port.
+  - type: web
+    name: decypher
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: decypher-db
+          property: connectionString
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: Decypher
+      - key: Jwt__Audience
+        value: DecypherUsers
+      - key: Jwt__ExpiryMinutes
+        value: 1440
+      - key: AllowedOrigins
+        value: https://decypher.onrender.com,https://decypher.app
+      - key: OpenAI__ApiKey
+        sync: false
+      - key: OpenAI__Model
+        value: gpt-4

@@ -1,0 +1,47 @@
+# Backend
+Decypher.Web/bin/
+Decypher.Web/obj/
+Decypher.Web/.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+Properties/launchSettings.json
+logs/
+*.log
+
+# Frontend
+angular-frontend/node_modules/
+angular-frontend/dist/
+angular-frontend/.angular/
+angular-frontend/coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+.dockerignore
+
+# Build
+out/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
