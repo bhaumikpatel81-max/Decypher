@@ -11,6 +11,9 @@ import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { VendorsComponent } from './vendors/vendors.component';
+import { AIScorecardComponent } from './ai-scorecard/ai-scorecard.component';
+import { SlaDashboardComponent } from './sla-dashboard/sla-dashboard.component';
+import { JdGeneratorComponent } from './jd-generator/jd-generator.component';
 import { environment } from '../environments/environment';
 
 @Pipe({ name: 'safeHtml' })
@@ -336,6 +339,9 @@ const routes: Routes = [
   { path: 'competency-ranker', component: GenericToolComponent },
   { path: 'jd-checker', component: GenericToolComponent },
   { path: 'users', component: UsersAdminComponent },
+  { path: 'ai-scorecard', component: AIScorecardComponent },
+  { path: 'sla-dashboard', component: SlaDashboardComponent },
+  { path: 'jd-generator', component: JdGeneratorComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -350,7 +356,10 @@ const routes: Routes = [
     GenericToolComponent,
     UsersAdminComponent,
     SafeHtmlPipe,
-    TimeAgoPipe
+    TimeAgoPipe,
+    AIScorecardComponent,
+    SlaDashboardComponent,
+    JdGeneratorComponent
   ],
   imports: [
     BrowserModule,

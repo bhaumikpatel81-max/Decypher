@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Decypher.Web.Data;
 using Decypher.Web.Models;
 using Decypher.Web.Services;
+using Decypher.Web.Services.AI;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -107,6 +108,26 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAgenticAIService, AgenticAIService>();
 builder.Services.AddHttpClient<IAIService, AIService>();
 builder.Services.AddHttpClient();
+
+// ── UC63 / UC64 AI Services ──────────────────────────────────
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/v1/");
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer", builder.Configuration["OpenAI:ApiKey"]);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddScoped<ParsingAgentService>();
+builder.Services.AddScoped<MatchingAgentService>();
+builder.Services.AddScoped<RankingAgentService>();
+builder.Services.AddScoped<ExplanationAgentService>();
+builder.Services.AddScoped<BiasDetectionAgentService>();
+builder.Services.AddScoped<IMultiAgentOrchestratorService, MultiAgentOrchestratorService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IJdGenerationService, JdGenerationService>();
+// ─────────────────────────────────────────────────────────────
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));

@@ -1,0 +1,117 @@
+<div class="page-container page-enter">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="page-title">AI Job Description Generator</h1>
+      <p class="text-sm" style="color:var(--text-3)">Generate professional, bias-free JDs with AI — UC64</p>
+    </div>
+    <button class="btn btn-secondary" *ngIf="result" (click)="reset()">New JD</button>
+  </div>
+
+  <!-- Error Banner -->
+  <div class="human-review-banner" *ngIf="errorMessage"
+    style="border-color:var(--sla-overdue);background:rgba(239,68,68,0.08);color:var(--sla-overdue)">
+    ⚠ {{ errorMessage }}
+  </div>
+
+  <!-- Form -->
+  <div class="card mb-6" *ngIf="!result">
+    <h3 class="card-title mb-4">Job Details</h3>
+    <div class="form-grid">
+      <div>
+        <label class="label">Job Title *</label>
+        <input class="input" [(ngModel)]="form.jobTitle" placeholder="e.g. Senior Software Engineer">
+      </div>
+      <div>
+        <label class="label">Department</label>
+        <input class="input" [(ngModel)]="form.department" placeholder="e.g. Engineering">
+      </div>
+      <div>
+        <label class="label">Required Skills (comma-separated)</label>
+        <input class="input" [(ngModel)]="form.requiredSkillsText"
+          placeholder="e.g. React, TypeScript, Node.js">
+      </div>
+      <div>
+        <label class="label">Employment Type</label>
+        <select class="select" [(ngModel)]="form.employmentType">
+          <option *ngFor="let t of employmentTypes" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Min Years Experience</label>
+        <input class="input" type="number" [(ngModel)]="form.minYearsExperience" min="0" max="20">
+      </div>
+      <div>
+        <label class="label">Max Years Experience</label>
+        <input class="input" type="number" [(ngModel)]="form.maxYearsExperience" min="0" max="30">
+      </div>
+    </div>
+    <div class="mt-4">
+      <label class="label">Additional Context (optional)</label>
+      <textarea class="input" rows="3" [(ngModel)]="form.additionalContext"
+        placeholder="e.g. Remote-first team, startup environment, fintech domain..."></textarea>
+    </div>
+    <div class="mt-4">
+      <button class="btn btn-primary" (click)="generate()" [disabled]="isGenerating || !form.jobTitle">
+        <span *ngIf="!isGenerating">✨ Generate JD</span>
+        <span *ngIf="isGenerating">🔄 Generating...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Generated JD -->
+  <div class="card" *ngIf="result?.data">
+    <div class="flex justify-between items-start mb-6">
+      <h2 style="font-size:22px;font-weight:700;color:var(--moonlight-dark)">
+        {{ result.data.title }}
+      </h2>
+      <button class="btn btn-secondary" (click)="copyToClipboard()">Copy as Markdown</button>
+    </div>
+
+    <!-- Overview -->
+    <div class="jd-section">
+      <h4>Overview</h4>
+      <p style="line-height:1.7;color:var(--text-2)">{{ result.data.overview }}</p>
+    </div>
+
+    <!-- Responsibilities -->
+    <div class="jd-section" *ngIf="result.data.responsibilities?.length">
+      <h4>Key Responsibilities</h4>
+      <ul class="jd-list">
+        <li *ngFor="let item of result.data.responsibilities">{{ item }}</li>
+      </ul>
+    </div>
+
+    <!-- Requirements -->
+    <div class="jd-section" *ngIf="result.data.requirements?.length">
+      <h4>Requirements</h4>
+      <ul class="jd-list">
+        <li *ngFor="let item of result.data.requirements">{{ item }}</li>
+      </ul>
+    </div>
+
+    <!-- Nice to Have -->
+    <div class="jd-section" *ngIf="result.data.niceToHave?.length">
+      <h4>Nice to Have</h4>
+      <ul class="jd-list">
+        <li *ngFor="let item of result.data.niceToHave">{{ item }}</li>
+      </ul>
+    </div>
+
+    <!-- Benefits -->
+    <div class="jd-section" *ngIf="result.data.benefits?.length">
+      <h4>Benefits</h4>
+      <ul class="jd-list">
+        <li *ngFor="let item of result.data.benefits">{{ item }}</li>
+      </ul>
+    </div>
+
+    <!-- Model Info Footer -->
+    <div class="model-info">
+      <span>Employment: {{ result.data.employmentType }}</span>
+      <span>Experience: {{ result.data.experienceRange }}</span>
+      <span>Model: {{ result.modelVersion }}</span>
+      <span>Generated: {{ result.timestamp | date:'medium' }}</span>
+    </div>
+  </div>
+</div>

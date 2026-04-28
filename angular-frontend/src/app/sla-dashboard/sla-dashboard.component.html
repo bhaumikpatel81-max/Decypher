@@ -1,0 +1,95 @@
+<div class="page-container page-enter">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="page-title">SLA Dashboard</h1>
+      <p class="text-sm" style="color:var(--text-3)">Recruitment pipeline SLA tracking — UC64</p>
+    </div>
+    <button class="btn btn-secondary" (click)="load()" [disabled]="loading">Refresh</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="card text-center" *ngIf="loading">
+    <p style="color:var(--text-3)">Loading SLA data...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="human-review-banner" *ngIf="error"
+    style="border-color:var(--sla-overdue);background:rgba(239,68,68,0.08);color:var(--sla-overdue)">
+    ⚠ {{ error }}
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- Summary Cards -->
+    <div class="score-breakdown mb-6">
+      <div class="score-card">
+        <div class="score-value" style="color:var(--sla-on-track)">{{ onTrackCount }}</div>
+        <div class="score-label">On Track</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value" style="color:var(--sla-warning)">{{ warningCount }}</div>
+        <div class="score-label">Warning</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value" style="color:var(--sla-overdue)">{{ overdueCount }}</div>
+        <div class="score-label">Overdue</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ tracks.length }}</div>
+        <div class="score-label">Total Tracked</div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="card text-center" *ngIf="tracks.length === 0">
+      <p style="color:var(--text-3); padding: 40px 0">No SLA records found for this tenant.</p>
+    </div>
+
+    <!-- SLA Table -->
+    <div class="card" *ngIf="tracks.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Requirement</th>
+            <th>Stage</th>
+            <th>Days in Stage</th>
+            <th>Progress</th>
+            <th>Status</th>
+            <th>Predicted Completion</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tracks">
+            <td><small style="color:var(--text-3)">{{ t.requirementId | slice:0:8 }}…</small></td>
+            <td><strong>{{ t.stage }}</strong></td>
+            <td>{{ t.daysInStage }} / {{ t.targetDays }} days</td>
+            <td style="min-width: 120px">
+              <div class="confidence-bar">
+                <div class="confidence-fill"
+                  [ngClass]="t.status === 'OnTrack' ? 'high' : t.status === 'Warning' ? 'medium' : 'low'"
+                  [style.width.%]="slaProgress(t)">
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="sla-badge" [ngClass]="getSlaClass(t.status)">
+                {{ getSlaEmoji(t.status) }} {{ t.status }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="t.predictedCompletionDate">
+                {{ t.predictedCompletionDate | date:'MMM d, y' }}
+              </span>
+              <span *ngIf="!t.predictedCompletionDate" style="color:var(--text-3)">—</span>
+            </td>
+            <td>
+              <span *ngIf="t.predictionConfidence > 0">{{ (t.predictionConfidence * 100) | number:'1.0-0' }}%</span>
+              <span *ngIf="t.predictionConfidence === 0" style="color:var(--text-3)">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,121 @@
+<div class="page-container page-enter">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="page-title">AI Resume Scorecard</h1>
+      <p class="text-sm" style="color:var(--text-3)">Multi-agent AI screening — UC63</p>
+    </div>
+    <button class="btn btn-secondary" *ngIf="results" (click)="exportResults()">Export JSON</button>
+  </div>
+
+  <!-- Error Banner -->
+  <div class="human-review-banner" *ngIf="errorMessage"
+    style="border-color:var(--sla-overdue);background:rgba(239,68,68,0.08);color:var(--sla-overdue)">
+    ⚠ {{ errorMessage }}
+  </div>
+
+  <!-- Human Review Banner -->
+  <div class="human-review-banner" *ngIf="results?.requiresHumanReview">
+    🔍 Human Review Required — {{ results.humanReviewReason }}
+  </div>
+
+  <!-- Inputs -->
+  <div class="grid grid-cols-2 gap-6 mb-6">
+    <div class="card">
+      <h3 class="card-title mb-4">Job Description</h3>
+      <textarea class="input" rows="12" [(ngModel)]="jdText"
+        placeholder="Paste job description here..."></textarea>
+    </div>
+    <div class="card">
+      <h3 class="card-title mb-4">Resume / CV</h3>
+      <textarea class="input" rows="12" [(ngModel)]="resumeText"
+        placeholder="Paste resume text here..."></textarea>
+    </div>
+  </div>
+
+  <!-- Run Button -->
+  <div class="text-center mb-8">
+    <button class="btn btn-primary"
+      (click)="runAIAgents()"
+      [disabled]="isProcessing || !jdText || !resumeText">
+      <span *ngIf="!isProcessing">⚡ Run AI Agents</span>
+      <span *ngIf="isProcessing">🔄 Processing...</span>
+    </button>
+  </div>
+
+  <!-- Agent Progress Tracker -->
+  <div class="agent-tracker" *ngIf="isProcessing || results">
+    <div class="agent-card" *ngFor="let a of agents" [ngClass]="a.status">
+      <div class="agent-icon">{{ a.icon }}</div>
+      <div class="agent-name">{{ a.name }}</div>
+      <div class="agent-status">{{ a.statusText }}</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" *ngIf="results">
+    <h3 class="card-title mb-6">AI Analysis Results</h3>
+
+    <!-- Overall Match Score -->
+    <div class="mb-6">
+      <h4 class="font-semibold mb-3">Overall Match Score</h4>
+      <div class="confidence-meter">
+        <div class="confidence-bar">
+          <div class="confidence-fill" [ngClass]="getConfidenceClass(results.confidence)"
+            [style.width.%]="results.overallScore"></div>
+        </div>
+        <div class="confidence-label">
+          <span>{{ results.overallScore }}%</span>
+          <span>{{ getConfidenceLabel(results.confidence) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score Breakdown -->
+    <div class="score-breakdown mb-6">
+      <div class="score-card">
+        <div class="score-value">{{ results.breakdown?.skillsMatch }}%</div>
+        <div class="score-label">Skills Match</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ results.breakdown?.experienceMatch }}%</div>
+        <div class="score-label">Experience</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ results.breakdown?.educationMatch }}%</div>
+        <div class="score-label">Education</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ results.breakdown?.cultureFit }}%</div>
+        <div class="score-label">Culture Fit</div>
+      </div>
+    </div>
+
+    <!-- Bias Safety Analysis -->
+    <div class="mb-6">
+      <h4 class="font-semibold mb-3">Bias Safety Analysis</h4>
+      <div class="bias-card" [ngClass]="getBiasClass(results.biasScore)">
+        <div class="bias-score">{{ (results.biasScore * 100) | number:'1.0-0' }}% Bias-Free</div>
+        <div class="bias-checks">
+          <div class="bias-check-item" *ngFor="let c of results.biasChecks">
+            <span>{{ c.passed ? '✅' : '⚠️' }}</span>
+            <span><strong>{{ c.label }}:</strong> {{ c.passed ? 'No bias detected' : c.detail }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Explanation -->
+    <div class="mb-6">
+      <h4 class="font-semibold mb-3">AI Explanation</h4>
+      <div class="ai-explanation">{{ results.explanation }}</div>
+    </div>
+
+    <!-- Model Info Footer -->
+    <div class="model-info">
+      <span>Model: {{ results.modelVersion }}</span>
+      <span>Prompt Version: {{ results.promptVersion }}</span>
+      <span>Generated: {{ results.timestamp | date:'medium' }}</span>
+    </div>
+  </div>
+</div>

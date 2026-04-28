@@ -30,6 +30,10 @@ namespace Decypher.Web.Data
         public DbSet<RecruiterPerformance> RecruiterPerformances { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 
+        // --- UC63 / UC64 additions ---
+        public DbSet<AIAuditLog> AIAuditLogs { get; set; }
+        public DbSet<SLATracking> SLATrackings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -147,6 +151,24 @@ namespace Decypher.Web.Data
                 entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => new { e.TenantId, e.UserId });
             });
+
+            // AI Audit Log — append-only, tamper-evident
+            builder.Entity<AIAuditLog>()
+                .HasIndex(a => a.TenantId);
+            builder.Entity<AIAuditLog>()
+                .HasIndex(a => new { a.EntityId, a.EventType });
+            builder.Entity<AIAuditLog>()
+                .Property(a => a.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            // SLA Tracking
+            builder.Entity<SLATracking>()
+                .HasOne(s => s.Requirement)
+                .WithMany()
+                .HasForeignKey(s => s.RequirementId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SLATracking>()
+                .HasIndex(s => new { s.TenantId, s.Status });
 
             // Seed data
             SeedData(builder);
