@@ -467,3 +467,112 @@ body {
     animation: none;
   }
 }
+
+/* === MOBILE & CROSS-BROWSER RESPONSIVE === */
+
+/* Tablet (≤ 768px) */
+@media (max-width: 768px) {
+  .agent-tracker {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .score-breakdown {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100%;
+    z-index: 1000;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: left var(--transition-drawer);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .model-info {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* Mobile (≤ 480px) */
+@media (max-width: 480px) {
+  :root {
+    --header-height: 56px;
+  }
+
+  .agent-tracker {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .agent-card {
+    padding: 12px 8px;
+  }
+
+  .agent-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .score-breakdown {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .score-value {
+    font-size: 24px;
+  }
+
+  .score-card {
+    padding: 12px;
+  }
+
+  .bias-card {
+    padding: 14px;
+  }
+
+  .ai-explanation {
+    padding: 14px;
+  }
+
+  .jd-section h4 {
+    font-size: 13px;
+  }
+}
+
+/* Touch device optimisations (all pointers, not just small screens) */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .btn,
+  [role="button"],
+  a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Prevent iOS Safari from zooming inputs on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  /* Larger tap targets */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

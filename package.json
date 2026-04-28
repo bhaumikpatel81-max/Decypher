@@ -1,5 +1,8 @@
 {
   "scripts": {
-    "serve:local": "node local-single-port-server.js"
+    "build:frontend": "npm run build --prefix angular-frontend",
+    "serve:local": "node local-single-port-server.js",
+    "start": "npm run build:frontend && node local-single-port-server.js",
+    "dev": "node local-single-port-server.js"
   }
 }

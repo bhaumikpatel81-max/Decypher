@@ -2,6 +2,16 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const os = require('os');
+
+function getLocalIP() {
+  for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const iface of ifaces) {
+      if (iface.family === 'IPv4' && !iface.internal) return iface.address;
+    }
+  }
+  return 'localhost';
+}
 
 const port = Number(process.env.PORT || 5000);
 const root = __dirname;
@@ -260,7 +270,8 @@ function sendJson(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(json),
-    'Cache-Control': 'no-store'
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
   });
   res.end(json);
 }
@@ -325,7 +336,9 @@ function serveStatic(req, res) {
     }
     res.writeHead(200, {
       'Content-Type': contentType(filePath),
-      'Cache-Control': filePath.endsWith('index.html') ? 'no-store' : 'public, max-age=31536000'
+      'Cache-Control': filePath.endsWith('index.html') ? 'no-store' : 'public, max-age=31536000',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
     });
     res.end(content);
   });
@@ -562,7 +575,12 @@ const server = http.createServer(async (req, res) => {
 });
 
 ensureDb();
-server.listen(port, () => {
-  console.log(`Decypher local single-port deployment is running at http://localhost:${port}`);
-  console.log(`Database file: ${dbPath}`);
+server.listen(port, '0.0.0.0', () => {
+  const localIP = getLocalIP();
+  console.log('');
+  console.log('  Decypher is running:');
+  console.log(`    Local:   http://localhost:${port}`);
+  console.log(`    Network: http://${localIP}:${port}  (open on mobile / other devices)`);
+  console.log(`    DB:      ${dbPath}`);
+  console.log('');
 });

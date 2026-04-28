@@ -165,3 +165,38 @@ pre {
     align-items: stretch;
   }
 }
+
+@media (max-width: 600px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-box {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .upload-box input {
+    max-width: 100%;
+  }
+
+  .candidate-head {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .metric-line {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .funnel-stage {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  pre {
+    font-size: 12px;
+    padding: 12px;
+  }
+}
