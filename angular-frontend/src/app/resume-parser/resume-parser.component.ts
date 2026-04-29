@@ -48,7 +48,7 @@ import { environment } from '../../environments/environment';
         <div class="mb-4" *ngIf="result.experience?.length">
           <strong>Experience</strong>
           <div class="metric-line" *ngFor="let e of result.experience" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0;border-bottom:1px solid var(--border);">
-            <b>{{ e.title }} @ {{ e.company }}</b>
+            <b>{{ e.title }} &#64; {{ e.company }}</b>
             <span style="color:var(--text-3);font-size:12px;">{{ e.startDate }} – {{ e.endDate }}</span>
             <span style="font-size:13px;">{{ e.description }}</span>
           </div>
