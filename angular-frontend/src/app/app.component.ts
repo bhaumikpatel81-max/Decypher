@@ -453,6 +453,7 @@ export class AppComponent implements OnInit {
     { path: '/competency-ranker',   label: 'Competency Ranker',   shortLabel: 'Competency', symbol: 'CR', color: '#16a34a', adminOnly: false },
     { path: '/jd-checker',          label: 'JD Checker',          shortLabel: 'JD Check',   symbol: 'JD', color: '#e8912a', adminOnly: false },
     { path: '/jd-generator',        label: 'JD Generator',        shortLabel: 'JD Gen',     symbol: 'JG', color: '#22a3d2', adminOnly: false },
+    { path: '/import-center',        label: 'Import Center',       shortLabel: 'Import',     symbol: '📥', color: '#0891b2', adminOnly: false },
     { path: '/users',               label: 'Users & Access',      shortLabel: 'Users',      symbol: 'UA', color: '#343a48', adminOnly: true  },
     { path: '/compliance',          label: 'Compliance',          shortLabel: 'Compliance', symbol: 'CO', color: '#5C5C99', adminOnly: true  },
   ];

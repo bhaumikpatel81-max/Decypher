@@ -29,6 +29,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { BudgetComponent } from './budget/budget.component';
+import { ImportCenterComponent } from './import-center/import-center.component';
 
 import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
@@ -384,6 +385,8 @@ const routes: Routes = [
   { path: 'jd-generator',         component: JdGeneratorComponent },
   // Budget Module
   { path: 'budget',               component: BudgetComponent },
+  // Import Center
+  { path: 'import-center',        component: ImportCenterComponent },
   // Admin
   { path: 'users',                component: UsersAdminComponent },
   { path: 'compliance',           component: ComplianceComponent },
@@ -415,7 +418,8 @@ const routes: Routes = [
     RequisitionsComponent,
     SourceTrackingComponent,
     ComplianceComponent,
-    BudgetComponent
+    BudgetComponent,
+    ImportCenterComponent
   ],
   imports: [
     BrowserModule,

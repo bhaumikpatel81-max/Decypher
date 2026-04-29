@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import {
   BudgetService, FiscalYear, DashboardKpi, Forecast, ForecastRow,
   CostPerHire, VendorSpend, DepartmentBreakdown, TenantConfig,
@@ -30,6 +32,32 @@ import {
       <button class="btn btn-outline btn-sm" (click)="exportPpt()" [disabled]="!selectedFyId">
         📊 Export PPT
       </button>
+    </div>
+  </div>
+
+  <!-- Import Strip -->
+  <div class="budget-import-strip">
+    <div class="import-strip-body">
+      <div class="import-strip-left">
+        <span style="font-size:20px">📥</span>
+        <div>
+          <div class="import-strip-title">Import Budget Data</div>
+          <div class="import-strip-desc">Upload your budget Excel file to populate all budget data across all periods</div>
+        </div>
+      </div>
+      <div class="import-strip-actions">
+        <button class="btn btn-sm btn-outline-import" (click)="downloadBudgetTemplate()">📥 DOWNLOAD BLANK TEMPLATE</button>
+        <button class="btn btn-sm btn-outline-import" (click)="budgetExcelInput.click()">📤 UPLOAD BUDGET EXCEL</button>
+        <input #budgetExcelInput type="file" accept=".xlsx" style="display:none" (change)="onBudgetExcelUpload($event)">
+      </div>
+    </div>
+    <div class="import-strip-sample">
+      Are you a first timer?
+      <a class="import-strip-link" (click)="downloadBudgetSample()">📎 VIEW & DOWNLOAD SAMPLE (pre-filled example)</a>
+    </div>
+    <div class="import-strip-result" *ngIf="budgetImportResult">
+      <span *ngIf="budgetImportResult.totalErrors === 0" style="color:#059669">✅ Import complete — {{budgetImportResult.fiscalYears.imported + budgetImportResult.allocations.imported + budgetImportResult.lineItems.imported + budgetImportResult.actuals.imported}} rows imported across all sheets.</span>
+      <span *ngIf="budgetImportResult.totalErrors > 0" style="color:#d97706">⚠️ Import complete with {{budgetImportResult.totalErrors}} error(s). Fiscal Years: {{budgetImportResult.fiscalYears.imported}} | Allocations: {{budgetImportResult.allocations.imported}} | Line Items: {{budgetImportResult.lineItems.imported}} | Actuals: {{budgetImportResult.actuals.imported}}</span>
     </div>
   </div>
 
@@ -919,6 +947,25 @@ import {
     .btn--danger { color: #ef4444; }
     .btn-outline { border: 1px solid #e2e8f0; background: #fff; color: #334155; }
     .btn-outline:hover { background: #f8fafc; }
+
+    .budget-import-strip {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      margin: 12px 24px 4px;
+      padding: 14px 20px;
+    }
+    .import-strip-body { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .import-strip-left { display: flex; align-items: center; gap: 12px; }
+    .import-strip-title { font-size: 14px; font-weight: 700; color: #0c4a6e; }
+    .import-strip-desc { font-size: 12px; color: #0369a1; margin-top: 2px; }
+    .import-strip-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-outline-import { background: #fff; border: 1.5px solid #0891b2; color: #0891b2; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-outline-import:hover { background: #e0f2fe; }
+    .import-strip-sample { margin-top: 10px; font-size: 12px; color: #374151; }
+    .import-strip-link { color: #0891b2; font-weight: 600; cursor: pointer; text-decoration: underline; margin-left: 4px; }
+    .import-strip-link:hover { color: #0369a1; }
+    .import-strip-result { margin-top: 8px; font-size: 13px; font-weight: 500; }
   `]
 })
 export class BudgetComponent implements OnInit {
@@ -938,6 +985,7 @@ export class BudgetComponent implements OnInit {
   allocations: BudgetAllocation[] = [];
   tenantConfig: TenantConfig | null = null;
   costCategories: CostCategory[] = [];
+  budgetImportResult: any = null;
 
   tabs = [
     { key: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -1013,7 +1061,7 @@ export class BudgetComponent implements OnInit {
     return allocation.allottedAmount - actual.amount;
   }
 
-  constructor(private svc: BudgetService, private route: ActivatedRoute, private router: Router) {}
+  constructor(private svc: BudgetService, private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -1235,5 +1283,41 @@ export class BudgetComponent implements OnInit {
       a.download = `Budget_${this.selectedFyLabel}.pptx`;
       a.click(); URL.revokeObjectURL(url);
     });
+  }
+
+  downloadBudgetTemplate() {
+    const apiUrl = environment.apiUrl;
+    this.http.get(`${apiUrl}/api/budget/import-template`, { responseType: 'blob' }).subscribe(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Budget_Import_Template.xlsx';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  downloadBudgetSample() {
+    this.downloadBudgetTemplate();
+  }
+
+  onBudgetExcelUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    const apiUrl = environment.apiUrl;
+    this.http.post<any>(`${apiUrl}/api/budget/import-excel`, fd).subscribe({
+      next: res => {
+        this.budgetImportResult = res;
+        this.loadFiscalYears();
+      },
+      error: err => {
+        alert('Import failed: ' + (err?.error?.error ?? 'Unknown error'));
+      }
+    });
+    input.value = '';
   }
 }

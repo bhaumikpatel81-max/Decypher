@@ -171,7 +171,26 @@ using (var scope = app.Services.CreateScope())
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         
         await context.Database.EnsureCreatedAsync();
-        
+
+        // Ensure new tables exist (safe to run on every startup)
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""ImportJobs"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Feature"" text NOT NULL DEFAULT '',
+                ""FileName"" text NOT NULL DEFAULT '',
+                ""Status"" text NOT NULL DEFAULT 'Processing',
+                ""TotalRows"" integer NOT NULL DEFAULT 0,
+                ""ImportedRows"" integer NOT NULL DEFAULT 0,
+                ""WarningRows"" integer NOT NULL DEFAULT 0,
+                ""ErrorRows"" integer NOT NULL DEFAULT 0,
+                ""ErrorReportJson"" text,
+                ""ImportedById"" text,
+                ""ImportedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ScheduledAt"" timestamp with time zone,
+                CONSTRAINT ""PK_ImportJobs"" PRIMARY KEY (""Id"")
+            );");
+
         // Seed data
         await SeedData.Initialize(context, userManager, roleManager);
         

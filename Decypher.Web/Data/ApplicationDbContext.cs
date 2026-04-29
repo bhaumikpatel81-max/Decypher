@@ -56,6 +56,9 @@ namespace Decypher.Web.Data
         public DbSet<BudgetCostCategoryConfig> BudgetCostCategoryConfigs { get; set; }
         public DbSet<BudgetTenantConfig> BudgetTenantConfigs { get; set; }
 
+        // ─── Import Center ──────────────────────────────────────────────────
+        public DbSet<ImportJob> ImportJobs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
