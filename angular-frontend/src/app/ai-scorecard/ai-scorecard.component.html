@@ -3,7 +3,7 @@
   <div class="flex justify-between items-center mb-6">
     <div>
       <h1 class="page-title">AI Resume Scorecard</h1>
-      <p class="text-sm" style="color:var(--text-3)">Multi-agent AI screening — CV match, competency, bias & dropout risk</p>
+      <p class="text-sm" style="color:var(--text-3)">6-agent AI screening — CV match, competency, behavioral intelligence, bias & dropout risk</p>
     </div>
     <button class="btn btn-secondary" *ngIf="results" (click)="exportResults()">Export JSON</button>
   </div>
@@ -24,8 +24,6 @@
     <!-- JD Panel -->
     <div class="card">
       <h3 class="card-title mb-4">Job Description</h3>
-
-      <!-- JD Upload Zone -->
       <div class="sc-upload-zone"
         [class.sc-dz-hover]="jdDragOver"
         [class.sc-dz-loaded]="!!jdFile"
@@ -50,17 +48,13 @@
         </div>
       </div>
       <div *ngIf="jdExtractError" style="color:#ef4444;font-size:12px;margin:4px 0;">⚠ {{ jdExtractError }}</div>
-
       <div class="sc-or-divider"><span>or paste text</span></div>
-      <textarea class="input" rows="8" [(ngModel)]="jdText"
-        placeholder="Paste job description here..."></textarea>
+      <textarea class="input" rows="8" [(ngModel)]="jdText" placeholder="Paste job description here..."></textarea>
     </div>
 
     <!-- Resume Panel -->
     <div class="card">
       <h3 class="card-title mb-4">Resume / CV</h3>
-
-      <!-- Resume Upload Zone -->
       <div class="sc-upload-zone"
         [class.sc-dz-hover]="resumeDragOver"
         [class.sc-dz-loaded]="!!resumeFile"
@@ -85,10 +79,8 @@
         </div>
       </div>
       <div *ngIf="resumeExtractError" style="color:#ef4444;font-size:12px;margin:4px 0;">⚠ {{ resumeExtractError }}</div>
-
       <div class="sc-or-divider"><span>or paste text</span></div>
-      <textarea class="input" rows="8" [(ngModel)]="resumeText"
-        placeholder="Paste resume text here..."></textarea>
+      <textarea class="input" rows="8" [(ngModel)]="resumeText" placeholder="Paste resume text here..."></textarea>
     </div>
   </div>
 
@@ -111,43 +103,58 @@
     </div>
   </div>
 
-  <!-- Results -->
+  <!-- ════════════════════════════════════════════════════════════
+       RESULTS
+       ════════════════════════════════════════════════════════════ -->
   <div *ngIf="results">
 
-    <!-- ── Row 1: Score gauges ── -->
-    <div class="score-breakdown mb-6" style="grid-template-columns: repeat(3, 1fr)">
-      <!-- CV-JD Match Gauge -->
+    <!-- ── Row 1: Score Gauges (4-up) ── -->
+    <div class="score-breakdown mb-6" style="grid-template-columns:repeat(4,1fr)">
+
+      <!-- CV-JD Match -->
       <div class="card" style="text-align:center;padding:24px 16px;">
         <div class="card-title mb-2">CV ↔ JD Match</div>
         <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
           <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
           <circle cx="60" cy="60" r="50" fill="none"
-            [attr.stroke]="getGaugeColour(results.cvJdMatchScore)"
-            stroke-width="12"
-            stroke-linecap="round"
-            [attr.stroke-dasharray]="(results.cvJdMatchScore / 100 * 314) + ' 314'"
-            stroke-dashoffset="78.5"
-            transform="rotate(-90 60 60)"/>
+            [attr.stroke]="getGaugeColour(results.cvJdMatchScore)" stroke-width="12" stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.cvJdMatchScore/100*314)+' 314'"
+            stroke-dashoffset="78.5" transform="rotate(-90 60 60)"/>
           <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
             [attr.fill]="getGaugeColour(results.cvJdMatchScore)">{{ results.cvJdMatchScore }}%</text>
         </svg>
       </div>
 
-      <!-- Competency Score Gauge -->
+      <!-- Competency -->
       <div class="card" style="text-align:center;padding:24px 16px;">
         <div class="card-title mb-2">Competency Score</div>
         <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
           <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
           <circle cx="60" cy="60" r="50" fill="none"
-            [attr.stroke]="getGaugeColour(results.competencyScore)"
-            stroke-width="12"
-            stroke-linecap="round"
-            [attr.stroke-dasharray]="(results.competencyScore / 100 * 314) + ' 314'"
-            stroke-dashoffset="78.5"
-            transform="rotate(-90 60 60)"/>
+            [attr.stroke]="getGaugeColour(results.competencyScore)" stroke-width="12" stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.competencyScore/100*314)+' 314'"
+            stroke-dashoffset="78.5" transform="rotate(-90 60 60)"/>
           <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
             [attr.fill]="getGaugeColour(results.competencyScore)">{{ results.competencyScore }}%</text>
         </svg>
+      </div>
+
+      <!-- Behavioral Average -->
+      <div class="card" style="text-align:center;padding:24px 16px;" *ngIf="results.behavioral">
+        <div class="card-title mb-2">Behavioral Score</div>
+        <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+          <circle cx="60" cy="60" r="50" fill="none"
+            [attr.stroke]="getGaugeColour(getBehavioralAverage(results.behavioral.scores))"
+            stroke-width="12" stroke-linecap="round"
+            [attr.stroke-dasharray]="(getBehavioralAverage(results.behavioral.scores)/100*314)+' 314'"
+            stroke-dashoffset="78.5" transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
+            [attr.fill]="getGaugeColour(getBehavioralAverage(results.behavioral.scores))">
+            {{ getBehavioralAverage(results.behavioral.scores) }}%
+          </text>
+        </svg>
+        <div class="text-sm mt-1" style="color:var(--text-3)">Avg. of 8 skills</div>
       </div>
 
       <!-- Overall Score -->
@@ -156,12 +163,9 @@
         <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
           <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
           <circle cx="60" cy="60" r="50" fill="none"
-            [attr.stroke]="getGaugeColour(results.overallScore)"
-            stroke-width="12"
-            stroke-linecap="round"
-            [attr.stroke-dasharray]="(results.overallScore / 100 * 314) + ' 314'"
-            stroke-dashoffset="78.5"
-            transform="rotate(-90 60 60)"/>
+            [attr.stroke]="getGaugeColour(results.overallScore)" stroke-width="12" stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.overallScore/100*314)+' 314'"
+            stroke-dashoffset="78.5" transform="rotate(-90 60 60)"/>
           <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
             [attr.fill]="getGaugeColour(results.overallScore)">{{ results.overallScore }}%</text>
         </svg>
@@ -184,23 +188,21 @@
       </div>
     </div>
 
-    <!-- ── Row 3: Skills Gap Table ── -->
-    <div class="card mb-6" *ngIf="(results.matchedSkills?.length || results.missingSkills?.length)">
+    <!-- ── Row 3: Skills Gap Analysis ── -->
+    <div class="card mb-6" *ngIf="results.matchedSkills?.length || results.missingSkills?.length">
       <h3 class="card-title mb-4">Skills Gap Analysis</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
         <div>
           <div class="text-sm font-bold mb-2" style="color:#10b981;">Matched Skills</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            <span *ngFor="let skill of results.matchedSkills" class="chip"
-              style="background:#d1fae5;color:#065f46;">{{ skill }}</span>
+            <span *ngFor="let skill of results.matchedSkills" class="chip" style="background:#d1fae5;color:#065f46;">{{ skill }}</span>
             <em *ngIf="!results.matchedSkills?.length" style="color:var(--text-3)">None identified</em>
           </div>
         </div>
         <div>
           <div class="text-sm font-bold mb-2" style="color:#ef4444;">Missing Skills</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            <span *ngFor="let skill of results.missingSkills" class="chip"
-              style="background:#fee2e2;color:#991b1b;">{{ skill }}</span>
+            <span *ngFor="let skill of results.missingSkills" class="chip" style="background:#fee2e2;color:#991b1b;">{{ skill }}</span>
             <em *ngIf="!results.missingSkills?.length" style="color:var(--text-3)">None — great match!</em>
           </div>
         </div>
@@ -230,7 +232,112 @@
       </div>
     </div>
 
-    <!-- ── Row 5: Bias Safety ── -->
+    <!-- ══════════════════════════════════════════════════════════
+         ── Row 5: BEHAVIORAL INTELLIGENCE ──
+         ══════════════════════════════════════════════════════════ -->
+    <div class="card mb-6 behavioral-card" *ngIf="results.behavioral">
+
+      <!-- Card Header + Archetype Badge -->
+      <div class="bi-header">
+        <div>
+          <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+            <span class="bi-brain-icon">🧠</span> Behavioral Intelligence
+          </h3>
+          <p class="bi-subtitle">Inferred soft skills from CV language, achievements &amp; career patterns</p>
+        </div>
+        <div class="archetype-badge"
+          [style.background]="getBehavioralArchetype(results.behavioral.scores).color + '18'"
+          [style.border-color]="getBehavioralArchetype(results.behavioral.scores).color"
+          [style.color]="getBehavioralArchetype(results.behavioral.scores).color">
+          <div class="archetype-label">Behavioral Archetype</div>
+          <div class="archetype-title">{{ getBehavioralArchetype(results.behavioral.scores).title }}</div>
+          <div class="archetype-desc">{{ getBehavioralArchetype(results.behavioral.scores).description }}</div>
+        </div>
+      </div>
+
+      <!-- Main 2-column layout: Radar + Skill Bars -->
+      <div class="bi-body">
+
+        <!-- LEFT: Radar chart -->
+        <div class="bi-radar-wrap">
+          <svg viewBox="0 0 200 200" width="200" height="200" class="bi-radar-svg">
+            <!-- Background rings at 25%, 50%, 75%, 100% -->
+            <polygon [attr.points]="getRadarBackground(0.25)" fill="none" stroke="#e2e8f0" stroke-width="0.8"/>
+            <polygon [attr.points]="getRadarBackground(0.50)" fill="none" stroke="#e2e8f0" stroke-width="0.8"/>
+            <polygon [attr.points]="getRadarBackground(0.75)" fill="none" stroke="#e2e8f0" stroke-width="0.8"/>
+            <polygon [attr.points]="getRadarBackground(1.00)" fill="none" stroke="#d1d5db" stroke-width="1.2"/>
+            <!-- Axis lines -->
+            <line *ngFor="let ax of getRadarAxes()"
+              x1="100" y1="100" [attr.x2]="ax.x2" [attr.y2]="ax.y2"
+              stroke="#e2e8f0" stroke-width="0.8"/>
+            <!-- Score polygon (filled area) -->
+            <polygon [attr.points]="getRadarPoints(results.behavioral.scores)"
+              fill="rgba(109,68,240,0.15)" stroke="#6d44f0" stroke-width="2"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <!-- Score dots -->
+            <circle *ngFor="let dot of getBehavioralRadarDots(results.behavioral.scores)"
+              [attr.cx]="dot.x" [attr.cy]="dot.y"
+              r="4.5" fill="#6d44f0" stroke="white" stroke-width="2"/>
+          </svg>
+          <!-- Ring labels -->
+          <div class="radar-rings-legend">
+            <span class="ring-chip" style="background:#f8f0ff;color:#6d44f0;">25</span>
+            <span class="ring-chip" style="background:#f8f0ff;color:#6d44f0;">50</span>
+            <span class="ring-chip" style="background:#f8f0ff;color:#6d44f0;">75</span>
+            <span class="ring-chip" style="background:#6d44f0;color:#fff;">100</span>
+          </div>
+          <!-- Confidence pill -->
+          <div class="bi-confidence-pill">
+            Confidence:&nbsp;<strong>{{ (results.behavioral.confidence * 100) | number:'1.0-0' }}%</strong>
+          </div>
+        </div>
+
+        <!-- RIGHT: Skill bars -->
+        <div class="bi-skills-col">
+          <div *ngFor="let skill of behavioralSkills" class="bi-skill-row">
+
+            <!-- Skill label + score badge + toggle -->
+            <div class="bi-skill-header">
+              <span class="bi-skill-label">
+                <span class="bi-skill-icon">{{ skill.icon }}</span>{{ skill.label }}
+              </span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="bi-score-badge" [ngClass]="getBehavioralScoreClass(results.behavioral.scores[skill.key])">
+                  {{ results.behavioral.scores[skill.key] }}
+                </span>
+                <button class="bi-evidence-btn"
+                  (click)="toggleEvidence(skill.key)"
+                  [title]="expandedEvidence[skill.key] ? 'Hide evidence' : 'Show evidence'">
+                  {{ expandedEvidence[skill.key] ? '▲' : '▼' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="bi-bar-track">
+              <div class="bi-bar-fill"
+                [style.width.%]="results.behavioral.scores[skill.key]"
+                [style.background]="getBehavioralBarColor(results.behavioral.scores[skill.key])">
+              </div>
+            </div>
+
+            <!-- Evidence (expandable) -->
+            <div *ngIf="expandedEvidence[skill.key]" class="bi-evidence-text">
+              <span class="bi-evidence-icon">💡</span>
+              {{ results.behavioral.evidence[skill.key] || 'No specific evidence found in CV.' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Behavioral Profile Summary -->
+      <div class="bi-summary">
+        <div class="bi-summary-label">Behavioral Profile Summary</div>
+        <p class="bi-summary-text">{{ results.behavioral.summary }}</p>
+      </div>
+    </div>
+
+    <!-- ── Row 6: Bias Safety ── -->
     <div class="card mb-6">
       <h3 class="card-title mb-4">Bias Safety Analysis</h3>
       <div class="bias-card" [ngClass]="getBiasClass(results.biasScore)">
@@ -244,7 +351,7 @@
       </div>
     </div>
 
-    <!-- ── Row 6: Explanation ── -->
+    <!-- ── Row 7: AI Explanation ── -->
     <div class="card mb-6">
       <h3 class="card-title mb-4">AI Explanation</h3>
       <div class="ai-explanation">{{ results.explanation }}</div>
@@ -260,60 +367,225 @@
 </div>
 
 <style>
+  /* ── Upload Zone ────────────────────────────────────────── */
   .sc-upload-zone {
     border: 2px dashed var(--border-strong);
-    border-radius: 10px;
-    padding: 14px 16px;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    background: var(--surface-alt);
-    margin-bottom: 4px;
+    border-radius: 10px; padding: 14px 16px; cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--surface-alt); margin-bottom: 4px;
   }
   .sc-upload-zone:hover, .sc-upload-zone.sc-dz-hover {
-    border-color: var(--brand-violet-500);
-    background: #f4f1ff;
+    border-color: var(--brand-violet-500); background: #f4f1ff;
   }
   .sc-upload-zone.sc-dz-loaded {
-    border-style: solid;
-    border-color: var(--brand-violet-400);
-    background: #f4f1ff;
+    border-style: solid; border-color: var(--brand-violet-400); background: #f4f1ff;
   }
-  .sc-dz-idle {
-    display: flex; align-items: center; gap: 10px;
-    color: var(--text-3); font-size: 13px;
-  }
-  .sc-dz-label { color: var(--text-2); }
-  .sc-dz-link { color: #6b4df0; font-weight: 600; }
-  .sc-dz-hint { font-size: 11px; color: var(--text-3); margin-left: auto; }
-  .sc-dz-file {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .sc-dz-idle { display:flex; align-items:center; gap:10px; color:var(--text-3); font-size:13px; }
+  .sc-dz-label { color:var(--text-2); }
+  .sc-dz-link  { color:#6b4df0; font-weight:600; }
+  .sc-dz-hint  { font-size:11px; color:var(--text-3); margin-left:auto; }
+  .sc-dz-file  { display:flex; align-items:center; gap:8px; }
   .sc-dz-remove {
-    background: none; border: none; cursor: pointer;
-    font-size: 13px; color: var(--text-3); padding: 2px 6px;
-    border-radius: 4px; flex-shrink: 0;
+    background:none; border:none; cursor:pointer;
+    font-size:13px; color:var(--text-3); padding:2px 6px; border-radius:4px; flex-shrink:0;
   }
-  .sc-dz-remove:hover { background: #fee2e2; color: #dc2626; }
+  .sc-dz-remove:hover { background:#fee2e2; color:#dc2626; }
   .sc-or-divider {
-    display: flex; align-items: center; gap: 10px;
-    color: var(--text-3); font-size: 12px; margin: 10px 0 8px;
+    display:flex; align-items:center; gap:10px;
+    color:var(--text-3); font-size:12px; margin:10px 0 8px;
   }
   .sc-or-divider::before, .sc-or-divider::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
+    content:''; flex:1; height:1px; background:var(--border);
   }
+
+  /* ── Risk Badges ────────────────────────────────────────── */
   .risk-badge {
-    display: inline-flex;
+    display:inline-flex; flex-direction:column; align-items:center;
+    gap:4px; padding:12px 20px; border-radius:10px; font-size:13px;
+    min-width:120px; text-align:center;
+  }
+  .risk-badge strong { font-size:16px; font-weight:800; }
+  .risk-low    { background:#d1fae5; color:#065f46; }
+  .risk-medium { background:#fef3c7; color:#92400e; }
+  .risk-high   { background:#fee2e2; color:#991b1b; }
+
+  /* ── Behavioral Intelligence Card ──────────────────────── */
+  .behavioral-card {
+    border: 1.5px solid rgba(109,68,240,0.2);
+    background: linear-gradient(135deg, #faf8ff 0%, #fff 100%);
+  }
+
+  .bi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .bi-brain-icon { font-size: 20px; }
+
+  .bi-subtitle {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 3px;
+  }
+
+  .archetype-badge {
+    border: 1.5px solid;
+    border-radius: 12px;
+    padding: 10px 16px;
+    min-width: 220px;
+    max-width: 280px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .archetype-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.65;
+    margin-bottom: 4px;
+  }
+  .archetype-title {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .archetype-desc {
+    font-size: 11px;
+    opacity: 0.75;
+    line-height: 1.4;
+  }
+
+  .bi-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* Radar */
+  .bi-radar-wrap {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 12px 20px;
-    border-radius: 10px;
+    gap: 8px;
+  }
+  .bi-radar-svg { overflow: visible; }
+
+  .radar-rings-legend {
+    display: flex; gap: 4px; align-items: center;
+  }
+  .ring-chip {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+  }
+
+  .bi-confidence-pill {
+    font-size: 11px;
+    color: var(--text-3);
+    background: #f3f0ff;
+    border-radius: 20px;
+    padding: 3px 12px;
+  }
+  .bi-confidence-pill strong { color: #6d44f0; }
+
+  /* Skill rows */
+  .bi-skills-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bi-skill-row { display: flex; flex-direction: column; gap: 4px; }
+
+  .bi-skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bi-skill-label {
     font-size: 13px;
-    min-width: 120px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-1);
+  }
+  .bi-skill-icon { font-size: 15px; }
+
+  .bi-score-badge {
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    min-width: 36px;
     text-align: center;
   }
-  .risk-badge strong { font-size: 16px; font-weight: 800; }
-  .risk-low    { background: #d1fae5; color: #065f46; }
-  .risk-medium { background: #fef3c7; color: #92400e; }
-  .risk-high   { background: #fee2e2; color: #991b1b; }
+  .bscore-high { background: #d1fae5; color: #065f46; }
+  .bscore-mid  { background: #fef3c7; color: #92400e; }
+  .bscore-low  { background: #fee2e2; color: #991b1b; }
+
+  .bi-evidence-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer;
+    font-size: 10px; padding: 2px 6px;
+    color: var(--text-3); line-height: 1;
+    transition: background .15s;
+  }
+  .bi-evidence-btn:hover { background: #f3f0ff; border-color: #6d44f0; color: #6d44f0; }
+
+  .bi-bar-track {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bi-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  .bi-evidence-text {
+    font-size: 11.5px;
+    color: var(--text-2);
+    background: #f8f7ff;
+    border-left: 3px solid #6d44f0;
+    border-radius: 0 6px 6px 0;
+    padding: 6px 10px;
+    line-height: 1.5;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .bi-evidence-icon { flex-shrink: 0; }
+
+  /* Summary */
+  .bi-summary {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #f3f0ff, #f8f7ff);
+    border-radius: 10px;
+    border-left: 3px solid #6d44f0;
+  }
+  .bi-summary-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #6d44f0;
+    margin-bottom: 8px;
+  }
+  .bi-summary-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-2);
+    margin: 0;
+  }
 </style>

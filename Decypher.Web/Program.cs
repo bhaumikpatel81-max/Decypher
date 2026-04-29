@@ -137,6 +137,7 @@ builder.Services.AddHttpClient("OpenAI", client =>
 builder.Services.AddScoped<ParsingAgentService>();
 builder.Services.AddScoped<MatchingAgentService>();
 builder.Services.AddScoped<RankingAgentService>();
+builder.Services.AddScoped<BehavioralAgentService>();
 builder.Services.AddScoped<ExplanationAgentService>();
 builder.Services.AddScoped<BiasDetectionAgentService>();
 builder.Services.AddScoped<IMultiAgentOrchestratorService, MultiAgentOrchestratorService>();

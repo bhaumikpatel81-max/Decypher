@@ -9,6 +9,12 @@ interface Agent {
   statusText: string;
 }
 
+interface BehavioralSkill {
+  key: string;
+  label: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-ai-scorecard',
   templateUrl: './ai-scorecard.component.html'
@@ -35,12 +41,27 @@ export class AIScorecardComponent {
   resumeExtractError = '';
   resumeDragOver = false;
 
+  // Behavioral evidence expand/collapse state
+  expandedEvidence: Record<string, boolean> = {};
+
+  behavioralSkills: BehavioralSkill[] = [
+    { key: 'problemSolving',   label: 'Problem Solving',   icon: '🧩' },
+    { key: 'criticalThinking', label: 'Critical Thinking', icon: '🔬' },
+    { key: 'ownership',        label: 'Ownership',         icon: '🎯' },
+    { key: 'leadership',       label: 'Leadership',        icon: '👑' },
+    { key: 'communication',    label: 'Communication',     icon: '💬' },
+    { key: 'integrity',        label: 'Integrity',         icon: '🛡️' },
+    { key: 'adaptability',     label: 'Adaptability',      icon: '🔄' },
+    { key: 'collaboration',    label: 'Collaboration',     icon: '🤝' }
+  ];
+
   agents: Agent[] = [
-    { name: 'Parsing Agent',        icon: '📄', status: 'pending', statusText: 'Waiting...' },
-    { name: 'Matching Agent',       icon: '🔍', status: 'pending', statusText: 'Waiting...' },
-    { name: 'Ranking Agent',        icon: '📊', status: 'pending', statusText: 'Waiting...' },
-    { name: 'Explanation Agent',    icon: '💬', status: 'pending', statusText: 'Waiting...' },
-    { name: 'Bias Detection Agent', icon: '⚖️', status: 'pending', statusText: 'Waiting...' }
+    { name: 'Parsing Agent',                 icon: '📄', status: 'pending', statusText: 'Waiting...' },
+    { name: 'Matching Agent',                icon: '🔍', status: 'pending', statusText: 'Waiting...' },
+    { name: 'Ranking Agent',                 icon: '📊', status: 'pending', statusText: 'Waiting...' },
+    { name: 'Behavioral Intelligence Agent', icon: '🧠', status: 'pending', statusText: 'Waiting...' },
+    { name: 'Explanation Agent',             icon: '💬', status: 'pending', statusText: 'Waiting...' },
+    { name: 'Bias Detection Agent',          icon: '⚖️', status: 'pending', statusText: 'Waiting...' }
   ];
 
   constructor(private http: HttpClient) {}
@@ -54,6 +75,7 @@ export class AIScorecardComponent {
     this.isProcessing = true;
     this.results = null;
     this.errorMessage = '';
+    this.expandedEvidence = {};
     this.resetAgents();
 
     for (let i = 0; i < this.agents.length; i++) {
@@ -86,25 +108,34 @@ export class AIScorecardComponent {
     const explanation = r.explanationResult?.data ?? {};
     const bias        = r.biasDetectionResult?.data ?? {};
     const matching    = r.matchingResult?.data ?? {};
+    const behavData   = r.behavioralResult?.data;
 
-    const cvJdMatchScore = matching.matchPercentage ?? 0;
+    const cvJdMatchScore  = matching.matchPercentage ?? 0;
     const competencyScore = ranking.breakdown?.skillsMatch ?? 0;
-    const biasScore = bias.overallBiasFreeScore ?? 1;
-    const dropoutRisk = ranking.breakdown?.dropoutRisk ?? 0;
+    const biasScore       = bias.overallBiasFreeScore ?? 1;
+    const dropoutRisk     = ranking.breakdown?.dropoutRisk ?? 0;
+
+    const behavioral = behavData ? {
+      scores:     behavData.behavioralScores ?? {},
+      evidence:   behavData.evidence ?? {},
+      summary:    behavData.summary ?? '',
+      confidence: behavData.confidence ?? 0
+    } : null;
 
     return {
       overallScore:        ranking.overallScore ?? 0,
       cvJdMatchScore,
       competencyScore,
-      biasRiskLevel:   biasScore >= 0.9 ? 'Low' : biasScore >= 0.7 ? 'Medium' : 'High',
-      dropoutRiskLevel: dropoutRisk < 40 ? 'Low' : dropoutRisk < 70 ? 'Medium' : 'High',
-      matchedSkills:   matching.matchedSkills ?? [],
-      missingSkills:   matching.missingSkills ?? [],
-      confidence:      r.rankingResult?.confidence ?? 0,
+      behavioral,
+      biasRiskLevel:       biasScore >= 0.9 ? 'Low' : biasScore >= 0.7 ? 'Medium' : 'High',
+      dropoutRiskLevel:    dropoutRisk < 40  ? 'Low' : dropoutRisk < 70 ? 'Medium' : 'High',
+      matchedSkills:       matching.matchedSkills ?? [],
+      missingSkills:       matching.missingSkills ?? [],
+      confidence:          r.rankingResult?.confidence ?? 0,
       requiresHumanReview: r.requiresHumanReview,
       humanReviewReason:   r.humanReviewReason,
-      breakdown:       ranking.breakdown ?? {},
-      explanation:     explanation.explanation ?? 'No explanation generated.',
+      breakdown:           ranking.breakdown ?? {},
+      explanation:         explanation.explanation ?? 'No explanation generated.',
       biasScore,
       biasChecks: [
         { passed: !bias.genderBias?.detected,   label: 'Gender Bias',   detail: bias.genderBias?.details   ?? '—' },
@@ -117,6 +148,91 @@ export class AIScorecardComponent {
       timestamp:     r.timestamp
     };
   }
+
+  // ── Behavioral Intelligence helpers ──────────────────────────
+
+  toggleEvidence(key: string): void {
+    this.expandedEvidence[key] = !this.expandedEvidence[key];
+  }
+
+  /** SVG polygon points for the score shape */
+  getRadarPoints(scores: any): string {
+    if (!scores) return '';
+    return this.behavioralSkills.map((skill, i) => {
+      const { x, y } = this.polarToCartesian(i, (scores[skill.key] ?? 50) / 100);
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  /** SVG polygon points for a background ring (0–1 fraction of max) */
+  getRadarBackground(fraction: number): string {
+    return Array.from({ length: 8 }, (_, i) => {
+      const { x, y } = this.polarToCartesian(i, fraction);
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  /** SVG axis line endpoints (from center to outer vertex) */
+  getRadarAxes(): { x2: number, y2: number }[] {
+    return Array.from({ length: 8 }, (_, i) => {
+      const { x, y } = this.polarToCartesian(i, 1);
+      return { x2: x, y2: y };
+    });
+  }
+
+  /** SVG dot positions for individual skill scores */
+  getBehavioralRadarDots(scores: any): { x: number, y: number }[] {
+    if (!scores) return [];
+    return this.behavioralSkills.map((skill, i) =>
+      this.polarToCartesian(i, (scores[skill.key] ?? 50) / 100)
+    );
+  }
+
+  /** Returns archetype title, description, and accent color from top skills */
+  getBehavioralArchetype(scores: any): { title: string, description: string, color: string } {
+    if (!scores) return { title: 'Evaluating...', description: '', color: '#6b7280' };
+    const entries = Object.entries(scores as Record<string, number>);
+    const top3    = new Set(entries.sort((a, b) => b[1] - a[1]).slice(0, 3).map(p => p[0]));
+
+    if (top3.has('leadership') && top3.has('ownership'))
+      return { title: 'Visionary Leader',      description: 'Drives teams with clarity and accountability',        color: '#7c3aed' };
+    if (top3.has('problemSolving') && top3.has('criticalThinking'))
+      return { title: 'Analytical Innovator',  description: 'Tackles complexity with systematic thinking',         color: '#0891b2' };
+    if (top3.has('collaboration') && top3.has('communication'))
+      return { title: 'Trusted Collaborator',  description: 'Builds bridges with reliability and empathy',         color: '#059669' };
+    if (top3.has('ownership') && top3.has('adaptability'))
+      return { title: 'Accountable Achiever',  description: 'Takes charge and delivers in dynamic environments',   color: '#d97706' };
+    if (top3.has('adaptability') && top3.has('criticalThinking'))
+      return { title: 'Strategic Adapter',     description: 'Evolves with change while staying analytically sharp', color: '#db2777' };
+    if (top3.has('integrity'))
+      return { title: 'Principled Executor',   description: 'Consistent, trustworthy, and dependable',             color: '#16a34a' };
+    return   { title: 'Versatile Professional', description: 'Balanced across multiple behavioral dimensions',      color: '#6b7280' };
+  }
+
+  getBehavioralScoreClass(score: number): string {
+    return score >= 75 ? 'bscore-high' : score >= 50 ? 'bscore-mid' : 'bscore-low';
+  }
+
+  getBehavioralBarColor(score: number): string {
+    return score >= 75 ? 'linear-gradient(90deg,#10b981,#34d399)'
+         : score >= 50 ? 'linear-gradient(90deg,#f59e0b,#fbbf24)'
+         :               'linear-gradient(90deg,#ef4444,#f87171)';
+  }
+
+  getBehavioralAverage(scores: any): number {
+    if (!scores) return 0;
+    const vals = Object.values(scores) as number[];
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  }
+
+  private polarToCartesian(index: number, fraction: number): { x: number, y: number } {
+    const cx = 100, cy = 100, maxR = 75;
+    const angle = (index * 45 - 90) * Math.PI / 180;
+    const r = fraction * maxR;
+    return { x: +((cx + r * Math.cos(angle)).toFixed(2)), y: +((cy + r * Math.sin(angle)).toFixed(2)) };
+  }
+
+  // ── Existing helpers ─────────────────────────────────────────
 
   private fileIconFor(file: File): string {
     const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -133,7 +249,7 @@ export class AIScorecardComponent {
       this.http.post<{ text: string }>(`${environment.apiUrl}/api/resume-parser/extract-text`, {
         fileData: base64, fileName: file.name, mimeType: file.type
       }).subscribe({
-        next: r  => { onText(r.text); onDone(); },
+        next:  r   => { onText(r.text); onDone(); },
         error: err => { onError(err?.error?.error ?? 'Extraction failed'); onDone(); }
       });
     };
