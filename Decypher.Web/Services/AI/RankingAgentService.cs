@@ -14,7 +14,7 @@ namespace Decypher.Web.Services.AI
 
         public Task<AgentResult> ProcessAsync(AgentInput input, CancellationToken ct = default)
         {
-            // Weights configurable via appsettings — no redeploy needed (UC64 requirement)
+            // Weights configurable via appsettings — no redeploy needed
             double wSkills  = _config.GetValue<double>("AI:Weights:Skills",  0.40);
             double wExp     = _config.GetValue<double>("AI:Weights:Exp",     0.30);
             double wEdu     = _config.GetValue<double>("AI:Weights:Edu",     0.20);

@@ -594,7 +594,7 @@ async function handleApi(req, res, url) {
     return sendJson(res, 201, cv);
   }
 
-  // ── AI Agent endpoints (UC63 / UC64) ─────────────────────────────────────
+  // ── AI Agent endpoints ────────────────────────────────────────────────────
 
   if (route === '/api/aiagents/sla-dashboard' && req.method === 'GET') {
     const db = readDb();

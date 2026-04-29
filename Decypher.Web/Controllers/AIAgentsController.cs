@@ -25,7 +25,7 @@ namespace Decypher.Web.Controllers
             _log = log;
         }
 
-        /// <summary>UC63: Run all 5 AI agents on a JD + Resume pair.</summary>
+        /// <summary>Run all 5 AI agents on a JD + Resume pair.</summary>
         [HttpPost("run-screening")]
         public async Task<IActionResult> RunScreening([FromBody] ScreeningRequest req)
         {
@@ -51,7 +51,7 @@ namespace Decypher.Web.Controllers
             }
         }
 
-        /// <summary>UC64: Generate a job description using AI.</summary>
+        /// <summary>Generate a job description using AI.</summary>
         [HttpPost("generate-jd")]
         public async Task<IActionResult> GenerateJobDescription([FromBody] JdGenerationRequest req)
         {
@@ -75,7 +75,7 @@ namespace Decypher.Web.Controllers
             }
         }
 
-        /// <summary>UC64: Get SLA dashboard data for tenant.</summary>
+        /// <summary>Get SLA dashboard data for tenant.</summary>
         [HttpGet("sla-dashboard")]
         public IActionResult GetSLADashboard([FromServices] ApplicationDbContext db)
         {

@@ -121,7 +121,7 @@ builder.Services.AddScoped<ISourceTrackingService, SourceTrackingService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 // ─────────────────────────────────────────────────────────────
 
-// ── UC63 / UC64 AI Services ──────────────────────────────────
+// ── AI Services ──────────────────────────────────────────────
 builder.Services.AddHttpClient("OpenAI", client =>
 {
     client.BaseAddress = new Uri("https://api.openai.com/v1/");

@@ -23,7 +23,7 @@ namespace Decypher.Web.Models
         public DateTime? StageEndDate { get; set; }
 
         public int DaysInStage { get; set; }
-        public int TargetDays { get; set; } = 20;       // Configurable; default 20 days (UC64 target)
+        public int TargetDays { get; set; } = 20;       // Configurable; default 20 days
 
         [MaxLength(20)]
         public string Status { get; set; }              // "OnTrack", "Warning", "Overdue"

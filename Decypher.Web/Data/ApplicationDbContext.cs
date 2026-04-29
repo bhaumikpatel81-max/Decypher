@@ -30,7 +30,7 @@ namespace Decypher.Web.Data
         public DbSet<RecruiterPerformance> RecruiterPerformances { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 
-        // --- UC63 / UC64 additions ---
+        // --- AI additions ---
         public DbSet<AIAuditLog> AIAuditLogs { get; set; }
         public DbSet<SLATracking> SLATrackings { get; set; }
 
