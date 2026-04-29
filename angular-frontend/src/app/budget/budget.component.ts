@@ -262,7 +262,7 @@ import {
               </td>
             </tr>
             <!-- Line item detail row -->
-            <tr *ngIf="expandedDepts[row.department]" *ngFor="let row of forecast.rows"
+            <tr *ngIf="expandedDepts[row.department]"
               class="line-item-row">
               <td colspan="9">
                 <div class="line-item-panel" *ngIf="lineItemsByDept[row.department]?.length">
