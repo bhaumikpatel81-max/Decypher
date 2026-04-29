@@ -350,8 +350,8 @@ namespace Decypher.Web.Controllers
             WriteInstructionRow(fyWs, 2, fyHeaders.Length, "FORMAT: FiscalYearLabel is used as the key in all other sheets. Status: Draft/Active/Locked/Archived. Dates: dd-mm-yyyy.");
             object[][] fySamples =
             {
-                new object[] { "FY 2025-26", "01-04-2025", "31-03-2026", 2500000, "GBP", "Active", "Annual recruitment budget approved by board April 2025" },
-                new object[] { "FY 2024-25", "01-04-2024", "31-03-2025", 2100000, "GBP", "Locked", "Previous year locked for audit" },
+                new object[] { "FY 2025-26", "01-04-2025", "31-03-2026", 25000000, "INR", "Active", "Annual recruitment budget approved by board April 2025" },
+                new object[] { "FY 2024-25", "01-04-2024", "31-03-2025", 21000000, "INR", "Locked", "Previous year locked for audit" },
             };
             WriteSampleRows(fyWs, 3, fySamples);
 
@@ -362,11 +362,11 @@ namespace Decypher.Web.Controllers
             WriteInstructionRow(allocWs, 2, allocHeaders.Length, "FORMAT: FiscalYearLabel must match Sheet 2. Quarter: Q1/Q2/Q3/Q4. Category: Permanent/Contract/Intern/Replacement/NewRole.");
             object[][] allocSamples =
             {
-                new object[] { "FY 2025-26", "Engineering", "ENG", 5, 450000, "GBP", "Permanent", "Q1", "01-04-2025", "Core platform team expansion" },
-                new object[] { "FY 2025-26", "Engineering", "ENG", 3, 270000, "GBP", "Contract", "Q2", "01-07-2025", "Augmentation for project peak load" },
-                new object[] { "FY 2025-26", "Product", "PRD", 2, 160000, "GBP", "Permanent", "Q1", "15-04-2025", "Product design and management hires" },
-                new object[] { "FY 2025-26", "Finance", "FIN", 1, 80000, "GBP", "Replacement", "Q3", "01-10-2025", "Backfill for planned departure" },
-                new object[] { "FY 2025-26", "HR", "HR", 1, 70000, "GBP", "Intern", "Q4", "", "Summer intake carry forward to Q4" },
+                new object[] { "FY 2025-26", "Engineering", "ENG", 5, 4500000, "INR", "Permanent", "Q1", "01-04-2025", "Core platform team expansion" },
+                new object[] { "FY 2025-26", "Engineering", "ENG", 3, 2700000, "INR", "Contract", "Q2", "01-07-2025", "Augmentation for project peak load" },
+                new object[] { "FY 2025-26", "Product", "PRD", 2, 1600000, "INR", "Permanent", "Q1", "15-04-2025", "Product design and management hires" },
+                new object[] { "FY 2025-26", "Finance", "FIN", 1, 800000, "INR", "Replacement", "Q3", "01-10-2025", "Backfill for planned departure" },
+                new object[] { "FY 2025-26", "HR", "HR", 1, 700000, "INR", "Intern", "Q4", "", "Summer intake carry forward to Q4" },
             };
             WriteSampleRows(allocWs, 3, allocSamples);
 
@@ -518,7 +518,7 @@ namespace Decypher.Web.Controllers
                 { errors.Add(new ImportError { Row = r, Message = "EndDate must be dd-mm-yyyy." }); continue; }
 
                 _ = decimal.TryParse(ws.Cells[r, 4].Text?.Trim(), out var total);
-                var currency = ws.Cells[r, 5].Text?.Trim() ?? "GBP";
+                var currency = ws.Cells[r, 5].Text?.Trim() ?? "INR";
                 var statusStr = ws.Cells[r, 6].Text?.Trim() ?? "Draft";
                 var status = Enum.TryParse<FiscalYearStatus>(statusStr, true, out var s) ? s : FiscalYearStatus.Draft;
 

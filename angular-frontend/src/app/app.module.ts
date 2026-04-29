@@ -30,6 +30,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { BudgetComponent } from './budget/budget.component';
 import { ImportCenterComponent } from './import-center/import-center.component';
+import { InternalJobPostingsComponent } from './internal-job-postings/internal-job-postings.component';
+import { ReportsComponent } from './reports/reports.component';
 
 import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
@@ -387,6 +389,10 @@ const routes: Routes = [
   { path: 'budget',               component: BudgetComponent },
   // Import Center
   { path: 'import-center',        component: ImportCenterComponent },
+  // Internal Job Postings
+  { path: 'internal-job-postings', component: InternalJobPostingsComponent },
+  // Reports
+  { path: 'reports',              component: ReportsComponent },
   // Admin
   { path: 'users',                component: UsersAdminComponent },
   { path: 'compliance',           component: ComplianceComponent },
@@ -419,7 +425,9 @@ const routes: Routes = [
     SourceTrackingComponent,
     ComplianceComponent,
     BudgetComponent,
-    ImportCenterComponent
+    ImportCenterComponent,
+    InternalJobPostingsComponent,
+    ReportsComponent
   ],
   imports: [
     BrowserModule,

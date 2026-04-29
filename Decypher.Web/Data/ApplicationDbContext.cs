@@ -56,6 +56,12 @@ namespace Decypher.Web.Data
         public DbSet<BudgetCostCategoryConfig> BudgetCostCategoryConfigs { get; set; }
         public DbSet<BudgetTenantConfig> BudgetTenantConfigs { get; set; }
 
+        // ─── Requisition extensions ────────────────────────────────────────
+        public DbSet<RequisitionStatusHistory> RequisitionStatusHistories { get; set; }
+
+        // ─── Internal Job Postings ──────────────────────────────────────────
+        public DbSet<InternalJobPosting> InternalJobPostings { get; set; }
+
         // ─── Import Center ──────────────────────────────────────────────────
         public DbSet<ImportJob> ImportJobs { get; set; }
 

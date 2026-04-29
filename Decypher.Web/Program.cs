@@ -191,6 +191,61 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT ""PK_ImportJobs"" PRIMARY KEY (""Id"")
             );");
 
+        await context.Database.ExecuteSqlRawAsync(@"
+            ALTER TABLE ""SLATrackings"" ADD COLUMN IF NOT EXISTS ""HoldDays"" integer NOT NULL DEFAULT 0;");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""RequisitionStatusHistories"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""RequirementId"" uuid NOT NULL,
+                ""FromStatus"" text NOT NULL DEFAULT '',
+                ""ToStatus"" text NOT NULL DEFAULT '',
+                ""Reason"" text,
+                ""ChangedById"" text,
+                ""ChangedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text,
+                ""UpdatedBy"" text,
+                ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_RequisitionStatusHistories"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            ALTER TABLE ""Requirements"" ADD COLUMN IF NOT EXISTS ""HoldReason"" text;
+            ALTER TABLE ""Requirements"" ADD COLUMN IF NOT EXISTS ""HoldStartDate"" timestamp with time zone;
+            ALTER TABLE ""Requirements"" ADD COLUMN IF NOT EXISTS ""CancelReason"" text;
+            ALTER TABLE ""Requirements"" ADD COLUMN IF NOT EXISTS ""RevisedClosureDate"" timestamp with time zone;");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""InternalJobPostings"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Department"" text,
+                ""Location"" text,
+                ""EmploymentType"" text NOT NULL DEFAULT 'FullTime',
+                ""PostingType"" text NOT NULL DEFAULT 'Internal',
+                ""Description"" text,
+                ""Requirements"" text,
+                ""SalaryBandMin"" numeric,
+                ""SalaryBandMax"" numeric,
+                ""Currency"" text NOT NULL DEFAULT 'GBP',
+                ""ShowSalary"" boolean NOT NULL DEFAULT false,
+                ""PostedDate"" timestamp with time zone,
+                ""ClosingDate"" timestamp with time zone,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""LinkedRequisitionId"" uuid,
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text,
+                ""UpdatedBy"" text,
+                ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_InternalJobPostings"" PRIMARY KEY (""Id"")
+            );");
+
         // Seed data
         await SeedData.Initialize(context, userManager, roleManager);
         

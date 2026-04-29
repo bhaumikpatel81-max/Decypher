@@ -23,6 +23,7 @@ namespace Decypher.Web.Models
         public DateTime? StageEndDate { get; set; }
 
         public int DaysInStage { get; set; }
+        public int HoldDays { get; set; } = 0;          // Total days requirement was OnHold (excluded from TAT)
         public int TargetDays { get; set; } = 20;       // Configurable; default 20 days
 
         [MaxLength(20)]

@@ -33,7 +33,7 @@ namespace Decypher.Web.Models
         public decimal TotalBudgetAmount { get; set; }
 
         [MaxLength(10)]
-        public string Currency { get; set; } = "USD";
+        public string Currency { get; set; } = "INR";
 
         public FiscalYearStatus Status { get; set; } = FiscalYearStatus.Draft;
 
@@ -156,7 +156,7 @@ namespace Decypher.Web.Models
         public int FiscalYearStartMonth { get; set; } = 1;
 
         [MaxLength(10)]
-        public string DefaultCurrency { get; set; } = "USD";
+        public string DefaultCurrency { get; set; } = "INR";
 
         public bool BudgetApprovalRequired { get; set; } = false;
 

@@ -346,8 +346,21 @@ import { AuthService, CurrentUser } from './services/auth.service';
       background: #f1edff;
     }
     .login-btn {
-      height: 42px;
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 600;
       margin-top: 4px;
+      border-radius: 8px;
+    }
+    .login-panel .input {
+      width: 100%;
+      min-height: 48px;
+      font-size: 15px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1.5px solid #dde2ef;
+      box-sizing: border-box;
     }
     .login-error {
       color: #dc2626;
@@ -436,17 +449,18 @@ export class AppComponent implements OnInit {
   allApps = [
     { path: '/dashboard',           label: 'Dashboard',           shortLabel: 'Dashboard',  symbol: 'D',  color: '#292966', adminOnly: false },
     { path: '/vendors',             label: 'Vendors',             shortLabel: 'Vendors',    symbol: 'V',  color: '#22a3d2', adminOnly: false },
-    { path: '/budget',              label: 'Budget',              shortLabel: 'Budget',     symbol: '💰', color: '#059669', adminOnly: false },
+    { path: '/budget',              label: 'Budget Vs Forecasting', shortLabel: 'Budget VF',  symbol: '💰', color: '#059669', adminOnly: false },
     { path: '/recruiters',          label: 'Recruiters',          shortLabel: 'Recruiters', symbol: 'R',  color: '#6b4df0', adminOnly: false },
     { path: '/cv-database',         label: 'CV Database',         shortLabel: 'CV DB',      symbol: 'CV', color: '#5C5C99', adminOnly: false },
     { path: '/pipeline-board',      label: 'Pipeline Board',      shortLabel: 'Pipeline',   symbol: 'PB', color: '#a94ee6', adminOnly: false },
     { path: '/requisitions',        label: 'Requisitions',        shortLabel: 'Reqs',       symbol: 'RQ', color: '#e8912a', adminOnly: false },
-    { path: '/candidate-portal',    label: 'Candidate Portal',    shortLabel: 'Candidates', symbol: 'CP', color: '#16a34a', adminOnly: false },
     { path: '/interview-scheduler', label: 'Interview Scheduler', shortLabel: 'Interviews', symbol: 'IS', color: '#2563eb', adminOnly: false },
     { path: '/offer-management',    label: 'Offer Management',    shortLabel: 'Offers',     symbol: 'OM', color: '#5C5C99', adminOnly: false },
     { path: '/talent-pool',         label: 'Talent Pool',         shortLabel: 'Talent',     symbol: 'TP', color: '#c56bff', adminOnly: false },
     { path: '/source-tracking',     label: 'Source Tracking',     shortLabel: 'Sources',    symbol: 'ST', color: '#3bbdea', adminOnly: false },
     { path: '/sla-dashboard',       label: 'SLA Dashboard',       shortLabel: 'SLA',        symbol: 'SL', color: '#dc2626', adminOnly: false },
+    { path: '/reports',             label: 'Reports',             shortLabel: 'Reports',    symbol: '📊', color: '#0f766e', adminOnly: false },
+    { path: '/internal-job-postings', label: 'Internal Job Postings', shortLabel: 'Int. Jobs', symbol: '📌', color: '#b45309', adminOnly: false },
     { path: '/resume-parser',       label: 'Resume Parser',       shortLabel: 'Resume',     symbol: 'RP', color: '#6b4df0', adminOnly: false },
     { path: '/ai-scorecard',        label: 'AI Scorecard',        shortLabel: 'AI Score',   symbol: 'AS', color: '#a94ee6', adminOnly: false },
     { path: '/dropout-predictor',   label: 'Dropout Predictor',   shortLabel: 'Dropout',    symbol: 'DR', color: '#dc2626', adminOnly: false },
@@ -550,7 +564,7 @@ export class AppComponent implements OnInit {
       // Core
       '/dashboard':           { title: 'Dashboard',           breadcrumb: 'Home / Dashboard' },
       '/vendors':             { title: 'Vendors',             breadcrumb: 'Home / Vendors' },
-      '/budget':              { title: 'Budget',              breadcrumb: 'Home / Budget' },
+      '/budget':              { title: 'Budget Vs Forecasting', breadcrumb: 'Home / Budget Vs Forecasting' },
       '/recruiters':          { title: 'Recruiters',          breadcrumb: 'Home / Recruiters' },
       '/cv-database':         { title: 'CV Database',         breadcrumb: 'Home / CV Search' },
       '/pipeline-board':      { title: 'Pipeline Board',      breadcrumb: 'Core / Pipeline Board' },

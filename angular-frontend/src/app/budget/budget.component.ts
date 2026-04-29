@@ -78,18 +78,18 @@ import {
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">Total Budget</div>
-          <div class="kpi-value">{{kpi.totalBudget | currency:'USD':'symbol':'1.0-0'}}</div>
+          <div class="kpi-value">{{kpi.totalBudget | currency:'INR':'symbol':'1.0-0'}}</div>
           <div class="kpi-sub">{{selectedFyLabel}}</div>
         </div>
         <div class="kpi-card kpi-card--spent">
           <div class="kpi-label">Total Spent</div>
-          <div class="kpi-value">{{kpi.totalSpent | currency:'USD':'symbol':'1.0-0'}}</div>
+          <div class="kpi-value">{{kpi.totalSpent | currency:'INR':'symbol':'1.0-0'}}</div>
           <div class="kpi-sub">{{kpi.utilizationPct | number:'1.1-1'}}% utilized</div>
         </div>
         <div class="kpi-card" [class.kpi-card--warn]="kpi.remaining < kpi.totalBudget * 0.1">
           <div class="kpi-label">Remaining</div>
-          <div class="kpi-value">{{kpi.remaining | currency:'USD':'symbol':'1.0-0'}}</div>
-          <div class="kpi-sub">Committed: {{kpi.totalCommitted | currency:'USD':'symbol':'1.0-0'}}</div>
+          <div class="kpi-value">{{kpi.remaining | currency:'INR':'symbol':'1.0-0'}}</div>
+          <div class="kpi-sub">Committed: {{kpi.totalCommitted | currency:'INR':'symbol':'1.0-0'}}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Utilization</div>
@@ -107,8 +107,8 @@ import {
         </div>
         <div class="kpi-card" [class.kpi-card--warn]="kpi.costPerHireActual > kpi.costPerHireTarget * 1.1">
           <div class="kpi-label">Cost Per Hire</div>
-          <div class="kpi-value">{{kpi.costPerHireActual | currency:'USD':'symbol':'1.0-0'}}</div>
-          <div class="kpi-sub">Target: {{kpi.costPerHireTarget | currency:'USD':'symbol':'1.0-0'}}</div>
+          <div class="kpi-value">{{kpi.costPerHireActual | currency:'INR':'symbol':'1.0-0'}}</div>
+          <div class="kpi-sub">Target: {{kpi.costPerHireTarget | currency:'INR':'symbol':'1.0-0'}}</div>
         </div>
       </div>
 
@@ -123,9 +123,9 @@ import {
               <div class="bar-group" *ngFor="let m of kpi.monthlyTrend">
                 <div class="bar-pair">
                   <div class="bar bar--planned" [style.height.px]="scaleBar(m.planned, maxMonthly)"
-                    [title]="'Planned: ' + (m.planned | currency:'USD':'symbol':'1.0-0')"></div>
+                    [title]="'Planned: ' + (m.planned | currency:'INR':'symbol':'1.0-0')"></div>
                   <div class="bar bar--actual" [style.height.px]="scaleBar(m.actual, maxMonthly)"
-                    [title]="'Actual: ' + (m.actual | currency:'USD':'symbol':'1.0-0')"></div>
+                    [title]="'Actual: ' + (m.actual | currency:'INR':'symbol':'1.0-0')"></div>
                 </div>
                 <span class="bar-label">{{m.month}}</span>
               </div>
@@ -180,10 +180,10 @@ import {
               <div class="quarter-bar-wrap">
                 <div class="quarter-bar quarter-bar--planned"
                   [style.height.px]="scaleBar(q.planned, maxQuarterly)"
-                  [title]="'Planned: ' + (q.planned | currency:'USD':'symbol':'1.0-0')"></div>
+                  [title]="'Planned: ' + (q.planned | currency:'INR':'symbol':'1.0-0')"></div>
                 <div class="quarter-bar quarter-bar--actual"
                   [style.height.px]="scaleBar(q.actual, maxQuarterly)"
-                  [title]="'Actual: ' + (q.actual | currency:'USD':'symbol':'1.0-0')"></div>
+                  [title]="'Actual: ' + (q.actual | currency:'INR':'symbol':'1.0-0')"></div>
               </div>
               <span class="quarter-label">{{q.quarter}}</span>
             </div>
@@ -202,7 +202,7 @@ import {
                   [style.width.%]="maxVendorSpend > 0 ? (v.totalSpend / maxVendorSpend * 100) : 0">
                 </div>
               </div>
-              <span class="hbar-pct">{{v.totalSpend | currency:'USD':'symbol':'1.0-0'}}</span>
+              <span class="hbar-pct">{{v.totalSpend | currency:'INR':'symbol':'1.0-0'}}</span>
             </div>
           </div>
           <div *ngIf="!kpi.topVendorsBySpend?.length" class="empty-chart">No vendor data</div>
@@ -241,7 +241,7 @@ import {
               <td class="num-cell">
                 <span *ngIf="!editingRow[row.department + '_Q1']"
                   (click)="startEditCell(row, 'Q1')" class="editable-cell">
-                  {{row.q1Planned | currency:'USD':'symbol':'1.0-0'}}
+                  {{row.q1Planned | currency:'INR':'symbol':'1.0-0'}}
                 </span>
                 <input *ngIf="editingRow[row.department + '_Q1']" type="number"
                   [value]="row.q1Planned" class="cell-input"
@@ -251,7 +251,7 @@ import {
               <td class="num-cell">
                 <span *ngIf="!editingRow[row.department + '_Q2']"
                   (click)="startEditCell(row, 'Q2')" class="editable-cell">
-                  {{row.q2Planned | currency:'USD':'symbol':'1.0-0'}}
+                  {{row.q2Planned | currency:'INR':'symbol':'1.0-0'}}
                 </span>
                 <input *ngIf="editingRow[row.department + '_Q2']" type="number"
                   [value]="row.q2Planned" class="cell-input"
@@ -261,7 +261,7 @@ import {
               <td class="num-cell">
                 <span *ngIf="!editingRow[row.department + '_Q3']"
                   (click)="startEditCell(row, 'Q3')" class="editable-cell">
-                  {{row.q3Planned | currency:'USD':'symbol':'1.0-0'}}
+                  {{row.q3Planned | currency:'INR':'symbol':'1.0-0'}}
                 </span>
                 <input *ngIf="editingRow[row.department + '_Q3']" type="number"
                   [value]="row.q3Planned" class="cell-input"
@@ -271,16 +271,16 @@ import {
               <td class="num-cell">
                 <span *ngIf="!editingRow[row.department + '_Q4']"
                   (click)="startEditCell(row, 'Q4')" class="editable-cell">
-                  {{row.q4Planned | currency:'USD':'symbol':'1.0-0'}}
+                  {{row.q4Planned | currency:'INR':'symbol':'1.0-0'}}
                 </span>
                 <input *ngIf="editingRow[row.department + '_Q4']" type="number"
                   [value]="row.q4Planned" class="cell-input"
                   (blur)="saveAllocationQuarter(row, 'Q4', $event)"
                   (keyup.enter)="saveAllocationQuarter(row, 'Q4', $event)">
               </td>
-              <td class="num-cell total-cell">{{row.totalPlanned | currency:'USD':'symbol':'1.0-0'}}</td>
+              <td class="num-cell total-cell">{{row.totalPlanned | currency:'INR':'symbol':'1.0-0'}}</td>
               <td class="num-cell" [class.over-budget]="row.totalActual > row.totalPlanned">
-                {{row.totalActual | currency:'USD':'symbol':'1.0-0'}}
+                {{row.totalActual | currency:'INR':'symbol':'1.0-0'}}
               </td>
               <td class="num-cell">{{row.headcountPlanned}}</td>
               <td>
@@ -299,10 +299,10 @@ import {
                   </div>
                   <div class="line-item-grid-row" *ngFor="let li of lineItemsByDept[row.department]">
                     <span>{{li.lineItemType}}</span>
-                    <span>{{li.plannedAmount | currency:'USD':'symbol':'1.0-0'}}</span>
-                    <span>{{(li.actualAmount || 0) | currency:'USD':'symbol':'1.0-0'}}</span>
+                    <span>{{li.plannedAmount | currency:'INR':'symbol':'1.0-0'}}</span>
+                    <span>{{(li.actualAmount || 0) | currency:'INR':'symbol':'1.0-0'}}</span>
                     <span [class.text-danger]="li.plannedAmount < (li.actualAmount || 0)">
-                      {{(li.plannedAmount - (li.actualAmount || 0)) | currency:'USD':'symbol':'1.0-0'}}
+                      {{(li.plannedAmount - (li.actualAmount || 0)) | currency:'INR':'symbol':'1.0-0'}}
                     </span>
                   </div>
                 </div>
@@ -316,11 +316,11 @@ import {
           <tfoot>
             <tr class="totals-row">
               <td><strong>TOTAL</strong></td>
-              <td class="num-cell">{{forecast.totals.q1Planned | currency:'USD':'symbol':'1.0-0'}}</td>
-              <td class="num-cell">{{forecast.totals.q2Planned | currency:'USD':'symbol':'1.0-0'}}</td>
-              <td class="num-cell">{{forecast.totals.q3Planned | currency:'USD':'symbol':'1.0-0'}}</td>
-              <td class="num-cell">{{forecast.totals.q4Planned | currency:'USD':'symbol':'1.0-0'}}</td>
-              <td class="num-cell total-cell">{{forecast.totals.total | currency:'USD':'symbol':'1.0-0'}}</td>
+              <td class="num-cell">{{forecast.totals.q1Planned | currency:'INR':'symbol':'1.0-0'}}</td>
+              <td class="num-cell">{{forecast.totals.q2Planned | currency:'INR':'symbol':'1.0-0'}}</td>
+              <td class="num-cell">{{forecast.totals.q3Planned | currency:'INR':'symbol':'1.0-0'}}</td>
+              <td class="num-cell">{{forecast.totals.q4Planned | currency:'INR':'symbol':'1.0-0'}}</td>
+              <td class="num-cell total-cell">{{forecast.totals.total | currency:'INR':'symbol':'1.0-0'}}</td>
               <td colspan="3"></td>
             </tr>
           </tfoot>
@@ -392,13 +392,13 @@ import {
             <td>{{a.spendDate | date:'mediumDate'}}</td>
             <td>{{a.departmentName}}</td>
             <td><span class="chip chip-sm">{{a.spendCategory}}</span></td>
-            <td class="num-cell">{{a.amount | currency:'USD':'symbol':'1.0-0'}}</td>
+            <td class="num-cell">{{a.amount | currency:'INR':'symbol':'1.0-0'}}</td>
             <td>{{a.vendorName}}</td>
             <td>{{a.invoiceReference}}</td>
             <td>
               <span class="variance-pill" [class.pill--green]="getVariance(a) >= 0"
                 [class.pill--red]="getVariance(a) < 0">
-                {{getVariance(a) | currency:'USD':'symbol':'1.0-0'}}
+                {{getVariance(a) | currency:'INR':'symbol':'1.0-0'}}
               </span>
             </td>
             <td>
@@ -516,10 +516,10 @@ import {
         <tbody>
           <tr *ngFor="let d of departments">
             <td>{{d.department}}</td>
-            <td class="num-cell">{{d.plannedBudget | currency:'USD':'symbol':'1.0-0'}}</td>
-            <td class="num-cell">{{d.actualSpend | currency:'USD':'symbol':'1.0-0'}}</td>
+            <td class="num-cell">{{d.plannedBudget | currency:'INR':'symbol':'1.0-0'}}</td>
+            <td class="num-cell">{{d.actualSpend | currency:'INR':'symbol':'1.0-0'}}</td>
             <td class="num-cell" [class.text-danger]="d.variance < 0">
-              {{d.variance | currency:'USD':'symbol':'1.0-0'}}
+              {{d.variance | currency:'INR':'symbol':'1.0-0'}}
             </td>
             <td class="num-cell">
               <div class="mini-progress">
@@ -572,8 +572,8 @@ import {
         <tbody>
           <tr *ngFor="let d of kpi.budgetByDepartment">
             <td>{{d.department}}</td>
-            <td class="num-cell">{{d.planned | currency:'USD':'symbol':'1.0-0'}}</td>
-            <td class="num-cell">{{d.actual | currency:'USD':'symbol':'1.0-0'}}</td>
+            <td class="num-cell">{{d.planned | currency:'INR':'symbol':'1.0-0'}}</td>
+            <td class="num-cell">{{d.actual | currency:'INR':'symbol':'1.0-0'}}</td>
             <td class="num-cell">{{d.planned > 0 ? (d.actual / d.planned * 100 | number:'1.0-0') : 0}}%</td>
           </tr>
         </tbody>
@@ -620,7 +620,7 @@ import {
             </div>
             <div class="fy-item-meta">
               {{fy.startDate | date:'mediumDate'}} – {{fy.endDate | date:'mediumDate'}} &nbsp;|&nbsp;
-              {{fy.totalBudgetAmount | currency:'USD':'symbol':'1.0-0'}}
+              {{fy.totalBudgetAmount | currency:'INR':'symbol':'1.0-0'}}
             </div>
             <div class="fy-actions">
               <button class="btn btn-ghost btn-xs" (click)="lockFY(fy)" *ngIf="fy.status !== 'Locked'">🔒 Lock</button>

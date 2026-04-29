@@ -149,9 +149,72 @@ namespace Decypher.Web.Models
         [MaxLength(50)]
         public string Priority { get; set; } = "Medium"; // Low, Medium, High, Critical
         
+        // Hold/Cancel fields
+        public string? HoldReason { get; set; }
+        public DateTime? HoldStartDate { get; set; }
+        public string? CancelReason { get; set; }
+        public DateTime? RevisedClosureDate { get; set; }
+
         // Navigation properties
         public virtual Tenant Tenant { get; set; } = null!;
         public virtual ICollection<Candidate> Candidates { get; set; } = new List<Candidate>();
+        public virtual ICollection<RequisitionStatusHistory> StatusHistory { get; set; } = new List<RequisitionStatusHistory>();
+    }
+
+    public class RequisitionStatusHistory : BaseEntity
+    {
+        [Required]
+        public Guid RequirementId { get; set; }
+
+        [Required, MaxLength(50)]
+        public string FromStatus { get; set; } = string.Empty;
+
+        [Required, MaxLength(50)]
+        public string ToStatus { get; set; } = string.Empty;
+
+        public string? Reason { get; set; }
+        public string? ChangedById { get; set; }
+        public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual Requirement Requirement { get; set; } = null!;
+    }
+
+    public class InternalJobPosting : BaseEntity
+    {
+        [Required, MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? Department { get; set; }
+
+        [MaxLength(100)]
+        public string? Location { get; set; }
+
+        [MaxLength(50)]
+        public string EmploymentType { get; set; } = "FullTime"; // FullTime, PartTime, Contract, Intern
+
+        [MaxLength(50)]
+        public string PostingType { get; set; } = "Internal"; // Internal, Referral, Both
+
+        public string? Description { get; set; }
+        public string? Requirements { get; set; }
+
+        public decimal? SalaryBandMin { get; set; }
+        public decimal? SalaryBandMax { get; set; }
+
+        [MaxLength(10)]
+        public string Currency { get; set; } = "INR";
+
+        public bool ShowSalary { get; set; } = false;
+
+        public DateTime? PostedDate { get; set; }
+        public DateTime? ClosingDate { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Draft"; // Draft, Active, Paused
+
+        public Guid? LinkedRequisitionId { get; set; }
+        public string? Notes { get; set; }
     }
 
     // Candidate

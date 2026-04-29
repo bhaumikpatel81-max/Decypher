@@ -6,7 +6,7 @@ namespace Decypher.Web.Models
         public Guid CandidateId { get; set; }
         public Guid JobId { get; set; }
         public decimal Salary { get; set; }
-        public string Currency { get; set; } = "GBP";
+        public string Currency { get; set; } = "INR";
         public DateTime StartDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public string Status { get; set; } = "Draft"; // Draft | Sent | Accepted | Declined | Withdrawn
@@ -21,7 +21,7 @@ namespace Decypher.Web.Models
         public Guid CandidateId { get; set; }
         public Guid JobId { get; set; }
         public decimal Salary { get; set; }
-        public string Currency { get; set; } = "GBP";
+        public string Currency { get; set; } = "INR";
         public DateTime StartDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public List<string> Benefits { get; set; } = new();

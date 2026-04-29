@@ -15,7 +15,7 @@ import { environment } from '../../environments/environment';
           <div style="display:flex;gap:8px;">
             <input class="input" placeholder="Salary" type="number" [(ngModel)]="form.salary" style="flex:1;">
             <select class="select" [(ngModel)]="form.currency" style="flex:0 0 80px;">
-              <option>GBP</option><option>USD</option><option>EUR</option>
+              <option>INR</option><option>GBP</option><option>USD</option><option>EUR</option>
             </select>
           </div>
           <input class="input" type="date" placeholder="Start date" [(ngModel)]="form.startDate">
@@ -53,7 +53,7 @@ export class OfferManagementComponent implements OnInit {
   pending: any[] = [];
   saving = false;
   saveOk = false;
-  form = { candidateId: '', jobId: '', salary: 0, currency: 'GBP', startDate: '', expiryDate: '', benefits: [] };
+  form = { candidateId: '', jobId: '', salary: 0, currency: 'INR', startDate: '', expiryDate: '', benefits: [] };
 
   constructor(private http: HttpClient) {}
 

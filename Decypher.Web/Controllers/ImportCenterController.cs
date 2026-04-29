@@ -590,7 +590,7 @@ namespace Decypher.Web.Controllers
                 StartDate = DateTime.SpecifyKind(start, DateTimeKind.Utc),
                 EndDate = DateTime.SpecifyKind(end, DateTimeKind.Utc),
                 TotalBudgetAmount = total,
-                Currency = Get("Currency") is var c && !string.IsNullOrEmpty(c) ? c : "GBP",
+                Currency = Get("Currency") is var c && !string.IsNullOrEmpty(c) ? c : "INR",
                 Status = status,
                 Notes = Get("Notes"),
                 CreatedBy = userId,
