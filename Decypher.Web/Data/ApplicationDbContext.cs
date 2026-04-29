@@ -34,6 +34,20 @@ namespace Decypher.Web.Data
         public DbSet<AIAuditLog> AIAuditLogs { get; set; }
         public DbSet<SLATracking> SLATrackings { get; set; }
 
+        // --- New ATS modules ---
+        public DbSet<ParsedResume> ParsedResumes { get; set; }
+        public DbSet<PipelineStage> PipelineStages { get; set; }
+        public DbSet<CandidateStage> CandidateStages { get; set; }
+        public DbSet<CandidateApplication> CandidateApplications { get; set; }
+        public DbSet<Interview> Interviews { get; set; }
+        public DbSet<InterviewSlot> InterviewSlots { get; set; }
+        public DbSet<InterviewFeedback> InterviewFeedbacks { get; set; }
+        public DbSet<Offer> Offers { get; set; }
+        public DbSet<TalentPoolEntry> TalentPoolEntries { get; set; }
+        public DbSet<TalentPoolCampaign> TalentPoolCampaigns { get; set; }
+        public DbSet<Requisition> Requisitions { get; set; }
+        public DbSet<CandidateSource> CandidateSources { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -169,6 +183,42 @@ namespace Decypher.Web.Data
                 .OnDelete(DeleteBehavior.Restrict);
             builder.Entity<SLATracking>()
                 .HasIndex(s => new { s.TenantId, s.Status });
+
+            // JSON column configuration for new entities
+            builder.Entity<ParsedResume>()
+                .Property(p => p.Skills).HasColumnType("jsonb");
+            builder.Entity<ParsedResume>()
+                .Property(p => p.Experience).HasColumnType("jsonb");
+            builder.Entity<ParsedResume>()
+                .Property(p => p.EducationHistory).HasColumnType("jsonb");
+            builder.Entity<ParsedResume>()
+                .Property(p => p.Certifications).HasColumnType("jsonb");
+
+            builder.Entity<TalentPoolEntry>()
+                .Property(t => t.Tags).HasColumnType("jsonb");
+
+            builder.Entity<TalentPoolCampaign>()
+                .Property(t => t.TargetTags).HasColumnType("jsonb");
+
+            builder.Entity<Interview>()
+                .Property(i => i.RecruiterIds).HasColumnType("jsonb");
+
+            builder.Entity<Offer>()
+                .Property(o => o.Benefits).HasColumnType("jsonb");
+
+            // Seed default pipeline stages
+            var demoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+            var defaultStages = new[]
+            {
+                new PipelineStage { Id = Guid.Parse("aa000001-0000-0000-0000-000000000001"), Name = "Sourced",     Order = 1, Colour = "#6366f1", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000002-0000-0000-0000-000000000002"), Name = "Applied",     Order = 2, Colour = "#3b82f6", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000003-0000-0000-0000-000000000003"), Name = "Screening",   Order = 3, Colour = "#f59e0b", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000004-0000-0000-0000-000000000004"), Name = "Interview",   Order = 4, Colour = "#8b5cf6", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000005-0000-0000-0000-000000000005"), Name = "Offer",       Order = 5, Colour = "#ec4899", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000006-0000-0000-0000-000000000006"), Name = "Hired",       Order = 6, Colour = "#10b981", TenantId = demoTenantId },
+                new PipelineStage { Id = Guid.Parse("aa000007-0000-0000-0000-000000000007"), Name = "Rejected",    Order = 7, Colour = "#ef4444", TenantId = demoTenantId },
+            };
+            builder.Entity<PipelineStage>().HasData(defaultStages);
 
             // Seed data
             SeedData(builder);

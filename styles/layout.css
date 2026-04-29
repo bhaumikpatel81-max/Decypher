@@ -453,12 +453,98 @@
   .topbar {
     padding: 0 16px;
   }
-  
+
   .topbar-center {
     display: none;
   }
-  
+
   .page-container {
     padding: 16px;
   }
+}
+
+/* =============================================
+   MOONLIGHT SIDEBAR THEME
+   Must live here (after base rules) so it wins
+   ============================================= */
+.sidebar {
+  background: var(--brand-primary-700);
+  border-right-color: rgba(204, 204, 255, 0.12);
+}
+
+.sidebar-header {
+  border-bottom-color: rgba(204, 204, 255, 0.12);
+}
+
+.sidebar-logo {
+  background: rgba(204, 204, 255, 0.15);
+  color: var(--moonlight-lightest);
+}
+
+.sidebar-brand-name {
+  color: var(--moonlight-lightest);
+}
+
+.sidebar-brand-tagline {
+  color: rgba(204, 204, 255, 0.55);
+}
+
+.sidebar-section-label {
+  color: rgba(204, 204, 255, 0.45);
+}
+
+.sidebar-nav-item {
+  color: rgba(204, 204, 255, 0.72);
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(204, 204, 255, 0.1);
+  color: var(--moonlight-lightest);
+}
+
+.sidebar-nav-item.active {
+  background: rgba(204, 204, 255, 0.15);
+  color: var(--moonlight-lightest);
+}
+
+.sidebar-nav-item.active::before {
+  background: var(--moonlight-lightest);
+}
+
+.sidebar-footer {
+  border-top-color: rgba(204, 204, 255, 0.12);
+}
+
+.sidebar-ai-assist {
+  background: rgba(204, 204, 255, 0.07);
+  border-color: rgba(204, 204, 255, 0.18);
+}
+
+.sidebar-ai-assist-kicker {
+  color: var(--moonlight-lightest);
+}
+
+.sidebar-ai-assist-content {
+  color: rgba(204, 204, 255, 0.72);
+}
+
+.sidebar-collapse-btn {
+  background: rgba(204, 204, 255, 0.07);
+  border-color: rgba(204, 204, 255, 0.18);
+  color: rgba(204, 204, 255, 0.72);
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(204, 204, 255, 0.14);
+  border-color: rgba(204, 204, 255, 0.3);
+  color: var(--moonlight-lightest);
+}
+
+.nav-symbol {
+  color: rgba(204, 204, 255, 0.55);
+}
+
+.sidebar-nav-item.active .nav-symbol,
+.sidebar-nav-item:hover .nav-symbol {
+  color: var(--moonlight-lightest);
 }

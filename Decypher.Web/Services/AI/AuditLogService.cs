@@ -5,6 +5,35 @@ using Decypher.Web.Data;
 
 namespace Decypher.Web.Services.AI
 {
+    public enum AuditAction
+    {
+        // AI events
+        ResumeScreened,
+        CandidateScored,
+        BiasChecked,
+        JdGenerated,
+
+        // ATS events
+        CandidateStageChanged,
+        OfferSent,
+        OfferAccepted,
+        OfferDeclined,
+        InterviewScheduled,
+        InterviewFeedbackSubmitted,
+        RequisitionApproved,
+        RequisitionRejected,
+        TalentPoolAdded,
+        CampaignSent,
+
+        // Compliance / GDPR
+        ConsentRecorded,
+        DataAccessRequest,
+        DataDeleted
+    }
+}
+
+namespace Decypher.Web.Services.AI
+{
     public interface IAuditLogService
     {
         Task LogAIDecisionAsync(string eventType, string agentName, string entityId,

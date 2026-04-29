@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - frontend_dist:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    profiles: [prod]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build:
+      context: .
+      dockerfile: Decypher.Web/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - OpenAI__ApiKey=${OPENAI_API_KEY}
+      - Jwt__Key=${JWT_SECRET}
+      - Notifications__Provider=${NOTIFICATION_PROVIDER:-Stub}
+      - Notifications__SendGridApiKey=${SENDGRID_API_KEY}
+      - AllowedOrigins=http://localhost:${PORT:-8080}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+    user: "appuser"
+    profiles: [prod]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend-builder:
+    build:
+      context: ./angular-frontend
+      dockerfile: Dockerfile.build
+    volumes:
+      - frontend_dist:/app/dist
+    profiles: [prod]
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-decypher}
+      POSTGRES_USER: ${POSTGRES_USER:-decypher}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    profiles: [prod]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-decypher}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    expose:
+      - "6379"
+    profiles: [prod]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres_data:
+  frontend_dist:

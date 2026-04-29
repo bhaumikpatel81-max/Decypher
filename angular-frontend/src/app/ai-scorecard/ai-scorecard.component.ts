@@ -72,15 +72,25 @@ export class AIScorecardComponent {
     const bias        = r.biasDetectionResult?.data ?? {};
     const matching    = r.matchingResult?.data ?? {};
 
+    const cvJdMatchScore = matching.matchPercentage ?? 0;
+    const competencyScore = ranking.breakdown?.skillsMatch ?? 0;
+    const biasScore = bias.overallBiasFreeScore ?? 1;
+    const dropoutRisk = ranking.breakdown?.dropoutRisk ?? 0;
+
     return {
       overallScore:        ranking.overallScore ?? 0,
-      matchPercentage:     matching.matchPercentage ?? 0,
-      confidence:          r.rankingResult?.confidence ?? 0,
+      cvJdMatchScore,
+      competencyScore,
+      biasRiskLevel:   biasScore >= 0.9 ? 'Low' : biasScore >= 0.7 ? 'Medium' : 'High',
+      dropoutRiskLevel: dropoutRisk < 40 ? 'Low' : dropoutRisk < 70 ? 'Medium' : 'High',
+      matchedSkills:   matching.matchedSkills ?? [],
+      missingSkills:   matching.missingSkills ?? [],
+      confidence:      r.rankingResult?.confidence ?? 0,
       requiresHumanReview: r.requiresHumanReview,
       humanReviewReason:   r.humanReviewReason,
-      breakdown:           ranking.breakdown ?? {},
-      explanation:         explanation.explanation ?? 'No explanation generated.',
-      biasScore:           bias.overallBiasFreeScore ?? 1,
+      breakdown:       ranking.breakdown ?? {},
+      explanation:     explanation.explanation ?? 'No explanation generated.',
+      biasScore,
       biasChecks: [
         { passed: !bias.genderBias?.detected,   label: 'Gender Bias',   detail: bias.genderBias?.details   ?? '—' },
         { passed: !bias.locationBias?.detected, label: 'Location Bias', detail: bias.locationBias?.details ?? '—' },
@@ -91,6 +101,14 @@ export class AIScorecardComponent {
       promptVersion: r.explanationResult?.promptVersion ?? '—',
       timestamp:     r.timestamp
     };
+  }
+
+  getGaugeColour(score: number): string {
+    return score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
+  }
+
+  getRiskClass(level: string): string {
+    return level === 'Low' ? 'risk-low' : level === 'Medium' ? 'risk-medium' : 'risk-high';
   }
 
   getConfidenceClass(c: number): string { return c >= 0.8 ? 'high' : c >= 0.6 ? 'medium' : 'low'; }

@@ -14,6 +14,15 @@ import { VendorsComponent } from './vendors/vendors.component';
 import { AIScorecardComponent } from './ai-scorecard/ai-scorecard.component';
 import { SlaDashboardComponent } from './sla-dashboard/sla-dashboard.component';
 import { JdGeneratorComponent } from './jd-generator/jd-generator.component';
+import { ResumeParserComponent } from './resume-parser/resume-parser.component';
+import { PipelineBoardComponent } from './pipeline-board/pipeline-board.component';
+import { CandidatePortalComponent } from './candidate-portal/candidate-portal.component';
+import { InterviewSchedulerComponent } from './interview-scheduler/interview-scheduler.component';
+import { OfferManagementComponent } from './offer-management/offer-management.component';
+import { TalentPoolComponent } from './talent-pool/talent-pool.component';
+import { RequisitionsComponent } from './requisitions/requisitions.component';
+import { SourceTrackingComponent } from './source-tracking/source-tracking.component';
+import { ComplianceComponent } from './compliance/compliance.component';
 import { environment } from '../environments/environment';
 
 @Pipe({ name: 'safeHtml' })
@@ -330,18 +339,29 @@ export class GenericToolComponent {
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'vendors', component: VendorsComponent },
-  { path: 'recruiters', component: RecruitersPageComponent },
-  { path: 'cv-database', component: CvDatabaseComponent },
-  { path: 'dropout-predictor', component: DropoutPageComponent },
-  { path: 'cv-jd-matcher', component: GenericToolComponent },
-  { path: 'competency-ranker', component: GenericToolComponent },
-  { path: 'jd-checker', component: GenericToolComponent },
-  { path: 'users', component: UsersAdminComponent },
-  { path: 'ai-scorecard', component: AIScorecardComponent },
-  { path: 'sla-dashboard', component: SlaDashboardComponent },
-  { path: 'jd-generator', component: JdGeneratorComponent },
+  // Core
+  { path: 'dashboard',            component: DashboardComponent },
+  { path: 'vendors',              component: VendorsComponent },
+  { path: 'recruiters',           component: RecruitersPageComponent },
+  { path: 'cv-database',          component: CvDatabaseComponent },
+  { path: 'pipeline-board',       component: PipelineBoardComponent },
+  { path: 'requisitions',         component: RequisitionsComponent },
+  { path: 'candidate-portal',     component: CandidatePortalComponent },
+  { path: 'interview-scheduler',  component: InterviewSchedulerComponent },
+  { path: 'offer-management',     component: OfferManagementComponent },
+  { path: 'talent-pool',          component: TalentPoolComponent },
+  { path: 'source-tracking',      component: SourceTrackingComponent },
+  { path: 'sla-dashboard',        component: SlaDashboardComponent },
+  // AI Tools
+  { path: 'resume-parser',        component: ResumeParserComponent },
+  { path: 'ai-scorecard',         component: AIScorecardComponent },
+  { path: 'dropout-predictor',    component: DropoutPageComponent },
+  { path: 'competency-ranker',    component: GenericToolComponent },
+  { path: 'jd-checker',           component: GenericToolComponent },
+  { path: 'jd-generator',         component: JdGeneratorComponent },
+  // Admin
+  { path: 'users',                component: UsersAdminComponent },
+  { path: 'compliance',           component: ComplianceComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -359,7 +379,17 @@ const routes: Routes = [
     TimeAgoPipe,
     AIScorecardComponent,
     SlaDashboardComponent,
-    JdGeneratorComponent
+    JdGeneratorComponent,
+    // New ATS modules
+    ResumeParserComponent,
+    PipelineBoardComponent,
+    CandidatePortalComponent,
+    InterviewSchedulerComponent,
+    OfferManagementComponent,
+    TalentPoolComponent,
+    RequisitionsComponent,
+    SourceTrackingComponent,
+    ComplianceComponent
   ],
   imports: [
     BrowserModule,

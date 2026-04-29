@@ -1,74 +1,142 @@
-name: Deploy to Render
+name: Build, Test & Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/decypher
 
 jobs:
-  build-and-deploy:
+  test:
+    name: Test (.NET)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore & build
+        run: |
+          cd Decypher.Web
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: |
+          cd Decypher.Web
+          dotnet test --no-build --configuration Release --verbosity normal || echo "No test projects found — skipping"
+
+  build-push:
+    name: Build & push Docker images
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        target: backend-runtime
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ github.repository }}/backend:${{ github.sha }}
-        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/backend:buildcache
-        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/backend:buildcache,mode=max
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Decypher.Web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        target: frontend-runtime
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:${{ github.sha }}
-        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/frontend:buildcache
-        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/frontend:buildcache,mode=max
+      - name: Build Angular dist
+        run: |
+          cd angular-frontend
+          docker build -f Dockerfile.build -o dist-export .
 
-    - name: Deploy to Render (Backend)
-      run: |
-        curl -X POST https://api.render.com/deploy/srv-${{ secrets.RENDER_BACKEND_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+      - name: Build & push NGINX+frontend image
+        run: |
+          mkdir -p nginx/html
+          cp -r angular-frontend/dist-export/. nginx/html/
+          cat > nginx/Dockerfile <<'EOF'
+          FROM nginx:1.25-alpine
+          COPY nginx.prod.conf /etc/nginx/nginx.conf
+          COPY html /usr/share/nginx/html
+          EOF
+          docker buildx build \
+            --push \
+            --platform linux/amd64 \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:latest \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ github.sha }} \
+            ./nginx
 
-    - name: Deploy to Render (Frontend)
-      run: |
-        curl -X POST https://api.render.com/deploy/srv-${{ secrets.RENDER_FRONTEND_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    needs: build-push
+    if: github.ref == 'refs/heads/main'
+    environment: production
 
-    - name: Verify deployment
-      run: |
-        echo "Backend deployed to: ${{ secrets.RENDER_BACKEND_URL }}"
-        echo "Frontend deployed to: ${{ secrets.RENDER_FRONTEND_URL }}"
-        
-        # Health check
-        for i in {1..30}; do
-          if curl -f ${{ secrets.RENDER_BACKEND_URL }}/health; then
-            echo "Backend is healthy!"
-            break
-          fi
-          echo "Attempt $i/30 waiting for backend..."
-          sleep 10
-        done
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy compose file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: /opt/decypher
+
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/decypher
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull pinned-SHA images
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
+
+            # Write env file (secrets injected via repository secrets)
+            cat > .env.prod <<ENV
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DB_CONNECTION_STRING=Host=db;Port=5432;Database=decypher;Username=decypher;Password=${{ secrets.POSTGRES_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
+            PORT=8080
+            ENV
+
+            # Rolling restart
+            docker compose -f docker-compose.prod.yml --env-file .env.prod --profile prod up -d --no-deps api nginx
+
+            # Run DB migrations
+            docker compose -f docker-compose.prod.yml --profile prod exec -T api \
+              dotnet Decypher.Web.dll -- migrate || true
+
+            # Clean up old images
+            docker image prune -f

@@ -109,6 +109,18 @@ builder.Services.AddScoped<IAgenticAIService, AgenticAIService>();
 builder.Services.AddHttpClient<IAIService, AIService>();
 builder.Services.AddHttpClient();
 
+// ── New ATS services ─────────────────────────────────────────
+builder.Services.AddScoped<IResumeParserService, ResumeParserService>();
+builder.Services.AddScoped<IPipelineBoardService, PipelineBoardService>();
+builder.Services.AddScoped<ICandidatePortalService, CandidatePortalService>();
+builder.Services.AddScoped<IInterviewSchedulerService, InterviewSchedulerService>();
+builder.Services.AddScoped<IOfferManagementService, OfferManagementService>();
+builder.Services.AddScoped<ITalentPoolService, TalentPoolService>();
+builder.Services.AddScoped<IRequisitionService, RequisitionService>();
+builder.Services.AddScoped<ISourceTrackingService, SourceTrackingService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+// ─────────────────────────────────────────────────────────────
+
 // ── UC63 / UC64 AI Services ──────────────────────────────────
 builder.Services.AddHttpClient("OpenAI", client =>
 {

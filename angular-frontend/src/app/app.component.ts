@@ -85,9 +85,9 @@ import { AuthService, CurrentUser } from './services/auth.service';
 
           <div class="sidebar-section" *ngIf="canAccessAdmin">
             <div class="sidebar-section-label">Admin</div>
-            <a routerLink="/users" routerLinkActive="active" class="sidebar-nav-item">
-              <span class="nav-symbol">U</span>
-              <span class="sidebar-nav-label">Users & Access</span>
+            <a *ngFor="let item of adminNav" [routerLink]="item.path" routerLinkActive="active" class="sidebar-nav-item">
+              <span class="nav-symbol">{{ item.icon }}</span>
+              <span class="sidebar-nav-label">{{ item.label }}</span>
             </a>
           </div>
         </nav>
@@ -422,17 +422,32 @@ export class AppComponent implements OnInit {
   insightText = 'Live pipeline risk is calculated from current candidate records.';
 
   coreNav = [
-    { path: '/dashboard', label: 'Dashboard', icon: 'D' },
-    { path: '/vendors', label: 'Vendors', icon: 'V' },
-    { path: '/recruiters', label: 'Recruiters', icon: 'R' },
-    { path: '/cv-database', label: 'CV Database', icon: 'CV' }
+    { path: '/dashboard',           label: 'Dashboard',           icon: 'D'  },
+    { path: '/vendors',             label: 'Vendors',             icon: 'V'  },
+    { path: '/recruiters',          label: 'Recruiters',          icon: 'R'  },
+    { path: '/cv-database',         label: 'CV Database',         icon: 'CV' },
+    { path: '/pipeline-board',      label: 'Pipeline Board',      icon: 'PB' },
+    { path: '/requisitions',        label: 'Requisitions',        icon: 'RQ' },
+    { path: '/candidate-portal',    label: 'Candidate Portal',    icon: 'CP' },
+    { path: '/interview-scheduler', label: 'Interview Scheduler', icon: 'IS' },
+    { path: '/offer-management',    label: 'Offer Management',    icon: 'OM' },
+    { path: '/talent-pool',         label: 'Talent Pool',         icon: 'TP' },
+    { path: '/source-tracking',     label: 'Source Tracking',     icon: 'ST' },
+    { path: '/sla-dashboard',       label: 'SLA Dashboard',       icon: 'SL' },
   ];
 
   aiNav = [
-    { path: '/dropout-predictor', label: 'Dropout Predictor', icon: 'DR' },
-    { path: '/cv-jd-matcher', label: 'CV-JD Matcher', icon: 'MJ' },
-    { path: '/competency-ranker', label: 'Competency Ranker', icon: 'CR' },
-    { path: '/jd-checker', label: 'JD Checker', icon: 'JD' }
+    { path: '/resume-parser',      label: 'Resume Parser',      icon: 'RP' },
+    { path: '/ai-scorecard',       label: 'AI Scorecard',       icon: 'AS' },
+    { path: '/dropout-predictor',  label: 'Dropout Predictor',  icon: 'DR' },
+    { path: '/competency-ranker',  label: 'Competency Ranker',  icon: 'CR' },
+    { path: '/jd-checker',         label: 'JD Checker',         icon: 'JD' },
+    { path: '/jd-generator',       label: 'JD Generator',       icon: 'JG' }
+  ];
+
+  adminNav = [
+    { path: '/users',      label: 'Users & Access', icon: 'U'  },
+    { path: '/compliance', label: 'Compliance',     icon: 'CO' }
   ];
 
   constructor(private authService: AuthService, private router: Router) {}
@@ -488,15 +503,29 @@ export class AppComponent implements OnInit {
 
   updatePageTitle() {
     const titles: { [key: string]: { title: string; breadcrumb: string } } = {
-      '/dashboard': { title: 'Dashboard', breadcrumb: 'Home / Dashboard' },
-      '/vendors': { title: 'Vendors', breadcrumb: 'Home / Vendors' },
-      '/recruiters': { title: 'Recruiters', breadcrumb: 'Home / Recruiters' },
-      '/cv-database': { title: 'CV Database', breadcrumb: 'Home / CV Search' },
-      '/dropout-predictor': { title: 'Dropout Predictor', breadcrumb: 'AI Tools / Dropout Predictor' },
-      '/cv-jd-matcher': { title: 'CV-JD Matcher', breadcrumb: 'AI Tools / CV-JD Matcher' },
-      '/competency-ranker': { title: 'Competency Ranker', breadcrumb: 'AI Tools / Competency Ranker' },
-      '/jd-checker': { title: 'JD Checker', breadcrumb: 'AI Tools / JD Checker' },
-      '/users': { title: 'Users & Access', breadcrumb: 'Admin / Users' }
+      // Core
+      '/dashboard':           { title: 'Dashboard',           breadcrumb: 'Home / Dashboard' },
+      '/vendors':             { title: 'Vendors',             breadcrumb: 'Home / Vendors' },
+      '/recruiters':          { title: 'Recruiters',          breadcrumb: 'Home / Recruiters' },
+      '/cv-database':         { title: 'CV Database',         breadcrumb: 'Home / CV Search' },
+      '/pipeline-board':      { title: 'Pipeline Board',      breadcrumb: 'Core / Pipeline Board' },
+      '/requisitions':        { title: 'Requisitions',        breadcrumb: 'Core / Requisitions' },
+      '/candidate-portal':    { title: 'Candidate Portal',    breadcrumb: 'Core / Candidate Portal' },
+      '/interview-scheduler': { title: 'Interview Scheduler', breadcrumb: 'Core / Interview Scheduler' },
+      '/offer-management':    { title: 'Offer Management',    breadcrumb: 'Core / Offer Management' },
+      '/talent-pool':         { title: 'Talent Pool',         breadcrumb: 'Core / Talent Pool' },
+      '/source-tracking':     { title: 'Source Tracking',     breadcrumb: 'Core / Source Tracking' },
+      '/sla-dashboard':       { title: 'SLA Dashboard',       breadcrumb: 'Core / SLA Dashboard' },
+      // AI Tools
+      '/resume-parser':       { title: 'Resume Parser',       breadcrumb: 'AI Tools / Resume Parser' },
+      '/ai-scorecard':        { title: 'AI Scorecard',        breadcrumb: 'AI Tools / AI Scorecard' },
+      '/dropout-predictor':   { title: 'Dropout Predictor',   breadcrumb: 'AI Tools / Dropout Predictor' },
+      '/competency-ranker':   { title: 'Competency Ranker',   breadcrumb: 'AI Tools / Competency Ranker' },
+      '/jd-checker':          { title: 'JD Checker',          breadcrumb: 'AI Tools / JD Checker' },
+      '/jd-generator':        { title: 'JD Generator',        breadcrumb: 'AI Tools / JD Generator' },
+      // Admin
+      '/users':               { title: 'Users & Access',      breadcrumb: 'Admin / Users' },
+      '/compliance':          { title: 'Compliance',          breadcrumb: 'Admin / Compliance' },
     };
     const match = Object.keys(titles).find(key => this.router.url.startsWith(key));
     if (match) {

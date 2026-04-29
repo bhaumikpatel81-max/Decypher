@@ -3,7 +3,7 @@
   <div class="flex justify-between items-center mb-6">
     <div>
       <h1 class="page-title">AI Resume Scorecard</h1>
-      <p class="text-sm" style="color:var(--text-3)">Multi-agent AI screening — UC63</p>
+      <p class="text-sm" style="color:var(--text-3)">Multi-agent AI screening — CV match, competency, bias & dropout risk</p>
     </div>
     <button class="btn btn-secondary" *ngIf="results" (click)="exportResults()">Export JSON</button>
   </div>
@@ -53,47 +53,127 @@
   </div>
 
   <!-- Results -->
-  <div class="card" *ngIf="results">
-    <h3 class="card-title mb-6">AI Analysis Results</h3>
+  <div *ngIf="results">
 
-    <!-- Overall Match Score -->
-    <div class="mb-6">
-      <h4 class="font-semibold mb-3">Overall Match Score</h4>
-      <div class="confidence-meter">
-        <div class="confidence-bar">
-          <div class="confidence-fill" [ngClass]="getConfidenceClass(results.confidence)"
-            [style.width.%]="results.overallScore"></div>
+    <!-- ── Row 1: Score gauges ── -->
+    <div class="score-breakdown mb-6" style="grid-template-columns: repeat(3, 1fr)">
+      <!-- CV-JD Match Gauge -->
+      <div class="card" style="text-align:center;padding:24px 16px;">
+        <div class="card-title mb-2">CV ↔ JD Match</div>
+        <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+          <circle cx="60" cy="60" r="50" fill="none"
+            [attr.stroke]="getGaugeColour(results.cvJdMatchScore)"
+            stroke-width="12"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.cvJdMatchScore / 100 * 314) + ' 314'"
+            stroke-dashoffset="78.5"
+            transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
+            [attr.fill]="getGaugeColour(results.cvJdMatchScore)">{{ results.cvJdMatchScore }}%</text>
+        </svg>
+      </div>
+
+      <!-- Competency Score Gauge -->
+      <div class="card" style="text-align:center;padding:24px 16px;">
+        <div class="card-title mb-2">Competency Score</div>
+        <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+          <circle cx="60" cy="60" r="50" fill="none"
+            [attr.stroke]="getGaugeColour(results.competencyScore)"
+            stroke-width="12"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.competencyScore / 100 * 314) + ' 314'"
+            stroke-dashoffset="78.5"
+            transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
+            [attr.fill]="getGaugeColour(results.competencyScore)">{{ results.competencyScore }}%</text>
+        </svg>
+      </div>
+
+      <!-- Overall Score -->
+      <div class="card" style="text-align:center;padding:24px 16px;">
+        <div class="card-title mb-2">Overall Score</div>
+        <svg viewBox="0 0 120 120" width="100" height="100" style="margin:0 auto;display:block;">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+          <circle cx="60" cy="60" r="50" fill="none"
+            [attr.stroke]="getGaugeColour(results.overallScore)"
+            stroke-width="12"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.overallScore / 100 * 314) + ' 314'"
+            stroke-dashoffset="78.5"
+            transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
+            [attr.fill]="getGaugeColour(results.overallScore)">{{ results.overallScore }}%</text>
+        </svg>
+        <div class="text-sm mt-1" style="color:var(--text-3)">{{ getConfidenceLabel(results.confidence) }}</div>
+      </div>
+    </div>
+
+    <!-- ── Row 2: Risk Indicators ── -->
+    <div class="card mb-6">
+      <h3 class="card-title mb-4">Risk Indicators</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div class="risk-badge" [ngClass]="getRiskClass(results.biasRiskLevel)">
+          <span>⚖️ Bias Risk</span>
+          <strong>{{ results.biasRiskLevel }}</strong>
         </div>
-        <div class="confidence-label">
-          <span>{{ results.overallScore }}%</span>
-          <span>{{ getConfidenceLabel(results.confidence) }}</span>
+        <div class="risk-badge" [ngClass]="getRiskClass(results.dropoutRiskLevel)">
+          <span>🚪 Dropout Risk</span>
+          <strong>{{ results.dropoutRiskLevel }}</strong>
         </div>
       </div>
     </div>
 
-    <!-- Score Breakdown -->
-    <div class="score-breakdown mb-6">
-      <div class="score-card">
-        <div class="score-value">{{ results.breakdown?.skillsMatch }}%</div>
-        <div class="score-label">Skills Match</div>
-      </div>
-      <div class="score-card">
-        <div class="score-value">{{ results.breakdown?.experienceMatch }}%</div>
-        <div class="score-label">Experience</div>
-      </div>
-      <div class="score-card">
-        <div class="score-value">{{ results.breakdown?.educationMatch }}%</div>
-        <div class="score-label">Education</div>
-      </div>
-      <div class="score-card">
-        <div class="score-value">{{ results.breakdown?.cultureFit }}%</div>
-        <div class="score-label">Culture Fit</div>
+    <!-- ── Row 3: Skills Gap Table ── -->
+    <div class="card mb-6" *ngIf="(results.matchedSkills?.length || results.missingSkills?.length)">
+      <h3 class="card-title mb-4">Skills Gap Analysis</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <div class="text-sm font-bold mb-2" style="color:#10b981;">Matched Skills</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span *ngFor="let skill of results.matchedSkills" class="chip"
+              style="background:#d1fae5;color:#065f46;">{{ skill }}</span>
+            <em *ngIf="!results.matchedSkills?.length" style="color:var(--text-3)">None identified</em>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm font-bold mb-2" style="color:#ef4444;">Missing Skills</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span *ngFor="let skill of results.missingSkills" class="chip"
+              style="background:#fee2e2;color:#991b1b;">{{ skill }}</span>
+            <em *ngIf="!results.missingSkills?.length" style="color:var(--text-3)">None — great match!</em>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Bias Safety Analysis -->
-    <div class="mb-6">
-      <h4 class="font-semibold mb-3">Bias Safety Analysis</h4>
+    <!-- ── Row 4: Score Breakdown ── -->
+    <div class="card mb-6">
+      <h3 class="card-title mb-4">Score Breakdown</h3>
+      <div class="score-breakdown">
+        <div class="score-card">
+          <div class="score-value">{{ results.breakdown?.skillsMatch }}%</div>
+          <div class="score-label">Skills Match</div>
+        </div>
+        <div class="score-card">
+          <div class="score-value">{{ results.breakdown?.experienceMatch }}%</div>
+          <div class="score-label">Experience</div>
+        </div>
+        <div class="score-card">
+          <div class="score-value">{{ results.breakdown?.educationMatch }}%</div>
+          <div class="score-label">Education</div>
+        </div>
+        <div class="score-card">
+          <div class="score-value">{{ results.breakdown?.cultureFit }}%</div>
+          <div class="score-label">Culture Fit</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Row 5: Bias Safety ── -->
+    <div class="card mb-6">
+      <h3 class="card-title mb-4">Bias Safety Analysis</h3>
       <div class="bias-card" [ngClass]="getBiasClass(results.biasScore)">
         <div class="bias-score">{{ (results.biasScore * 100) | number:'1.0-0' }}% Bias-Free</div>
         <div class="bias-checks">
@@ -105,9 +185,9 @@
       </div>
     </div>
 
-    <!-- AI Explanation -->
-    <div class="mb-6">
-      <h4 class="font-semibold mb-3">AI Explanation</h4>
+    <!-- ── Row 6: Explanation ── -->
+    <div class="card mb-6">
+      <h3 class="card-title mb-4">AI Explanation</h3>
       <div class="ai-explanation">{{ results.explanation }}</div>
     </div>
 
@@ -119,3 +199,21 @@
     </div>
   </div>
 </div>
+
+<style>
+  .risk-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    min-width: 120px;
+    text-align: center;
+  }
+  .risk-badge strong { font-size: 16px; font-weight: 800; }
+  .risk-low    { background: #d1fae5; color: #065f46; }
+  .risk-medium { background: #fef3c7; color: #92400e; }
+  .risk-high   { background: #fee2e2; color: #991b1b; }
+</style>

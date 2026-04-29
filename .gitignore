@@ -19,6 +19,7 @@ angular-frontend/coverage/
 
 # Environment
 .env
+.env.prod
 .env.local
 .env.*.local
 

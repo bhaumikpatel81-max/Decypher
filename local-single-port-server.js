@@ -541,6 +541,127 @@ async function handleApi(req, res, url) {
     return sendJson(res, 201, cv);
   }
 
+  // ── AI Agent endpoints (UC63 / UC64) ─────────────────────────────────────
+
+  if (route === '/api/aiagents/sla-dashboard' && req.method === 'GET') {
+    const db = readDb();
+    const stages = ['Sourcing', 'Screening', 'Interview L1', 'Interview L2', 'Offer', 'Onboarding'];
+    const statuses = ['OnTrack', 'OnTrack', 'Warning', 'OnTrack', 'Overdue', 'OnTrack'];
+    const targets   = [7, 5, 7, 5, 3, 10];
+    const days      = [4, 3, 11, 4, 8, 2];
+    const tracks = stages.map((stage, i) => ({
+      id: `sla-${i + 1}`,
+      requirementId: `req-0000000${i + 1}`,
+      stage,
+      stageStartDate: new Date(Date.now() - days[i] * 86400000).toISOString(),
+      stageEndDate: null,
+      daysInStage: days[i],
+      targetDays: targets[i],
+      status: statuses[i],
+      predictedCompletionDate: statuses[i] === 'Overdue' ? null : new Date(Date.now() + (targets[i] - days[i]) * 86400000).toISOString(),
+      predictionConfidence: statuses[i] === 'Overdue' ? 0 : statuses[i] === 'Warning' ? 0.68 : 0.88,
+      tenantId: 'default',
+      updatedAt: now()
+    }));
+    return sendJson(res, 200, tracks);
+  }
+
+  if (route === '/api/aiagents/run-screening' && req.method === 'POST') {
+    const body = await readBody(req);
+    const jd     = String(body.jobDescription || '');
+    const resume = String(body.resumeText || '');
+    if (!jd || !resume) return sendJson(res, 400, { error: 'jobDescription and resumeText are required' });
+
+    const skillBank = ['c#', '.net', 'azure', 'aws', 'sql', 'docker', 'angular', 'react', 'kubernetes', 'python', 'java', 'typescript'];
+    const jdWords     = jd.toLowerCase();
+    const resumeWords = resume.toLowerCase();
+    const matched = skillBank.filter(s => jdWords.includes(s) && resumeWords.includes(s));
+    const score = Math.min(95, 55 + matched.length * 6);
+    const confidence = score >= 80 ? 0.88 : score >= 65 ? 0.72 : 0.55;
+
+    return sendJson(res, 200, {
+      requiresHumanReview: confidence < 0.6,
+      humanReviewReason: confidence < 0.6 ? 'Low confidence — manual review recommended' : null,
+      timestamp: new Date().toISOString(),
+      matchingResult:  { data: { matchPercentage: score } },
+      rankingResult: {
+        confidence,
+        data: {
+          overallScore: score,
+          breakdown: {
+            skillsMatch:      Math.min(100, score + 6),
+            experienceMatch:  Math.min(100, score - 2),
+            educationMatch:   Math.min(100, score - 8),
+            cultureFit:       Math.min(100, score - 4)
+          }
+        }
+      },
+      explanationResult: {
+        data: {
+          explanation: matched.length
+            ? `Candidate demonstrates strong alignment. Matched skills: ${matched.join(', ')}. Experience aligns well with the role requirements.`
+            : 'Limited skill overlap detected. Consider broadening the candidate search or clarifying JD requirements.'
+        },
+        modelVersion: 'local-mock-v1',
+        promptVersion: 'v2.1'
+      },
+      biasDetectionResult: {
+        data: {
+          overallBiasFreeScore: 0.96,
+          genderBias:   { detected: false, details: 'No gender-specific language detected' },
+          locationBias: { detected: false, details: 'Location-neutral evaluation' },
+          collegeBias:  { detected: false, details: 'No college preference detected' },
+          ageBias:      { detected: false, details: 'No age indicators found' }
+        }
+      }
+    });
+  }
+
+  if (route === '/api/aiagents/generate-jd' && req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body.jobTitle) return sendJson(res, 400, { error: 'jobTitle is required' });
+    const skills = Array.isArray(body.requiredSkills) ? body.requiredSkills : [];
+    const min = body.minYearsExperience ?? 2;
+    const max = body.maxYearsExperience ?? 5;
+
+    return sendJson(res, 200, {
+      data: {
+        title: body.jobTitle,
+        overview: `We are seeking a talented ${body.jobTitle} to join our ${body.department || 'Engineering'} team. You will build and maintain scalable solutions that directly impact business outcomes.`,
+        responsibilities: [
+          `Design and develop robust ${skills[0] || 'software'} solutions`,
+          'Collaborate with cross-functional teams on product requirements',
+          'Write clean, well-tested, and well-documented code',
+          'Participate in code reviews and uphold engineering standards',
+          'Troubleshoot and resolve production issues quickly'
+        ],
+        requirements: [
+          `${min}–${max} years of professional development experience`,
+          ...skills.map(s => `Hands-on proficiency in ${s}`),
+          'Strong analytical and problem-solving mindset',
+          'Experience with Agile/Scrum delivery'
+        ],
+        niceToHave: [
+          'Experience with cloud platforms (AWS / Azure / GCP)',
+          'Familiarity with CI/CD and DevOps practices',
+          'Open-source contributions'
+        ],
+        benefits: [
+          'Competitive salary and equity',
+          'Flexible / remote-first environment',
+          'Health, dental, and vision insurance',
+          'Annual learning & development budget'
+        ],
+        employmentType: body.employmentType || 'Full-time',
+        experienceRange: `${min}–${max} years`
+      },
+      modelVersion: 'local-mock-v1',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (route === '/api/ai/analyze' && req.method === 'POST') {
     const body = await readBody(req);
     const text = [body.text, body.jdText, body.resumeText, body.jdFile?.fileName, body.resumeFile?.fileName].filter(Boolean).join(' ');
