@@ -48,6 +48,14 @@ namespace Decypher.Web.Data
         public DbSet<Requisition> Requisitions { get; set; }
         public DbSet<CandidateSource> CandidateSources { get; set; }
 
+        // ─── Budget Module ─────────────────────────────────────────────────
+        public DbSet<BudgetFiscalYear> BudgetFiscalYears { get; set; }
+        public DbSet<BudgetAllocation> BudgetAllocations { get; set; }
+        public DbSet<BudgetLineItem> BudgetLineItems { get; set; }
+        public DbSet<BudgetActual> BudgetActuals { get; set; }
+        public DbSet<BudgetCostCategoryConfig> BudgetCostCategoryConfigs { get; set; }
+        public DbSet<BudgetTenantConfig> BudgetTenantConfigs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -219,6 +227,76 @@ namespace Decypher.Web.Data
                 new PipelineStage { Id = Guid.Parse("aa000007-0000-0000-0000-000000000007"), Name = "Rejected",    Order = 7, Colour = "#ef4444", TenantId = demoTenantId },
             };
             builder.Entity<PipelineStage>().HasData(defaultStages);
+
+            // ─── Budget Module ─────────────────────────────────────────────
+            builder.Entity<BudgetFiscalYear>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.Status });
+                entity.Property(e => e.Status).HasConversion<string>();
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            builder.Entity<BudgetAllocation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(a => a.FiscalYear)
+                    .WithMany(f => f.Allocations)
+                    .HasForeignKey(a => a.FiscalYearId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.FiscalYearId });
+                entity.Property(e => e.Category).HasConversion<string>();
+                entity.Property(e => e.Quarter).HasConversion<string>();
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            builder.Entity<BudgetLineItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(l => l.Allocation)
+                    .WithMany(a => a.LineItems)
+                    .HasForeignKey(l => l.AllocationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(e => e.TenantId);
+                entity.Property(e => e.LineItemType).HasConversion<string>();
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            builder.Entity<BudgetActual>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(a => a.FiscalYear)
+                    .WithMany(f => f.Actuals)
+                    .HasForeignKey(a => a.FiscalYearId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(a => a.Vendor)
+                    .WithMany()
+                    .HasForeignKey(a => a.VendorId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.FiscalYearId });
+                entity.HasIndex(e => new { e.TenantId, e.SpendDate });
+                entity.Property(e => e.SpendCategory).HasConversion<string>();
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            builder.Entity<BudgetCostCategoryConfig>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.CategoryCode });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            builder.Entity<BudgetTenantConfig>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId).IsUnique();
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
 
             // Seed data
             SeedData(builder);

@@ -67,28 +67,40 @@ import { AuthService, CurrentUser } from './services/auth.service';
         </div>
 
         <nav class="sidebar-nav">
-          <div class="sidebar-section">
-            <div class="sidebar-section-label">Core</div>
-            <a *ngFor="let item of coreNav" [routerLink]="item.path" routerLinkActive="active" class="sidebar-nav-item">
-              <span class="nav-symbol">{{ item.icon }}</span>
-              <span class="sidebar-nav-label">{{ item.label }}</span>
-            </a>
+          <!-- Search -->
+          <div class="apps-search-wrap">
+            <input class="apps-search-input" placeholder="Search apps..."
+              [value]="appSearch" (input)="onAppSearch($event)">
           </div>
 
-          <div class="sidebar-section">
-            <div class="sidebar-section-label">AI Tools</div>
-            <a *ngFor="let item of aiNav" [routerLink]="item.path" routerLinkActive="active" class="sidebar-nav-item">
-              <span class="nav-symbol">{{ item.icon }}</span>
-              <span class="sidebar-nav-label">{{ item.label }}</span>
-            </a>
+          <!-- Recent Apps -->
+          <div class="apps-section" *ngIf="!appSearch">
+            <div class="apps-section-title">Recent Apps</div>
+            <div class="apps-grid">
+              <a *ngFor="let item of recentApps"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                class="app-tile"
+                [title]="item.label">
+                <div class="app-tile-icon" [style.background]="item.color">{{ item.symbol }}</div>
+                <span class="app-tile-label">{{ item.shortLabel || item.label }}</span>
+              </a>
+            </div>
           </div>
 
-          <div class="sidebar-section" *ngIf="canAccessAdmin">
-            <div class="sidebar-section-label">Admin</div>
-            <a *ngFor="let item of adminNav" [routerLink]="item.path" routerLinkActive="active" class="sidebar-nav-item">
-              <span class="nav-symbol">{{ item.icon }}</span>
-              <span class="sidebar-nav-label">{{ item.label }}</span>
-            </a>
+          <!-- All Apps / Search Results -->
+          <div class="apps-section">
+            <div class="apps-section-title">{{ appSearch ? 'Results' : 'All Apps' }}</div>
+            <div class="apps-grid">
+              <a *ngFor="let item of filteredApps"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                class="app-tile"
+                [title]="item.label">
+                <div class="app-tile-icon" [style.background]="item.color">{{ item.symbol }}</div>
+                <span class="app-tile-label">{{ item.shortLabel || item.label }}</span>
+              </a>
+            </div>
           </div>
         </nav>
 
@@ -421,34 +433,38 @@ export class AppComponent implements OnInit {
   loginError = '';
   insightText = 'Live pipeline risk is calculated from current candidate records.';
 
-  coreNav = [
-    { path: '/dashboard',           label: 'Dashboard',           icon: 'D'  },
-    { path: '/vendors',             label: 'Vendors',             icon: 'V'  },
-    { path: '/recruiters',          label: 'Recruiters',          icon: 'R'  },
-    { path: '/cv-database',         label: 'CV Database',         icon: 'CV' },
-    { path: '/pipeline-board',      label: 'Pipeline Board',      icon: 'PB' },
-    { path: '/requisitions',        label: 'Requisitions',        icon: 'RQ' },
-    { path: '/candidate-portal',    label: 'Candidate Portal',    icon: 'CP' },
-    { path: '/interview-scheduler', label: 'Interview Scheduler', icon: 'IS' },
-    { path: '/offer-management',    label: 'Offer Management',    icon: 'OM' },
-    { path: '/talent-pool',         label: 'Talent Pool',         icon: 'TP' },
-    { path: '/source-tracking',     label: 'Source Tracking',     icon: 'ST' },
-    { path: '/sla-dashboard',       label: 'SLA Dashboard',       icon: 'SL' },
+  allApps = [
+    { path: '/dashboard',           label: 'Dashboard',           shortLabel: 'Dashboard',  symbol: 'D',  color: '#292966', adminOnly: false },
+    { path: '/vendors',             label: 'Vendors',             shortLabel: 'Vendors',    symbol: 'V',  color: '#22a3d2', adminOnly: false },
+    { path: '/budget',              label: 'Budget',              shortLabel: 'Budget',     symbol: '💰', color: '#059669', adminOnly: false },
+    { path: '/recruiters',          label: 'Recruiters',          shortLabel: 'Recruiters', symbol: 'R',  color: '#6b4df0', adminOnly: false },
+    { path: '/cv-database',         label: 'CV Database',         shortLabel: 'CV DB',      symbol: 'CV', color: '#5C5C99', adminOnly: false },
+    { path: '/pipeline-board',      label: 'Pipeline Board',      shortLabel: 'Pipeline',   symbol: 'PB', color: '#a94ee6', adminOnly: false },
+    { path: '/requisitions',        label: 'Requisitions',        shortLabel: 'Reqs',       symbol: 'RQ', color: '#e8912a', adminOnly: false },
+    { path: '/candidate-portal',    label: 'Candidate Portal',    shortLabel: 'Candidates', symbol: 'CP', color: '#16a34a', adminOnly: false },
+    { path: '/interview-scheduler', label: 'Interview Scheduler', shortLabel: 'Interviews', symbol: 'IS', color: '#2563eb', adminOnly: false },
+    { path: '/offer-management',    label: 'Offer Management',    shortLabel: 'Offers',     symbol: 'OM', color: '#5C5C99', adminOnly: false },
+    { path: '/talent-pool',         label: 'Talent Pool',         shortLabel: 'Talent',     symbol: 'TP', color: '#c56bff', adminOnly: false },
+    { path: '/source-tracking',     label: 'Source Tracking',     shortLabel: 'Sources',    symbol: 'ST', color: '#3bbdea', adminOnly: false },
+    { path: '/sla-dashboard',       label: 'SLA Dashboard',       shortLabel: 'SLA',        symbol: 'SL', color: '#dc2626', adminOnly: false },
+    { path: '/resume-parser',       label: 'Resume Parser',       shortLabel: 'Resume',     symbol: 'RP', color: '#6b4df0', adminOnly: false },
+    { path: '/ai-scorecard',        label: 'AI Scorecard',        shortLabel: 'AI Score',   symbol: 'AS', color: '#a94ee6', adminOnly: false },
+    { path: '/dropout-predictor',   label: 'Dropout Predictor',   shortLabel: 'Dropout',    symbol: 'DR', color: '#dc2626', adminOnly: false },
+    { path: '/competency-ranker',   label: 'Competency Ranker',   shortLabel: 'Competency', symbol: 'CR', color: '#16a34a', adminOnly: false },
+    { path: '/jd-checker',          label: 'JD Checker',          shortLabel: 'JD Check',   symbol: 'JD', color: '#e8912a', adminOnly: false },
+    { path: '/jd-generator',        label: 'JD Generator',        shortLabel: 'JD Gen',     symbol: 'JG', color: '#22a3d2', adminOnly: false },
+    { path: '/users',               label: 'Users & Access',      shortLabel: 'Users',      symbol: 'UA', color: '#343a48', adminOnly: true  },
+    { path: '/compliance',          label: 'Compliance',          shortLabel: 'Compliance', symbol: 'CO', color: '#5C5C99', adminOnly: true  },
   ];
 
-  aiNav = [
-    { path: '/resume-parser',      label: 'Resume Parser',      icon: 'RP' },
-    { path: '/ai-scorecard',       label: 'AI Scorecard',       icon: 'AS' },
-    { path: '/dropout-predictor',  label: 'Dropout Predictor',  icon: 'DR' },
-    { path: '/competency-ranker',  label: 'Competency Ranker',  icon: 'CR' },
-    { path: '/jd-checker',         label: 'JD Checker',         icon: 'JD' },
-    { path: '/jd-generator',       label: 'JD Generator',       icon: 'JG' }
-  ];
+  recentApps: any[] = [];
+  filteredApps: any[] = [];
+  appSearch = '';
 
-  adminNav = [
-    { path: '/users',      label: 'Users & Access', icon: 'U'  },
-    { path: '/compliance', label: 'Compliance',     icon: 'CO' }
-  ];
+  /* kept for updatePageTitle() */
+  coreNav = this.allApps.filter(a => !a.adminOnly).slice(0, 12);
+  aiNav   = this.allApps.slice(12, 18);
+  adminNav = this.allApps.filter(a => a.adminOnly);
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -457,9 +473,36 @@ export class AppComponent implements OnInit {
       this.isAuthenticated = !!user;
       this.currentUser = user;
       this.canAccessAdmin = user?.role === 'SuperAdmin';
+      this.refreshApps();
     });
 
-    this.router.events.subscribe(() => this.updatePageTitle());
+    this.router.events.subscribe(() => {
+      this.updatePageTitle();
+      this.trackRecentApp();
+    });
+
+    this.refreshApps();
+  }
+
+  refreshApps() {
+    const visible = this.allApps.filter(a => !a.adminOnly || this.canAccessAdmin);
+    this.recentApps = visible.slice(0, 9);
+    this.filteredApps = visible;
+  }
+
+  onAppSearch(event: Event) {
+    this.appSearch = (event.target as HTMLInputElement).value.trim();
+    const q = this.appSearch.toLowerCase();
+    const visible = this.allApps.filter(a => !a.adminOnly || this.canAccessAdmin);
+    this.filteredApps = q ? visible.filter(a => a.label.toLowerCase().includes(q)) : visible;
+  }
+
+  trackRecentApp() {
+    const url = this.router.url.split('?')[0];
+    const found = this.allApps.find(a => url.startsWith(a.path) && (!a.adminOnly || this.canAccessAdmin));
+    if (!found) return;
+    const list = [found, ...this.recentApps.filter(a => a.path !== found.path)].slice(0, 9);
+    this.recentApps = list;
   }
 
   usePreset(type: string) {
@@ -506,6 +549,7 @@ export class AppComponent implements OnInit {
       // Core
       '/dashboard':           { title: 'Dashboard',           breadcrumb: 'Home / Dashboard' },
       '/vendors':             { title: 'Vendors',             breadcrumb: 'Home / Vendors' },
+      '/budget':              { title: 'Budget',              breadcrumb: 'Home / Budget' },
       '/recruiters':          { title: 'Recruiters',          breadcrumb: 'Home / Recruiters' },
       '/cv-database':         { title: 'CV Database',         breadcrumb: 'Home / CV Search' },
       '/pipeline-board':      { title: 'Pipeline Board',      breadcrumb: 'Core / Pipeline Board' },

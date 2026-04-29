@@ -2,10 +2,33 @@ import { Component, NgModule, OnInit, Pipe, PipeTransform } from '@angular/core'
 import { BrowserModule, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Routes } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
+import { BudgetComponent } from './budget/budget.component';
 
 import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
@@ -359,6 +382,8 @@ const routes: Routes = [
   { path: 'competency-ranker',    component: GenericToolComponent },
   { path: 'jd-checker',           component: GenericToolComponent },
   { path: 'jd-generator',         component: JdGeneratorComponent },
+  // Budget Module
+  { path: 'budget',               component: BudgetComponent },
   // Admin
   { path: 'users',                component: UsersAdminComponent },
   { path: 'compliance',           component: ComplianceComponent },
@@ -389,19 +414,43 @@ const routes: Routes = [
     TalentPoolComponent,
     RequisitionsComponent,
     SourceTrackingComponent,
-    ComplianceComponent
+    ComplianceComponent,
+    BudgetComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule,
     MatMenuModule,
     MatDividerModule,
+    MatTabsModule,
+    MatCardModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule,
+    MatProgressBarModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
+    MatDialogModule,
+    MatSidenavModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
     RouterModule.forRoot(routes)
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true },
+    CurrencyPipe, DecimalPipe, DatePipe
   ],
   bootstrap: [AppComponent]
 })
