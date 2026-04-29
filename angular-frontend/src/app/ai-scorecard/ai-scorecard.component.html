@@ -21,14 +21,73 @@
 
   <!-- Inputs -->
   <div class="grid grid-cols-2 gap-6 mb-6">
+    <!-- JD Panel -->
     <div class="card">
       <h3 class="card-title mb-4">Job Description</h3>
-      <textarea class="input" rows="12" [(ngModel)]="jdText"
+
+      <!-- JD Upload Zone -->
+      <div class="sc-upload-zone"
+        [class.sc-dz-hover]="jdDragOver"
+        [class.sc-dz-loaded]="!!jdFile"
+        (click)="jdFileInput.click()"
+        (dragover)="jdDragOver = true; $event.preventDefault()"
+        (dragleave)="jdDragOver = false"
+        (drop)="onJdDrop($event)">
+        <input #jdFileInput type="file" style="display:none"
+          accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
+          (change)="onJdFileSelect($event)">
+        <div *ngIf="!jdFile" class="sc-dz-idle">
+          <span style="font-size:22px;">📎</span>
+          <span class="sc-dz-label">Upload JD or <span class="sc-dz-link">browse</span></span>
+          <span class="sc-dz-hint">PDF · DOCX · DOC · JPG · PNG</span>
+        </div>
+        <div *ngIf="jdFile" class="sc-dz-file">
+          <span>{{ jdFileIcon }}</span>
+          <span style="font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ jdFile.name }}</span>
+          <span *ngIf="jdExtracting" style="font-size:12px;color:var(--text-3);">⏳ Extracting...</span>
+          <span *ngIf="!jdExtracting && jdText" style="font-size:12px;color:#10b981;">✔ Ready</span>
+          <button class="sc-dz-remove" (click)="clearJdFile($event)">✕</button>
+        </div>
+      </div>
+      <div *ngIf="jdExtractError" style="color:#ef4444;font-size:12px;margin:4px 0;">⚠ {{ jdExtractError }}</div>
+
+      <div class="sc-or-divider"><span>or paste text</span></div>
+      <textarea class="input" rows="8" [(ngModel)]="jdText"
         placeholder="Paste job description here..."></textarea>
     </div>
+
+    <!-- Resume Panel -->
     <div class="card">
       <h3 class="card-title mb-4">Resume / CV</h3>
-      <textarea class="input" rows="12" [(ngModel)]="resumeText"
+
+      <!-- Resume Upload Zone -->
+      <div class="sc-upload-zone"
+        [class.sc-dz-hover]="resumeDragOver"
+        [class.sc-dz-loaded]="!!resumeFile"
+        (click)="resumeFileInput.click()"
+        (dragover)="resumeDragOver = true; $event.preventDefault()"
+        (dragleave)="resumeDragOver = false"
+        (drop)="onResumeDrop($event)">
+        <input #resumeFileInput type="file" style="display:none"
+          accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
+          (change)="onResumeFileSelect($event)">
+        <div *ngIf="!resumeFile" class="sc-dz-idle">
+          <span style="font-size:22px;">📎</span>
+          <span class="sc-dz-label">Upload Resume or <span class="sc-dz-link">browse</span></span>
+          <span class="sc-dz-hint">PDF · DOCX · DOC · JPG · PNG</span>
+        </div>
+        <div *ngIf="resumeFile" class="sc-dz-file">
+          <span>{{ resumeFileIcon }}</span>
+          <span style="font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ resumeFile.name }}</span>
+          <span *ngIf="resumeExtracting" style="font-size:12px;color:var(--text-3);">⏳ Extracting...</span>
+          <span *ngIf="!resumeExtracting && resumeText" style="font-size:12px;color:#10b981;">✔ Ready</span>
+          <button class="sc-dz-remove" (click)="clearResumeFile($event)">✕</button>
+        </div>
+      </div>
+      <div *ngIf="resumeExtractError" style="color:#ef4444;font-size:12px;margin:4px 0;">⚠ {{ resumeExtractError }}</div>
+
+      <div class="sc-or-divider"><span>or paste text</span></div>
+      <textarea class="input" rows="8" [(ngModel)]="resumeText"
         placeholder="Paste resume text here..."></textarea>
     </div>
   </div>
@@ -37,7 +96,7 @@
   <div class="text-center mb-8">
     <button class="btn btn-primary"
       (click)="runAIAgents()"
-      [disabled]="isProcessing || !jdText || !resumeText">
+      [disabled]="isProcessing || jdExtracting || resumeExtracting || !jdText || !resumeText">
       <span *ngIf="!isProcessing">⚡ Run AI Agents</span>
       <span *ngIf="isProcessing">🔄 Processing...</span>
     </button>
@@ -201,6 +260,47 @@
 </div>
 
 <style>
+  .sc-upload-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--surface-alt);
+    margin-bottom: 4px;
+  }
+  .sc-upload-zone:hover, .sc-upload-zone.sc-dz-hover {
+    border-color: var(--brand-violet-500);
+    background: #f4f1ff;
+  }
+  .sc-upload-zone.sc-dz-loaded {
+    border-style: solid;
+    border-color: var(--brand-violet-400);
+    background: #f4f1ff;
+  }
+  .sc-dz-idle {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-3); font-size: 13px;
+  }
+  .sc-dz-label { color: var(--text-2); }
+  .sc-dz-link { color: #6b4df0; font-weight: 600; }
+  .sc-dz-hint { font-size: 11px; color: var(--text-3); margin-left: auto; }
+  .sc-dz-file {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-dz-remove {
+    background: none; border: none; cursor: pointer;
+    font-size: 13px; color: var(--text-3); padding: 2px 6px;
+    border-radius: 4px; flex-shrink: 0;
+  }
+  .sc-dz-remove:hover { background: #fee2e2; color: #dc2626; }
+  .sc-or-divider {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-3); font-size: 12px; margin: 10px 0 8px;
+  }
+  .sc-or-divider::before, .sc-or-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
   .risk-badge {
     display: inline-flex;
     flex-direction: column;

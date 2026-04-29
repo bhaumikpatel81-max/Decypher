@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -14,11 +14,26 @@ interface Agent {
   templateUrl: './ai-scorecard.component.html'
 })
 export class AIScorecardComponent {
+  @ViewChild('jdFileInput')     jdFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('resumeFileInput') resumeFileInput!: ElementRef<HTMLInputElement>;
+
   jdText = '';
   resumeText = '';
   isProcessing = false;
   results: any = null;
   errorMessage = '';
+
+  // JD file upload
+  jdFile: File | null = null;
+  jdExtracting = false;
+  jdExtractError = '';
+  jdDragOver = false;
+
+  // Resume file upload
+  resumeFile: File | null = null;
+  resumeExtracting = false;
+  resumeExtractError = '';
+  resumeDragOver = false;
 
   agents: Agent[] = [
     { name: 'Parsing Agent',        icon: '📄', status: 'pending', statusText: 'Waiting...' },
@@ -101,6 +116,66 @@ export class AIScorecardComponent {
       promptVersion: r.explanationResult?.promptVersion ?? '—',
       timestamp:     r.timestamp
     };
+  }
+
+  private fileIconFor(file: File): string {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    return ({ pdf: '📄', docx: '📝', doc: '📝', jpg: '🖼️', jpeg: '🖼️', png: '🖼️' } as any)[ext] ?? '📎';
+  }
+
+  get jdFileIcon()     { return this.jdFile     ? this.fileIconFor(this.jdFile)     : ''; }
+  get resumeFileIcon() { return this.resumeFile ? this.fileIconFor(this.resumeFile) : ''; }
+
+  private extractFile(file: File, onText: (t: string) => void, onError: (e: string) => void, onDone: () => void) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      this.http.post<{ text: string }>(`${environment.apiUrl}/api/resume-parser/extract-text`, {
+        fileData: base64, fileName: file.name, mimeType: file.type
+      }).subscribe({
+        next: r  => { onText(r.text); onDone(); },
+        error: err => { onError(err?.error?.error ?? 'Extraction failed'); onDone(); }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onJdFileSelect(e: Event) {
+    const f = (e.target as HTMLInputElement).files?.[0];
+    if (f) this.loadJdFile(f);
+  }
+  onJdDrop(e: DragEvent) {
+    e.preventDefault(); this.jdDragOver = false;
+    const f = e.dataTransfer?.files[0];
+    if (f) this.loadJdFile(f);
+  }
+  loadJdFile(file: File) {
+    this.jdFile = file; this.jdExtracting = true; this.jdExtractError = ''; this.jdText = '';
+    this.extractFile(file, t => this.jdText = t, e => this.jdExtractError = e, () => this.jdExtracting = false);
+  }
+  clearJdFile(e: MouseEvent) {
+    e.stopPropagation();
+    this.jdFile = null; this.jdText = ''; this.jdExtractError = '';
+    if (this.jdFileInput?.nativeElement) this.jdFileInput.nativeElement.value = '';
+  }
+
+  onResumeFileSelect(e: Event) {
+    const f = (e.target as HTMLInputElement).files?.[0];
+    if (f) this.loadResumeFile(f);
+  }
+  onResumeDrop(e: DragEvent) {
+    e.preventDefault(); this.resumeDragOver = false;
+    const f = e.dataTransfer?.files[0];
+    if (f) this.loadResumeFile(f);
+  }
+  loadResumeFile(file: File) {
+    this.resumeFile = file; this.resumeExtracting = true; this.resumeExtractError = ''; this.resumeText = '';
+    this.extractFile(file, t => this.resumeText = t, e => this.resumeExtractError = e, () => this.resumeExtracting = false);
+  }
+  clearResumeFile(e: MouseEvent) {
+    e.stopPropagation();
+    this.resumeFile = null; this.resumeText = ''; this.resumeExtractError = '';
+    if (this.resumeFileInput?.nativeElement) this.resumeFileInput.nativeElement.value = '';
   }
 
   getGaugeColour(score: number): string {

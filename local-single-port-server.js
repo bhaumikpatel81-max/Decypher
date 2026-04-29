@@ -1,8 +1,20 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+
+// Load only API keys from .env.prod (never override PORT or other runtime settings)
+(function loadEnv() {
+  const envPath = path.join(__dirname, '.env.prod');
+  if (!fs.existsSync(envPath)) return;
+  const keysToLoad = ['OPENAI_API_KEY'];
+  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z_]+)=(.+)$/);
+    if (m && keysToLoad.includes(m[1]) && !(m[1] in process.env)) process.env[m[1]] = m[2].trim();
+  }
+})();
 
 function getLocalIP() {
   for (const ifaces of Object.values(os.networkInterfaces())) {
@@ -276,12 +288,12 @@ function sendJson(res, status, body) {
   res.end(json);
 }
 
-function readBody(req) {
+function readBody(req, maxBytes = 1_000_000) {
   return new Promise((resolve, reject) => {
     let raw = '';
     req.on('data', chunk => {
       raw += chunk;
-      if (raw.length > 1_000_000) {
+      if (raw.length > maxBytes) {
         reject(new Error('Request body too large'));
         req.destroy();
       }
@@ -293,6 +305,47 @@ function readBody(req) {
         reject(new Error('Invalid JSON'));
       }
     });
+  });
+}
+
+function callOpenAIVision(base64Data, mimeType, apiKey) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      model: 'gpt-4o',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Extract all the text from this resume or CV image. Return only the raw text content, preserving structure with line breaks. Do not add any commentary.' },
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Data}`, detail: 'high' } }
+        ]
+      }],
+      max_tokens: 3000
+    });
+    const options = {
+      hostname: 'api.openai.com',
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    const req = https.request(options, r => {
+      let data = '';
+      r.on('data', c => data += c);
+      r.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          const text = result.choices?.[0]?.message?.content;
+          if (text) resolve(text);
+          else reject(new Error(result.error?.message || 'No content returned from OpenAI'));
+        } catch { reject(new Error('Failed to parse OpenAI response')); }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
   });
 }
 
@@ -677,6 +730,37 @@ async function handleApi(req, res, url) {
         ? ['Shortlist matching CVs from CV Database', 'Validate depth of top skills in interview']
         : ['Add more technical detail to improve matching', 'Include required skills explicitly']
     });
+  }
+
+  if (route === '/api/resume-parser/extract-text' && req.method === 'POST') {
+    const body = await readBody(req, 25_000_000); // 25 MB – base64 inflates ~33%
+    const { fileData, fileName, mimeType } = body;
+    if (!fileData || !fileName) return sendJson(res, 400, { error: 'fileData and fileName are required' });
+
+    const ext = path.extname(fileName).toLowerCase();
+    const buf = Buffer.from(fileData, 'base64');
+
+    try {
+      let text = '';
+      if (ext === '.pdf') {
+        const pdfParse = require('pdf-parse');
+        const data = await pdfParse(buf);
+        text = data.text;
+      } else if (ext === '.docx' || ext === '.doc') {
+        const mammoth = require('mammoth');
+        const result = await mammoth.extractRawText({ buffer: buf });
+        text = result.value;
+      } else if (ext === '.jpg' || ext === '.jpeg' || ext === '.png') {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) return sendJson(res, 500, { error: 'OpenAI API key not configured for image extraction' });
+        text = await callOpenAIVision(fileData, mimeType || 'image/jpeg', apiKey);
+      } else {
+        return sendJson(res, 400, { error: 'Unsupported file type. Allowed: PDF, DOCX, DOC, JPG, PNG' });
+      }
+      return sendJson(res, 200, { text: text.trim() });
+    } catch (err) {
+      return sendJson(res, 500, { error: `Text extraction failed: ${err.message}` });
+    }
   }
 
   return sendJson(res, 404, { error: 'API route not found', path: url.pathname });

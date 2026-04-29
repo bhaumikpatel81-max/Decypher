@@ -1,4 +1,8 @@
 {
+  "dependencies": {
+    "mammoth": "^1.7.0",
+    "pdf-parse": "^1.1.1"
+  },
   "scripts": {
     "build:frontend": "npm run build --prefix angular-frontend",
     "serve:local": "node local-single-port-server.js",
