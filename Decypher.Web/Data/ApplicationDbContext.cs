@@ -313,7 +313,7 @@ namespace Decypher.Web.Data
 
         private void SeedData(ModelBuilder builder)
         {
-            // Seed Demo Tenant
+            // Seed Demo Tenant (fixed dates required by EF Core HasData)
             var demoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
             builder.Entity<Tenant>().HasData(new Tenant
             {
@@ -322,14 +322,15 @@ namespace Decypher.Web.Data
                 Industry = "Technology",
                 EmployeeCount = 50,
                 SubscriptionPlan = "Enterprise",
-                SubscriptionStartDate = DateTime.UtcNow,
-                SubscriptionEndDate = DateTime.UtcNow.AddYears(1),
+                SubscriptionStartDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                SubscriptionEndDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
 
             // Seed Decypher Platform Tenant (for SuperAdmin)
-            var platformTenantId = Guid.Parse("00000000-0000-0000-0000-000000000000");
+            // Uses a non-zero GUID — Guid.Empty is rejected by EF Core HasData validation.
+            var platformTenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
             builder.Entity<Tenant>().HasData(new Tenant
             {
                 Id = platformTenantId,
@@ -338,7 +339,7 @@ namespace Decypher.Web.Data
                 EmployeeCount = 1,
                 SubscriptionPlan = "Platform",
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
         }
 

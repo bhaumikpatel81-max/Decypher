@@ -21,10 +21,42 @@ namespace Decypher.Web.Data
                 }
             }
 
-            // Get tenants
-            var demoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-            var platformTenantId = Guid.Parse("00000000-0000-0000-0000-000000000000");
+            // Tenant IDs — must match ApplicationDbContext.SeedData(ModelBuilder)
+            var demoTenantId     = Guid.Parse("11111111-1111-1111-1111-111111111111");
+            var platformTenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
             context.SetCurrentTenant(demoTenantId);
+
+            // Ensure platform tenant exists (not filtered by tenant query filter)
+            if (!await context.Tenants.IgnoreQueryFilters().AnyAsync(t => t.Id == platformTenantId))
+            {
+                context.Tenants.Add(new Tenant
+                {
+                    Id = platformTenantId,
+                    CompanyName = "Decypher Platform",
+                    Industry = "HR Tech SaaS",
+                    EmployeeCount = 1,
+                    SubscriptionPlan = "Platform",
+                    IsActive = true
+                });
+                await context.SaveChangesAsync();
+            }
+
+            // Ensure demo tenant exists
+            if (!await context.Tenants.IgnoreQueryFilters().AnyAsync(t => t.Id == demoTenantId))
+            {
+                context.Tenants.Add(new Tenant
+                {
+                    Id = demoTenantId,
+                    CompanyName = "Demo Corporation",
+                    Industry = "Technology",
+                    EmployeeCount = 50,
+                    SubscriptionPlan = "Enterprise",
+                    SubscriptionStartDate = DateTime.UtcNow,
+                    SubscriptionEndDate = DateTime.UtcNow.AddYears(1),
+                    IsActive = true
+                });
+                await context.SaveChangesAsync();
+            }
 
             // Create SuperAdmin (Bhaumik)
             var adminEmail = "admin@decypher.app";
