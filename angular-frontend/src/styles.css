@@ -200,3 +200,23 @@ pre {
     padding: 12px;
   }
 }
+
+/* ── AI Scorecard: Print / PDF Export ────────────────────────── */
+@media print {
+  /* Hide app chrome */
+  .sidebar,
+  aside,
+  .topbar,
+  .topbar-row,
+  nav,
+  .login-screen { display: none !important; }
+
+  /* Full-width main content */
+  .app-container { display: block !important; }
+  .main-content  { margin: 0 !important; padding: 16px !important; width: 100% !important; max-width: none !important; }
+
+  body { background: #fff !important; }
+
+  /* Page setup */
+  @page { margin: 15mm 12mm; size: A4; }
+}
