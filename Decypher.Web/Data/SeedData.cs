@@ -54,6 +54,34 @@ namespace Decypher.Web.Data
                 }
             }
 
+            // Create Recruiter Demo User
+            var recruiterEmail = "recruiter@decypher.app";
+            var recruiterUser = await userManager.FindByEmailAsync(recruiterEmail);
+
+            if (recruiterUser == null)
+            {
+                recruiterUser = new ApplicationUser
+                {
+                    UserName = recruiterEmail,
+                    Email = recruiterEmail,
+                    EmailConfirmed = true,
+                    FirstName = "Demo",
+                    LastName = "Recruiter",
+                    TenantId = demoTenantId,
+                    Role = UserRole.Recruiter,
+                    Department = "HR",
+                    Designation = "Recruiter",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await userManager.CreateAsync(recruiterUser, "Recruiter@2024");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(recruiterUser, "Recruiter");
+                }
+            }
+
             // Create Guest Demo User
             var guestEmail = "guest@decypher.app";
             var guestUser = await userManager.FindByEmailAsync(guestEmail);
