@@ -684,46 +684,133 @@ async function handleApi(req, res, url) {
     const resume = String(body.resumeText || '');
     if (!jd || !resume) return sendJson(res, 400, { error: 'jobDescription and resumeText are required' });
 
-    const skillBank = ['c#', '.net', 'azure', 'aws', 'sql', 'docker', 'angular', 'react', 'kubernetes', 'python', 'java', 'typescript'];
+    const skillBank   = ['c#', '.net', 'azure', 'aws', 'sql', 'docker', 'angular', 'react', 'kubernetes', 'python', 'java', 'typescript'];
     const jdWords     = jd.toLowerCase();
     const resumeWords = resume.toLowerCase();
-    const matched = skillBank.filter(s => jdWords.includes(s) && resumeWords.includes(s));
-    const score = Math.min(95, 55 + matched.length * 6);
-    const confidence = score >= 80 ? 0.88 : score >= 65 ? 0.72 : 0.55;
+    const matched  = skillBank.filter(s => jdWords.includes(s) && resumeWords.includes(s));
+    const missing  = skillBank.filter(s => jdWords.includes(s) && !resumeWords.includes(s)).slice(0, 4);
+    const score    = Math.min(95, 55 + matched.length * 6);
+    const confidence     = score >= 80 ? 0.88 : score >= 65 ? 0.72 : 0.55;
+    const strong         = matched.length >= 2;
+    const recommendation = matched.length >= 3 ? 'SHORTLIST' : matched.length >= 1 ? 'REVIEW' : 'REJECT';
+    const matchStr       = matched.length ? matched.slice(0, 3).map(s => s.toUpperCase()).join(', ') : 'none';
 
     return sendJson(res, 200, {
       requiresHumanReview: confidence < 0.6,
       humanReviewReason: confidence < 0.6 ? 'Low confidence — manual review recommended' : null,
       timestamp: new Date().toISOString(),
-      matchingResult:  { data: { matchPercentage: score } },
+
+      matchingResult: {
+        data: {
+          matchPercentage: score,
+          matchedSkills: matched,
+          missingSkills: missing
+        }
+      },
+
       rankingResult: {
         confidence,
         data: {
           overallScore: score,
           breakdown: {
-            skillsMatch:      Math.min(100, score + 6),
-            experienceMatch:  Math.min(100, score - 2),
-            educationMatch:   Math.min(100, score - 8),
-            cultureFit:       Math.min(100, score - 4)
+            skillsMatch:     Math.min(100, score + 6),
+            experienceMatch: Math.min(100, score - 2),
+            educationMatch:  Math.min(100, score - 8),
+            cultureFit:      Math.min(100, score - 4),
+            dropoutRisk:     strong ? 22 : 58
           }
         }
       },
+
+      behavioralResult: {
+        data: {
+          behavioralScores: {
+            problemSolving:   strong ? 78 : 52,
+            criticalThinking: strong ? 74 : 48,
+            ownership:        strong ? 82 : 58,
+            leadership:       strong ? 66 : 44,
+            communication:    strong ? 72 : 56,
+            integrity:        strong ? 85 : 64,
+            adaptability:     strong ? 76 : 50,
+            collaboration:    strong ? 79 : 60
+          },
+          evidence: {
+            problemSolving:   strong ? 'CV demonstrates systematic debugging and root-cause analysis with measurable production impact.' : 'Some problem-solving indicators present; limited quantified outcomes.',
+            criticalThinking: strong ? 'Technical decisions reflect data-driven reasoning and architectural trade-off analysis across multiple projects.' : 'Basic technical decision-making present; deeper analytical evidence is limited.',
+            ownership:        strong ? 'Led end-to-end delivery of multiple projects with clear accountability and outcome statements.' : 'Contributes to team deliverables; clear individual ownership examples are limited.',
+            leadership:       strong ? 'Mentored junior engineers and drove sprint planning and cross-team alignment activities.' : 'Some team collaboration noted; formal leadership or mentoring evidence is minimal.',
+            communication:    strong ? 'Presented technical solutions to senior stakeholders; authored architecture documentation and runbooks.' : 'Communication indicators present in team-collaboration contexts.',
+            integrity:        strong ? 'Consistent career progression with strong tenure; no red flags or unexplained gaps detected.' : 'Career stability is present; explicit trust-signal evidence is limited.',
+            adaptability:     strong ? 'Successfully transitioned across 2+ technology stacks within the same employment period.' : 'Some technology diversity present; cross-stack adaptability evidence is moderate.',
+            collaboration:    strong ? 'Active cross-functional collaboration with product, design, QA, and data teams throughout CV.' : 'Works within team settings; demonstrated collaborative leadership is moderate.'
+          },
+          summary: strong
+            ? `This candidate demonstrates a strong behavioral profile with particularly high scores in Ownership (82) and Integrity (85). The CV language reflects a results-driven professional who takes accountability for outcomes and works effectively across teams. Leadership potential is evidenced by mentoring and planning activities, consistent with senior contributor or lead-level placement.`
+            : `The candidate shows moderate behavioral signals with adequate indicators across problem-solving and communication. There is limited direct evidence of strong ownership, leadership, or cross-functional collaboration. A structured behavioral interview is recommended to validate competencies before advancing in the pipeline.`,
+          confidence: strong ? 0.84 : 0.63
+        }
+      },
+
       explanationResult: {
         data: {
-          explanation: matched.length
-            ? `Candidate demonstrates strong alignment. Matched skills: ${matched.join(', ')}. Experience aligns well with the role requirements.`
-            : 'Limited skill overlap detected. Consider broadening the candidate search or clarifying JD requirements.'
+          overallAssessment: strong
+            ? `The candidate presents a compelling profile with demonstrated expertise in ${matchStr}. The overall match score of ${score}% reflects strong alignment across core technical requirements, supported by consistent career progression and cross-functional delivery experience. The profile indicates readiness for the responsibilities outlined in the role.`
+            : `The candidate profile shows limited direct alignment with the stated role requirements. Matched skills include ${matchStr}, yielding a match score of ${score}%. Significant skill gaps and limited evidence of role-specific experience suggest this candidate would require substantial onboarding investment.`,
+
+          keyStrengths: strong ? [
+            `Demonstrated hands-on proficiency in ${matched.slice(0, 2).join(' and ').toUpperCase()} — directly required by the role`,
+            'Consistent career progression indicating reliability, growth mindset, and stability',
+            'Strong technical background with evidence of scalable solution design and delivery',
+            matched.length >= 3 ? `Additional expertise in ${matched[2].toUpperCase()} adds breadth and versatility to the technical profile` : 'Cross-functional collaboration and team leadership signals evident throughout CV',
+            'High ownership and integrity behavioral scores support senior-level placement'
+          ] : [
+            matched.length ? `Partial exposure to ${matched[0].toUpperCase()} noted in CV` : 'General software engineering background present',
+            'Career stability suggests reliability and low flight risk'
+          ],
+
+          skillGaps: missing.length > 0 ? [
+            ...missing.map(s => `No evidence of ${s.toUpperCase()} experience — listed as a core requirement in the JD`),
+            'Depth of expertise in matched skills requires technical interview validation'
+          ] : ['No critical skill gaps detected — strong technical match across all required competency areas'],
+
+          experienceFit: strong
+            ? `The candidate's experience level and project scope align well with the role expectations. Tenure and delivery breadth suggest readiness for the responsibilities and seniority described in the job description.`
+            : `The candidate's experience shows some relevant background but gaps in scope and depth relative to the role's expectations. Seniority alignment and project complexity require validation in a screening call.`,
+
+          educationFit: 'Educational background meets the standard requirements for this role. No concerns identified in the academic profile.',
+
+          behavioralSummary: strong
+            ? `Behavioral analysis indicates high Ownership (82) and Integrity (85) scores. The CV language reflects a results-oriented professional with strong accountability, cross-functional collaboration, and emerging leadership signals — consistent with high-performing senior contributors.`
+            : `Behavioral indicators are moderate. Ownership, leadership, and communication signals are present but lack the depth expected for senior roles. A structured behavioral interview is recommended before advancing.`,
+
+          riskFactors: strong ? [
+            'Dropout risk is LOW (22%) — strong career stability and role-engagement indicators present',
+            missing.length ? `Minor skill gaps in ${missing.slice(0, 2).map(s => s.toUpperCase()).join(' and ')} should be confirmed during the technical interview round` : 'No material risk factors identified — proceed to technical interview'
+          ] : [
+            `Skill gaps in ${missing.slice(0, 2).map(s => s.toUpperCase()).join(', ') || 'key required areas'} may require extended ramp-up and structured onboarding`,
+            `Dropout risk is ELEVATED (58%) — limited engagement signals; recommend early culture-fit discussion`,
+            'AI confidence is below threshold — human recruiter review is required before shortlisting this profile'
+          ],
+
+          recommendation,
+
+          recommendationRationale: recommendation === 'SHORTLIST'
+            ? `Strong technical and behavioral alignment makes this a high-priority shortlist candidate. Recommend scheduling a technical interview to validate depth in ${matched[0] ? matched[0].toUpperCase() : 'core skills'} and confirm leadership readiness.`
+            : recommendation === 'REVIEW'
+            ? `Partial alignment warrants a 30-minute screening call to clarify skill depth in ${missing.length ? missing[0].toUpperCase() : 'key areas'} and assess cultural fit before advancing to the technical round.`
+            : `Insufficient alignment with role requirements at this time. Consider re-evaluating if JD requirements are adjusted, or revisit this profile after the candidate upskills in ${missing.slice(0, 2).map(s => s.toUpperCase()).join(' and ') || 'the required areas'}.`
         },
         modelVersion: 'local-mock-v1',
         promptVersion: 'v2.1'
       },
+
       biasDetectionResult: {
         data: {
           overallBiasFreeScore: 0.96,
           genderBias:   { detected: false, details: 'No gender-specific language detected' },
-          locationBias: { detected: false, details: 'Location-neutral evaluation' },
-          collegeBias:  { detected: false, details: 'No college preference detected' },
-          ageBias:      { detected: false, details: 'No age indicators found' }
+          locationBias: { detected: false, details: 'Location-neutral evaluation applied' },
+          collegeBias:  { detected: false, details: 'No institution preference detected' },
+          ageBias:      { detected: false, details: 'No age indicators found in evaluation' }
         }
       }
     });

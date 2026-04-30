@@ -104,11 +104,11 @@ export class AIScorecardComponent {
   }
 
   private mapResults(r: any) {
-    const ranking     = r.rankingResult?.data ?? {};
-    const explanation = r.explanationResult?.data ?? {};
-    const bias        = r.biasDetectionResult?.data ?? {};
-    const matching    = r.matchingResult?.data ?? {};
-    const behavData   = r.behavioralResult?.data;
+    const ranking    = r.rankingResult?.data ?? {};
+    const expRaw     = r.explanationResult?.data ?? {};
+    const bias       = r.biasDetectionResult?.data ?? {};
+    const matching   = r.matchingResult?.data ?? {};
+    const behavData  = r.behavioralResult?.data;
 
     const cvJdMatchScore  = matching.matchPercentage ?? 0;
     const competencyScore = ranking.breakdown?.skillsMatch ?? 0;
@@ -121,6 +121,30 @@ export class AIScorecardComponent {
       summary:    behavData.summary ?? '',
       confidence: behavData.confidence ?? 0
     } : null;
+
+    // Support both structured (new) and legacy flat-string explanation
+    const isStructured = !!expRaw.overallAssessment;
+    const explanationData = isStructured ? {
+      overallAssessment:       expRaw.overallAssessment       ?? '',
+      keyStrengths:            expRaw.keyStrengths            ?? [],
+      skillGaps:               expRaw.skillGaps               ?? [],
+      experienceFit:           expRaw.experienceFit           ?? '',
+      educationFit:            expRaw.educationFit            ?? '',
+      behavioralSummary:       expRaw.behavioralSummary       ?? '',
+      riskFactors:             expRaw.riskFactors             ?? [],
+      recommendation:          expRaw.recommendation          ?? '',
+      recommendationRationale: expRaw.recommendationRationale ?? ''
+    } : {
+      overallAssessment:       expRaw.explanation ?? 'No explanation generated.',
+      keyStrengths:            [] as string[],
+      skillGaps:               [] as string[],
+      experienceFit:           '',
+      educationFit:            '',
+      behavioralSummary:       '',
+      riskFactors:             [] as string[],
+      recommendation:          '',
+      recommendationRationale: ''
+    };
 
     return {
       overallScore:        ranking.overallScore ?? 0,
@@ -135,7 +159,7 @@ export class AIScorecardComponent {
       requiresHumanReview: r.requiresHumanReview,
       humanReviewReason:   r.humanReviewReason,
       breakdown:           ranking.breakdown ?? {},
-      explanation:         explanation.explanation ?? 'No explanation generated.',
+      explanationData,
       biasScore,
       biasChecks: [
         { passed: !bias.genderBias?.detected,   label: 'Gender Bias',   detail: bias.genderBias?.details   ?? '—' },
@@ -308,12 +332,12 @@ export class AIScorecardComponent {
   }
   getBiasClass(s: number): string { return s >= 0.9 ? 'safe' : s >= 0.7 ? 'warning' : 'alert'; }
 
-  exportResults(): void {
-    const blob = new Blob([JSON.stringify(this.results, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `ai-scorecard-${Date.now()}.json`;
-    a.click();
+  exportPdf(): void {
+    window.print();
+  }
+
+  getRecommendationClass(rec: string): string {
+    return rec === 'SHORTLIST' ? 'rec-shortlist' : rec === 'REVIEW' ? 'rec-review' : rec === 'REJECT' ? 'rec-reject' : 'rec-unknown';
   }
 
   private resetAgents() {
