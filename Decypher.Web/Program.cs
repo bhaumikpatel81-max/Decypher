@@ -121,12 +121,16 @@ builder.Services.AddSession(options =>
 });
 
 // Configure CORS
-var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',') ?? new[] { "http://localhost:4200" };
+var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',') ?? new[] { "http://localhost:5000" };
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost" || allowedOrigins.Contains(origin);
+            })
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
