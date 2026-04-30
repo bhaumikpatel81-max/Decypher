@@ -283,5 +283,60 @@
       "fileData": "",
       "interviewedEarlier": false
     }
-  ]
+  ],
+  "fiscalYears": [],
+  "allocations": [],
+  "lineItems": [],
+  "actuals": [],
+  "costCategories": [
+    {
+      "id": "cc1",
+      "categoryName": "Job Boards",
+      "categoryCode": "JB",
+      "isActive": true,
+      "displayOrder": 1,
+      "defaultEstimatePerHire": 5000
+    },
+    {
+      "id": "cc2",
+      "categoryName": "Agency Fees",
+      "categoryCode": "AF",
+      "isActive": true,
+      "displayOrder": 2,
+      "defaultEstimatePerHire": 15000
+    },
+    {
+      "id": "cc3",
+      "categoryName": "Background Checks",
+      "categoryCode": "BC",
+      "isActive": true,
+      "displayOrder": 3,
+      "defaultEstimatePerHire": 500
+    },
+    {
+      "id": "cc4",
+      "categoryName": "Onboarding",
+      "categoryCode": "OB",
+      "isActive": true,
+      "displayOrder": 4,
+      "defaultEstimatePerHire": 2000
+    },
+    {
+      "id": "cc5",
+      "categoryName": "Referral Bonus",
+      "categoryCode": "RB",
+      "isActive": true,
+      "displayOrder": 5,
+      "defaultEstimatePerHire": 3000
+    }
+  ],
+  "budgetConfig": {
+    "id": "cfg-default",
+    "fiscalYearStartMonth": 4,
+    "defaultCurrency": "INR",
+    "budgetApprovalRequired": false,
+    "costPerHireTargetAmount": 50000,
+    "approvalThresholdAmount": 100000,
+    "brandColor": "#6C3EB8"
+  }
 }

@@ -285,7 +285,9 @@ namespace Decypher.Web.Services
             using var ms = new MemoryStream();
             using (var doc = PresentationDocument.Create(ms, PresentationDocumentType.Presentation))
             {
-                var mainPart = doc.AddMainPresentationPart();
+                var mainPart = doc.AddNewPart<PresentationPart>(
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+                    "rId1");
                 mainPart.Presentation = BuildPresentation();
 
                 var slideLayoutPart = CreateSlideLayoutPart(mainPart);
@@ -334,7 +336,7 @@ namespace Decypher.Web.Services
                         new P.NonVisualGroupShapeDrawingProperties(),
                         new ApplicationNonVisualDrawingProperties()),
                     new GroupShapeProperties(new D.TransformGroup()))),
-                new ColorMap
+                new P.ColorMap
                 {
                     Background1 = D.ColorSchemeIndexValues.Light1,
                     Text1 = D.ColorSchemeIndexValues.Dark1,

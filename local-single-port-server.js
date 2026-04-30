@@ -229,7 +229,27 @@ const seed = {
       fileData: '',
       interviewedEarlier: false
     }
-  ]
+  ],
+  fiscalYears: [],
+  allocations: [],
+  lineItems: [],
+  actuals: [],
+  costCategories: [
+    { id: 'cc1', categoryName: 'Job Boards', categoryCode: 'JB', isActive: true, displayOrder: 1, defaultEstimatePerHire: 5000 },
+    { id: 'cc2', categoryName: 'Agency Fees', categoryCode: 'AF', isActive: true, displayOrder: 2, defaultEstimatePerHire: 15000 },
+    { id: 'cc3', categoryName: 'Background Checks', categoryCode: 'BC', isActive: true, displayOrder: 3, defaultEstimatePerHire: 500 },
+    { id: 'cc4', categoryName: 'Onboarding', categoryCode: 'OB', isActive: true, displayOrder: 4, defaultEstimatePerHire: 2000 },
+    { id: 'cc5', categoryName: 'Referral Bonus', categoryCode: 'RB', isActive: true, displayOrder: 5, defaultEstimatePerHire: 3000 }
+  ],
+  budgetConfig: {
+    id: 'cfg-default',
+    fiscalYearStartMonth: 4,
+    defaultCurrency: 'INR',
+    budgetApprovalRequired: false,
+    costPerHireTargetAmount: 50000,
+    approvalThresholdAmount: 100000,
+    brandColor: '#6C3EB8'
+  }
 };
 
 function ensureDb() {
@@ -242,9 +262,14 @@ function ensureDb() {
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
     let changed = false;
     for (const key of Object.keys(seed)) {
-      if (!Array.isArray(db[key])) {
+      if (db[key] === undefined || db[key] === null) {
         db[key] = seed[key];
         changed = true;
+      } else if (!Array.isArray(db[key]) && Array.isArray(seed[key])) {
+        db[key] = seed[key];
+        changed = true;
+      } else if (!Array.isArray(db[key])) {
+        // non-array (object) key already exists — leave user data intact
       } else {
         for (const seededItem of seed[key]) {
           const existingItem = seededItem.id ? db[key].find(item => item.id === seededItem.id) : null;
@@ -306,6 +331,40 @@ function readBody(req, maxBytes = 1_000_000) {
       }
     });
   });
+}
+
+function readBodyBuffer(req, maxBytes = 50_000_000) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let total = 0;
+    req.on('data', chunk => {
+      total += chunk.length;
+      if (total > maxBytes) { reject(new Error('Request body too large')); req.destroy(); return; }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+function parseMultipartFile(buf, boundary) {
+  const delim = Buffer.from('\r\n--' + boundary);
+  const headerSep = Buffer.from('\r\n\r\n');
+  let pos = buf.indexOf('--' + boundary);
+  if (pos === -1) return null;
+  pos += ('--' + boundary).length;
+  while (pos < buf.length) {
+    if (buf[pos] === 13) pos += 2;
+    const hEnd = buf.indexOf(headerSep, pos);
+    if (hEnd === -1) break;
+    const header = buf.slice(pos, hEnd).toString();
+    const bodyStart = hEnd + 4;
+    const nextBound = buf.indexOf(delim, bodyStart);
+    const bodyEnd = nextBound === -1 ? buf.length : nextBound;
+    if (/name="file"/i.test(header)) return buf.slice(bodyStart, bodyEnd);
+    pos = nextBound === -1 ? buf.length : nextBound + delim.length;
+  }
+  return null;
 }
 
 function callOpenAIVision(base64Data, mimeType, apiKey) {
@@ -761,6 +820,456 @@ async function handleApi(req, res, url) {
     } catch (err) {
       return sendJson(res, 500, { error: `Text extraction failed: ${err.message}` });
     }
+  }
+
+  // ── Budget Module ─────────────────────────────────────────────────────────
+
+  if (route.startsWith('/api/budget')) {
+    if (!db.fiscalYears) db.fiscalYears = [];
+    if (!db.allocations) db.allocations = [];
+    if (!db.lineItems) db.lineItems = [];
+    if (!db.actuals) db.actuals = [];
+    if (!db.costCategories) db.costCategories = [];
+    if (!db.budgetConfig) db.budgetConfig = { id: 'cfg-default', fiscalYearStartMonth: 4, defaultCurrency: 'INR', budgetApprovalRequired: false, costPerHireTargetAmount: 50000, approvalThresholdAmount: 100000, brandColor: '#6C3EB8' };
+
+    // ── Fiscal Years ─────────────────────────────────────────────────────────
+    if (route === '/api/budget/fiscal-years' && req.method === 'GET') {
+      const fys = db.fiscalYears.map(fy => {
+        const allocs = db.allocations.filter(a => a.fiscalYearId === fy.id);
+        const acts = db.actuals.filter(a => a.fiscalYearId === fy.id);
+        const totalAllocated = allocs.reduce((s, a) => s + Number(a.allottedAmount || 0), 0);
+        const totalSpent = acts.reduce((s, a) => s + Number(a.amount || 0), 0);
+        return { ...fy, totalAllocated, totalSpent, remaining: Number(fy.totalBudgetAmount || 0) - totalSpent };
+      });
+      return sendJson(res, 200, fys);
+    }
+
+    if (route === '/api/budget/fiscal-years' && req.method === 'POST') {
+      const body = await readBody(req);
+      const fy = { id: crypto.randomUUID(), fiscalYearLabel: body.fiscalYearLabel || 'FY-New', startDate: body.startDate || '', endDate: body.endDate || '', totalBudgetAmount: Number(body.totalBudgetAmount || 0), currency: body.currency || 'INR', status: body.status || 'Active', notes: body.notes || '', createdAt: now(), updatedAt: now() };
+      db.fiscalYears.push(fy);
+      writeDb(db);
+      return sendJson(res, 201, { ...fy, totalAllocated: 0, totalSpent: 0, remaining: fy.totalBudgetAmount });
+    }
+
+    const fyMatch = route.match(/^\/api\/budget\/fiscal-years\/([^/]+)$/);
+    if (fyMatch) {
+      const fyId = fyMatch[1];
+      if (req.method === 'PUT') {
+        const body = await readBody(req);
+        const idx = db.fiscalYears.findIndex(f => f.id === fyId);
+        if (idx === -1) return sendJson(res, 404, { error: 'Fiscal year not found' });
+        db.fiscalYears[idx] = { ...db.fiscalYears[idx], ...body, id: fyId, updatedAt: now() };
+        writeDb(db);
+        return sendJson(res, 200, db.fiscalYears[idx]);
+      }
+      if (req.method === 'DELETE') {
+        db.fiscalYears = db.fiscalYears.filter(f => f.id !== fyId);
+        writeDb(db);
+        res.writeHead(204); res.end(); return;
+      }
+    }
+
+    if (route.match(/^\/api\/budget\/fiscal-years\/([^/]+)\/lock$/) && req.method === 'POST') {
+      const fyId = route.match(/^\/api\/budget\/fiscal-years\/([^/]+)\/lock$/)[1];
+      const idx = db.fiscalYears.findIndex(f => f.id === fyId);
+      if (idx === -1) return sendJson(res, 404, { error: 'Fiscal year not found' });
+      db.fiscalYears[idx].status = 'Locked'; db.fiscalYears[idx].updatedAt = now();
+      writeDb(db);
+      return sendJson(res, 200, db.fiscalYears[idx]);
+    }
+
+    if (route.match(/^\/api\/budget\/fiscal-years\/([^/]+)\/clone$/) && req.method === 'POST') {
+      const fyId = route.match(/^\/api\/budget\/fiscal-years\/([^/]+)\/clone$/)[1];
+      const orig = db.fiscalYears.find(f => f.id === fyId);
+      if (!orig) return sendJson(res, 404, { error: 'Fiscal year not found' });
+      const clone = { ...orig, id: crypto.randomUUID(), fiscalYearLabel: orig.fiscalYearLabel + ' (Copy)', status: 'Draft', createdAt: now(), updatedAt: now() };
+      db.fiscalYears.push(clone);
+      writeDb(db);
+      return sendJson(res, 201, clone);
+    }
+
+    // ── Allocations ──────────────────────────────────────────────────────────
+    if (route === '/api/budget/allocations' && req.method === 'GET') {
+      const { fiscalYearId, dept } = Object.fromEntries(url.searchParams);
+      let allocs = db.allocations;
+      if (fiscalYearId) allocs = allocs.filter(a => a.fiscalYearId === fiscalYearId);
+      if (dept) allocs = allocs.filter(a => (a.departmentName || '').toLowerCase().includes(dept.toLowerCase()));
+      const enriched = allocs.map(a => {
+        const acts = db.actuals.filter(x => x.allocationId === a.id);
+        const actualSpend = acts.reduce((s, x) => s + Number(x.amount || 0), 0);
+        const variance = Number(a.allottedAmount || 0) - actualSpend;
+        const utilizationPct = a.allottedAmount ? Math.round((actualSpend / a.allottedAmount) * 100) : 0;
+        return { ...a, actualSpend, variance, utilizationPct };
+      });
+      return sendJson(res, 200, enriched);
+    }
+
+    if (route === '/api/budget/allocations' && req.method === 'POST') {
+      const body = await readBody(req);
+      const alloc = { id: crypto.randomUUID(), fiscalYearId: body.fiscalYearId || '', departmentName: body.departmentName || '', departmentCode: body.departmentCode || '', headcountPlanned: Number(body.headcountPlanned || 0), allottedAmount: Number(body.allottedAmount || 0), category: body.category || 'General', quarter: body.quarter || 'Q1', notes: body.notes || '', createdAt: now(), updatedAt: now() };
+      db.allocations.push(alloc);
+      writeDb(db);
+      return sendJson(res, 201, { ...alloc, actualSpend: 0, variance: alloc.allottedAmount, utilizationPct: 0 });
+    }
+
+    const allocMatch = route.match(/^\/api\/budget\/allocations\/([^/]+)$/);
+    if (allocMatch) {
+      const allocId = allocMatch[1];
+      if (req.method === 'PUT') {
+        const body = await readBody(req);
+        const idx = db.allocations.findIndex(a => a.id === allocId);
+        if (idx === -1) return sendJson(res, 404, { error: 'Allocation not found' });
+        db.allocations[idx] = { ...db.allocations[idx], ...body, id: allocId, updatedAt: now() };
+        writeDb(db);
+        return sendJson(res, 200, db.allocations[idx]);
+      }
+      if (req.method === 'DELETE') {
+        db.allocations = db.allocations.filter(a => a.id !== allocId);
+        writeDb(db);
+        res.writeHead(204); res.end(); return;
+      }
+    }
+
+    // ── Line Items ───────────────────────────────────────────────────────────
+    if (route === '/api/budget/line-items' && req.method === 'GET') {
+      const { allocationId } = Object.fromEntries(url.searchParams);
+      let items = db.lineItems;
+      if (allocationId) items = items.filter(i => i.allocationId === allocationId);
+      return sendJson(res, 200, items);
+    }
+
+    if (route === '/api/budget/line-items' && req.method === 'POST') {
+      const body = await readBody(req);
+      const item = { id: crypto.randomUUID(), allocationId: body.allocationId || '', lineItemType: body.lineItemType || '', plannedAmount: Number(body.plannedAmount || 0), actualAmount: Number(body.actualAmount || 0) || undefined, notes: body.notes || '', createdAt: now(), updatedAt: now() };
+      db.lineItems.push(item);
+      writeDb(db);
+      return sendJson(res, 201, item);
+    }
+
+    const liMatch = route.match(/^\/api\/budget\/line-items\/([^/]+)$/);
+    if (liMatch) {
+      const liId = liMatch[1];
+      if (req.method === 'PUT') {
+        const body = await readBody(req);
+        const idx = db.lineItems.findIndex(i => i.id === liId);
+        if (idx === -1) return sendJson(res, 404, { error: 'Line item not found' });
+        db.lineItems[idx] = { ...db.lineItems[idx], ...body, id: liId, updatedAt: now() };
+        writeDb(db);
+        return sendJson(res, 200, db.lineItems[idx]);
+      }
+      if (req.method === 'DELETE') {
+        db.lineItems = db.lineItems.filter(i => i.id !== liId);
+        writeDb(db);
+        res.writeHead(204); res.end(); return;
+      }
+    }
+
+    // ── Actuals ──────────────────────────────────────────────────────────────
+    if (route === '/api/budget/actuals' && req.method === 'GET') {
+      const { fiscalYearId, from, to, dept } = Object.fromEntries(url.searchParams);
+      let acts = db.actuals;
+      if (fiscalYearId) acts = acts.filter(a => a.fiscalYearId === fiscalYearId);
+      if (from) acts = acts.filter(a => a.spendDate >= from);
+      if (to) acts = acts.filter(a => a.spendDate <= to);
+      if (dept) acts = acts.filter(a => (a.departmentName || '').toLowerCase().includes(dept.toLowerCase()));
+      return sendJson(res, 200, acts);
+    }
+
+    if (route === '/api/budget/actuals' && req.method === 'POST') {
+      const body = await readBody(req);
+      const act = { id: crypto.randomUUID(), fiscalYearId: body.fiscalYearId || '', allocationId: body.allocationId || undefined, spendCategory: body.spendCategory || '', amount: Number(body.amount || 0), spendDate: body.spendDate || now().slice(0, 10), invoiceReference: body.invoiceReference || '', vendorId: body.vendorId || undefined, vendorName: body.vendorName || '', departmentName: body.departmentName || '', isApproved: Boolean(body.isApproved), notes: body.notes || '', createdAt: now() };
+      db.actuals.push(act);
+      writeDb(db);
+      return sendJson(res, 201, act);
+    }
+
+    const actMatch = route.match(/^\/api\/budget\/actuals\/([^/]+)$/);
+    if (actMatch) {
+      const actId = actMatch[1];
+      if (req.method === 'PUT') {
+        const body = await readBody(req);
+        const idx = db.actuals.findIndex(a => a.id === actId);
+        if (idx === -1) return sendJson(res, 404, { error: 'Actual not found' });
+        db.actuals[idx] = { ...db.actuals[idx], ...body, id: actId };
+        writeDb(db);
+        return sendJson(res, 200, db.actuals[idx]);
+      }
+      if (req.method === 'DELETE') {
+        db.actuals = db.actuals.filter(a => a.id !== actId);
+        writeDb(db);
+        res.writeHead(204); res.end(); return;
+      }
+    }
+
+    // ── Analytics ────────────────────────────────────────────────────────────
+    if (route === '/api/budget/dashboard' && req.method === 'GET') {
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      const fy = db.fiscalYears.find(f => f.id === fyId);
+      const allocs = db.allocations.filter(a => a.fiscalYearId === fyId);
+      const acts = db.actuals.filter(a => a.fiscalYearId === fyId);
+      const totalBudget = Number(fy?.totalBudgetAmount || 0);
+      const totalSpent = acts.reduce((s, a) => s + Number(a.amount || 0), 0);
+      const totalCommitted = allocs.reduce((s, a) => s + Number(a.allottedAmount || 0), 0);
+      const remaining = totalBudget - totalSpent;
+      const headcountPlanned = allocs.reduce((s, a) => s + Number(a.headcountPlanned || 0), 0);
+      const deptMap = {};
+      for (const a of allocs) {
+        if (!deptMap[a.departmentName]) deptMap[a.departmentName] = { department: a.departmentName, planned: 0, actual: 0 };
+        deptMap[a.departmentName].planned += Number(a.allottedAmount || 0);
+      }
+      for (const a of acts) {
+        if (a.departmentName && deptMap[a.departmentName]) deptMap[a.departmentName].actual += Number(a.amount || 0);
+      }
+      const catMap = {};
+      for (const a of acts) {
+        const cat = a.spendCategory || 'Other';
+        catMap[cat] = (catMap[cat] || 0) + Number(a.amount || 0);
+      }
+      const budgetByCategory = Object.entries(catMap).map(([category, amount]) => ({ category, amount, pct: totalSpent ? Math.round((amount / totalSpent) * 100) : 0 }));
+      const qMap = { Q1: { q: 'Q1', planned: 0, actual: 0, hc: 0 }, Q2: { q: 'Q2', planned: 0, actual: 0, hc: 0 }, Q3: { q: 'Q3', planned: 0, actual: 0, hc: 0 }, Q4: { q: 'Q4', planned: 0, actual: 0, hc: 0 } };
+      for (const a of allocs) { if (qMap[a.quarter]) { qMap[a.quarter].planned += Number(a.allottedAmount || 0); qMap[a.quarter].hc += Number(a.headcountPlanned || 0); } }
+      const vendMap = {};
+      for (const a of acts) {
+        if (a.vendorName) {
+          if (!vendMap[a.vendorName]) vendMap[a.vendorName] = { vendorId: a.vendorId, vendorName: a.vendorName, totalSpend: 0, transactionCount: 0 };
+          vendMap[a.vendorName].totalSpend += Number(a.amount || 0);
+          vendMap[a.vendorName].transactionCount++;
+        }
+      }
+      return sendJson(res, 200, {
+        totalBudget, totalSpent, totalCommitted, remaining,
+        utilizationPct: totalBudget ? Math.round((totalSpent / totalBudget) * 100) : 0,
+        headcountPlanned, headcountFilled: 0, headcountInProgress: 0,
+        costPerHireActual: 0, costPerHireTarget: Number(db.budgetConfig?.costPerHireTargetAmount || 0),
+        budgetByDepartment: Object.values(deptMap),
+        budgetByCategory,
+        budgetByQuarter: Object.values(qMap).map(q => ({ quarter: q.q, planned: q.planned, actual: q.actual, headcountPlanned: q.hc })),
+        topVendorsBySpend: Object.values(vendMap).sort((a, b) => b.totalSpend - a.totalSpend).slice(0, 5),
+        monthlyTrend: []
+      });
+    }
+
+    if (route === '/api/budget/forecast' && req.method === 'GET') {
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      const fy = db.fiscalYears.find(f => f.id === fyId);
+      const allocs = db.allocations.filter(a => a.fiscalYearId === fyId);
+      const acts = db.actuals.filter(a => a.fiscalYearId === fyId);
+      const deptMap = {};
+      for (const a of allocs) {
+        if (!deptMap[a.departmentName]) deptMap[a.departmentName] = { department: a.departmentName, departmentCode: a.departmentCode || '', q1Planned: 0, q2Planned: 0, q3Planned: 0, q4Planned: 0, totalPlanned: 0, q1Actual: 0, q2Actual: 0, q3Actual: 0, q4Actual: 0, totalActual: 0, headcountPlanned: 0 };
+        const q = a.quarter && ['Q1','Q2','Q3','Q4'].includes(a.quarter) ? a.quarter.toLowerCase() : 'q1';
+        deptMap[a.departmentName][q + 'Planned'] += Number(a.allottedAmount || 0);
+        deptMap[a.departmentName].totalPlanned += Number(a.allottedAmount || 0);
+        deptMap[a.departmentName].headcountPlanned += Number(a.headcountPlanned || 0);
+      }
+      for (const a of acts) {
+        if (a.departmentName && deptMap[a.departmentName]) {
+          const month = new Date(a.spendDate).getMonth();
+          const q = month < 3 ? 'q1' : month < 6 ? 'q2' : month < 9 ? 'q3' : 'q4';
+          deptMap[a.departmentName][q + 'Actual'] += Number(a.amount || 0);
+          deptMap[a.departmentName].totalActual += Number(a.amount || 0);
+        }
+      }
+      const rows = Object.values(deptMap);
+      const totals = rows.reduce((t, r) => ({ q1Planned: t.q1Planned + r.q1Planned, q2Planned: t.q2Planned + r.q2Planned, q3Planned: t.q3Planned + r.q3Planned, q4Planned: t.q4Planned + r.q4Planned, total: t.total + r.totalPlanned }), { q1Planned: 0, q2Planned: 0, q3Planned: 0, q4Planned: 0, total: 0 });
+      return sendJson(res, 200, { fiscalYearId: fyId, fiscalYearLabel: fy?.fiscalYearLabel || '', rows, totals });
+    }
+
+    if (route === '/api/budget/cost-per-hire' && req.method === 'GET') {
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      const acts = db.actuals.filter(a => a.fiscalYearId === fyId);
+      const totalSpend = acts.reduce((s, a) => s + Number(a.amount || 0), 0);
+      return sendJson(res, 200, { overallCostPerHire: 0, targetCostPerHire: Number(db.budgetConfig?.costPerHireTargetAmount || 0), totalHires: 0, totalSpend, byDepartment: [], byCategory: [] });
+    }
+
+    if (route === '/api/budget/vendor-spend' && req.method === 'GET') {
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      const acts = db.actuals.filter(a => a.fiscalYearId === fyId && a.vendorName);
+      const map = {};
+      for (const a of acts) { if (!map[a.vendorName]) map[a.vendorName] = { vendorId: a.vendorId, vendorName: a.vendorName, totalSpend: 0, transactionCount: 0 }; map[a.vendorName].totalSpend += Number(a.amount || 0); map[a.vendorName].transactionCount++; }
+      return sendJson(res, 200, Object.values(map).sort((a, b) => b.totalSpend - a.totalSpend));
+    }
+
+    if (route === '/api/budget/department-breakdown' && req.method === 'GET') {
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      const allocs = db.allocations.filter(a => a.fiscalYearId === fyId);
+      const acts = db.actuals.filter(a => a.fiscalYearId === fyId);
+      const map = {};
+      for (const a of allocs) { if (!map[a.departmentName]) map[a.departmentName] = { department: a.departmentName, departmentCode: a.departmentCode || '', plannedBudget: 0, actualSpend: 0, headcountPlanned: 0, headcountFilled: 0 }; map[a.departmentName].plannedBudget += Number(a.allottedAmount || 0); map[a.departmentName].headcountPlanned += Number(a.headcountPlanned || 0); }
+      for (const a of acts) { if (a.departmentName && map[a.departmentName]) map[a.departmentName].actualSpend += Number(a.amount || 0); }
+      const rows = Object.values(map).map(r => ({ ...r, variance: r.plannedBudget - r.actualSpend, utilizationPct: r.plannedBudget ? Math.round((r.actualSpend / r.plannedBudget) * 100) : 0 }));
+      return sendJson(res, 200, rows);
+    }
+
+    // ── Config ───────────────────────────────────────────────────────────────
+    if (route === '/api/budget/config' && req.method === 'GET') {
+      return sendJson(res, 200, db.budgetConfig);
+    }
+
+    if (route === '/api/budget/config' && req.method === 'PUT') {
+      const body = await readBody(req);
+      db.budgetConfig = { ...db.budgetConfig, ...body, id: 'cfg-default' };
+      writeDb(db);
+      return sendJson(res, 200, db.budgetConfig);
+    }
+
+    if (route === '/api/budget/cost-categories' && req.method === 'GET') {
+      return sendJson(res, 200, db.costCategories.sort((a, b) => a.displayOrder - b.displayOrder));
+    }
+
+    if (route === '/api/budget/cost-categories' && req.method === 'POST') {
+      const body = await readBody(req);
+      const cat = { id: crypto.randomUUID(), categoryName: body.categoryName || '', categoryCode: body.categoryCode || '', isActive: body.isActive !== false, displayOrder: Number(body.displayOrder || db.costCategories.length + 1), defaultEstimatePerHire: Number(body.defaultEstimatePerHire || 0) || undefined };
+      db.costCategories.push(cat);
+      writeDb(db);
+      return sendJson(res, 201, cat);
+    }
+
+    const catMatch = route.match(/^\/api\/budget\/cost-categories\/([^/]+)$/);
+    if (catMatch) {
+      const catId = catMatch[1];
+      if (req.method === 'PUT') {
+        const body = await readBody(req);
+        const idx = db.costCategories.findIndex(c => c.id === catId);
+        if (idx === -1) return sendJson(res, 404, { error: 'Cost category not found' });
+        db.costCategories[idx] = { ...db.costCategories[idx], ...body, id: catId };
+        writeDb(db);
+        return sendJson(res, 200, db.costCategories[idx]);
+      }
+    }
+
+    // ── Import ───────────────────────────────────────────────────────────────
+    if (route === '/api/budget/import-template' && req.method === 'GET') {
+      const XLSX = require('xlsx');
+      const wb = XLSX.utils.book_new();
+      const instrData = [['Sheet', 'Column', 'Required', 'Description'], ['FiscalYear', 'FiscalYearLabel', 'Yes', 'e.g. FY2025'], ['FiscalYear', 'StartDate', 'Yes', 'YYYY-MM-DD'], ['FiscalYear', 'EndDate', 'Yes', 'YYYY-MM-DD'], ['FiscalYear', 'TotalBudgetAmount', 'Yes', 'Number'], ['FiscalYear', 'Currency', 'No', 'Default INR'], ['FiscalYear', 'Status', 'No', 'Active / Draft'], ['Allocations', 'FiscalYearLabel', 'Yes', 'Must match FiscalYear sheet'], ['Allocations', 'DepartmentName', 'Yes', 'e.g. Engineering'], ['Allocations', 'AllottedAmount', 'Yes', 'Number'], ['Allocations', 'HeadcountPlanned', 'No', 'Number'], ['Allocations', 'Quarter', 'No', 'Q1/Q2/Q3/Q4'], ['Allocations', 'Category', 'No', 'e.g. Permanent'], ['ActualSpend', 'FiscalYearLabel', 'Yes', 'Must match FiscalYear'], ['ActualSpend', 'SpendCategory', 'Yes', 'e.g. Agency Fees'], ['ActualSpend', 'Amount', 'Yes', 'Number'], ['ActualSpend', 'SpendDate', 'Yes', 'YYYY-MM-DD'], ['ActualSpend', 'DepartmentName', 'No', ''], ['ActualSpend', 'VendorName', 'No', ''], ['ActualSpend', 'InvoiceReference', 'No', '']];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instrData), 'Instructions');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['FiscalYearLabel', 'StartDate', 'EndDate', 'TotalBudgetAmount', 'Currency', 'Status', 'Notes'], ['FY2025', '2025-04-01', '2026-03-31', 5000000, 'INR', 'Active', '']]), 'FiscalYear');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['FiscalYearLabel', 'DepartmentName', 'DepartmentCode', 'HeadcountPlanned', 'AllottedAmount', 'Category', 'Quarter', 'Notes'], ['FY2025', 'Engineering', 'ENG', 10, 2000000, 'Permanent', 'Q1', '']]), 'Allocations');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['FiscalYearLabel', 'SpendCategory', 'Amount', 'SpendDate', 'DepartmentName', 'VendorName', 'InvoiceReference', 'Notes'], ['FY2025', 'Agency Fees', 50000, '2025-05-15', 'Engineering', 'TechStaff Solutions', 'INV-001', '']]), 'ActualSpend');
+      const xlsBuf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      res.writeHead(200, { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': 'attachment; filename="Budget_Import_Template.xlsx"', 'Content-Length': xlsBuf.length });
+      res.end(xlsBuf);
+      return;
+    }
+
+    if (route === '/api/budget/import-excel' && req.method === 'POST') {
+      const ctHeader = req.headers['content-type'] || '';
+      const boundaryMatch = ctHeader.match(/boundary=([^\s;]+)/);
+      if (!boundaryMatch) return sendJson(res, 400, { error: 'Expected multipart/form-data' });
+      const rawBuf = await readBodyBuffer(req, 50_000_000);
+      const fileBuf = parseMultipartFile(rawBuf, boundaryMatch[1]);
+      if (!fileBuf || fileBuf.length === 0) return sendJson(res, 400, { error: 'No file found in request' });
+      try {
+        const XLSX = require('xlsx');
+        const wb = XLSX.read(fileBuf, { type: 'buffer', cellDates: true });
+        const result = { fiscalYears: { imported: 0, updated: 0, errors: [] }, allocations: { imported: 0, updated: 0, errors: [] }, lineItems: { imported: 0, updated: 0, errors: [] }, actuals: { imported: 0, updated: 0, errors: [] }, totalErrors: 0 };
+
+        const fySheetName = wb.SheetNames.find(n => n.toLowerCase().includes('fiscal'));
+        if (fySheetName) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[fySheetName]);
+          for (const row of rows) {
+            const label = String(row['FiscalYearLabel'] || row['Fiscal Year Label'] || row['Label'] || '').trim();
+            if (!label) continue;
+            const existing = db.fiscalYears.find(f => f.fiscalYearLabel === label);
+            const startDate = row['StartDate'] || row['Start Date'] || '';
+            const endDate = row['EndDate'] || row['End Date'] || '';
+            const amount = Number(row['TotalBudgetAmount'] || row['Total Budget Amount'] || row['BudgetAmount'] || 0);
+            if (existing) {
+              Object.assign(existing, { startDate: String(startDate), endDate: String(endDate), totalBudgetAmount: amount || existing.totalBudgetAmount, currency: String(row['Currency'] || existing.currency), status: String(row['Status'] || existing.status), notes: String(row['Notes'] || existing.notes || ''), updatedAt: now() });
+              result.fiscalYears.updated++;
+            } else {
+              db.fiscalYears.push({ id: crypto.randomUUID(), fiscalYearLabel: label, startDate: String(startDate), endDate: String(endDate), totalBudgetAmount: amount, currency: String(row['Currency'] || 'INR'), status: String(row['Status'] || 'Active'), notes: String(row['Notes'] || ''), createdAt: now(), updatedAt: now() });
+              result.fiscalYears.imported++;
+            }
+          }
+        }
+
+        const allocSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('alloc'));
+        if (allocSheetName) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[allocSheetName]);
+          for (const row of rows) {
+            const fyLabel = String(row['FiscalYearLabel'] || row['Fiscal Year Label'] || '').trim();
+            const dept = String(row['DepartmentName'] || row['Department Name'] || row['Department'] || '').trim();
+            if (!dept) continue;
+            const fy = db.fiscalYears.find(f => f.fiscalYearLabel === fyLabel);
+            const fyId = fy?.id || '';
+            const existing = fyId ? db.allocations.find(a => a.fiscalYearId === fyId && a.departmentName === dept && (a.quarter || 'Q1') === (String(row['Quarter'] || row['quarter'] || 'Q1'))) : null;
+            const allottedAmount = Number(row['AllottedAmount'] || row['Allotted Amount'] || row['Amount'] || 0);
+            if (existing) {
+              Object.assign(existing, { allottedAmount, headcountPlanned: Number(row['HeadcountPlanned'] || row['Headcount'] || existing.headcountPlanned || 0), category: String(row['Category'] || existing.category || 'General'), quarter: String(row['Quarter'] || existing.quarter || 'Q1'), notes: String(row['Notes'] || existing.notes || ''), updatedAt: now() });
+              result.allocations.updated++;
+            } else {
+              db.allocations.push({ id: crypto.randomUUID(), fiscalYearId: fyId, departmentName: dept, departmentCode: String(row['DepartmentCode'] || row['Department Code'] || ''), headcountPlanned: Number(row['HeadcountPlanned'] || row['Headcount'] || 0), allottedAmount, category: String(row['Category'] || 'General'), quarter: String(row['Quarter'] || 'Q1'), notes: String(row['Notes'] || ''), createdAt: now(), updatedAt: now() });
+              result.allocations.imported++;
+            }
+          }
+        }
+
+        const actSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('actual'));
+        if (actSheetName) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[actSheetName]);
+          for (const row of rows) {
+            const fyLabel = String(row['FiscalYearLabel'] || row['Fiscal Year Label'] || '').trim();
+            const amount = Number(row['Amount'] || 0);
+            const spendDate = row['SpendDate'] || row['Spend Date'] || row['Date'] || '';
+            if (!amount && !spendDate) continue;
+            const fy = db.fiscalYears.find(f => f.fiscalYearLabel === fyLabel);
+            const dept = String(row['DepartmentName'] || row['Department Name'] || row['Department'] || '');
+            const alloc = fy ? db.allocations.find(a => a.fiscalYearId === fy.id && a.departmentName === dept) : null;
+            db.actuals.push({ id: crypto.randomUUID(), fiscalYearId: fy?.id || '', allocationId: alloc?.id || undefined, spendCategory: String(row['SpendCategory'] || row['Spend Category'] || row['Category'] || ''), amount, spendDate: String(spendDate).slice(0, 10), invoiceReference: String(row['InvoiceReference'] || row['Invoice Reference'] || row['Invoice'] || ''), vendorName: String(row['VendorName'] || row['Vendor Name'] || row['Vendor'] || ''), departmentName: dept, isApproved: false, notes: String(row['Notes'] || ''), createdAt: now() });
+            result.actuals.imported++;
+          }
+        }
+
+        writeDb(db);
+        result.totalErrors = result.fiscalYears.errors.length + result.allocations.errors.length + result.actuals.errors.length;
+        return sendJson(res, 200, result);
+      } catch (err) {
+        return sendJson(res, 500, { error: `Import failed: ${err.message}` });
+      }
+    }
+
+    // CSV import (same route, detected by content-type text/csv or .csv filename in header)
+    if (route === '/api/budget/import-csv' && req.method === 'POST') {
+      const ctHeader = req.headers['content-type'] || '';
+      const boundaryMatch = ctHeader.match(/boundary=([^\s;]+)/);
+      let csvText = '';
+      if (boundaryMatch) {
+        const rawBuf = await readBodyBuffer(req, 10_000_000);
+        const fileBuf = parseMultipartFile(rawBuf, boundaryMatch[1]);
+        csvText = fileBuf ? fileBuf.toString('utf8') : '';
+      } else {
+        const body = await readBodyBuffer(req, 10_000_000);
+        csvText = body.toString('utf8');
+      }
+      if (!csvText.trim()) return sendJson(res, 400, { error: 'No CSV data found in request' });
+      const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return sendJson(res, 400, { error: 'CSV must have a header row and at least one data row' });
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const imported = [];
+      for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const row = Object.fromEntries(headers.map((h, idx) => [h, vals[idx] || '']));
+        imported.push(row);
+      }
+      return sendJson(res, 200, { message: `CSV parsed: ${imported.length} rows. Use the Excel import for full budget import.`, rows: imported.slice(0, 5) });
+    }
+
+    // Export stubs (return empty xlsx)
+    if (route.startsWith('/api/budget/export/') && req.method === 'GET') {
+      const XLSX = require('xlsx');
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['No data']]), 'Sheet1');
+      const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const isPpt = route.includes('/ppt');
+      res.writeHead(200, { 'Content-Type': isPpt ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': `attachment; filename="BudgetReport.${isPpt ? 'pptx' : 'xlsx'}"`, 'Content-Length': buf.length });
+      res.end(buf);
+      return;
+    }
+
+    return sendJson(res, 404, { error: 'Budget API route not found', path: url.pathname });
   }
 
   return sendJson(res, 404, { error: 'API route not found', path: url.pathname });
