@@ -1318,7 +1318,7 @@ async function handleApi(req, res, url) {
       }
     }
 
-    // CSV import (same route, detected by content-type text/csv or .csv filename in header)
+    // CSV import — parses and saves allocations or actuals based on detected headers
     if (route === '/api/budget/import-csv' && req.method === 'POST') {
       const ctHeader = req.headers['content-type'] || '';
       const boundaryMatch = ctHeader.match(/boundary=([^\s;]+)/);
@@ -1334,14 +1334,84 @@ async function handleApi(req, res, url) {
       if (!csvText.trim()) return sendJson(res, 400, { error: 'No CSV data found in request' });
       const lines = csvText.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) return sendJson(res, 400, { error: 'CSV must have a header row and at least one data row' });
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-      const imported = [];
-      for (let i = 1; i < lines.length; i++) {
-        const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        const row = Object.fromEntries(headers.map((h, idx) => [h, vals[idx] || '']));
-        imported.push(row);
+      const parseCSVLine = line => {
+        const result = []; let cur = ''; let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') { inQ = !inQ; } else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; } else { cur += c; }
+        }
+        result.push(cur.trim());
+        return result;
+      };
+      const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, ''));
+      const rows = lines.slice(1).map(l => Object.fromEntries(headers.map((h, i) => [h, (parseCSVLine(l)[i] || '').replace(/^"|"$/g, '')])));
+
+      const result = { imported: 0, updated: 0, errors: [] };
+      const isActuals = headers.some(h => /amount|spend|invoice/i.test(h)) && !headers.some(h => /allott|headcount/i.test(h));
+
+      if (isActuals) {
+        for (const row of rows) {
+          const fyLabel = String(row['FiscalYearLabel'] || row['Fiscal Year Label'] || '').trim();
+          const amount = Number(row['Amount'] || 0);
+          const spendDate = String(row['SpendDate'] || row['Spend Date'] || row['Date'] || '').slice(0, 10);
+          if (!amount && !spendDate) { result.errors.push('Skipped row: missing Amount and SpendDate'); continue; }
+          const fy = db.fiscalYears.find(f => f.fiscalYearLabel === fyLabel);
+          const dept = String(row['DepartmentName'] || row['Department Name'] || row['Department'] || '');
+          const alloc = fy ? db.allocations.find(a => a.fiscalYearId === fy.id && a.departmentName === dept) : null;
+          db.actuals.push({ id: crypto.randomUUID(), fiscalYearId: fy?.id || '', allocationId: alloc?.id || undefined, spendCategory: String(row['SpendCategory'] || row['Spend Category'] || row['Category'] || ''), amount, spendDate, invoiceReference: String(row['InvoiceReference'] || row['Invoice Reference'] || row['Invoice'] || ''), vendorName: String(row['VendorName'] || row['Vendor Name'] || row['Vendor'] || ''), departmentName: dept, isApproved: false, notes: String(row['Notes'] || ''), createdAt: now() });
+          result.imported++;
+        }
+      } else {
+        for (const row of rows) {
+          const fyLabel = String(row['FiscalYearLabel'] || row['Fiscal Year Label'] || '').trim();
+          const dept = String(row['DepartmentName'] || row['Department Name'] || row['Department'] || '').trim();
+          if (!dept) { result.errors.push('Skipped row: missing DepartmentName'); continue; }
+          const fy = db.fiscalYears.find(f => f.fiscalYearLabel === fyLabel);
+          const fyId = fy?.id || '';
+          const quarter = String(row['Quarter'] || 'Q1');
+          const existing = fyId ? db.allocations.find(a => a.fiscalYearId === fyId && a.departmentName === dept && (a.quarter || 'Q1') === quarter) : null;
+          const allottedAmount = Number(row['AllottedAmount'] || row['Allotted Amount'] || row['Amount'] || 0);
+          if (existing) {
+            Object.assign(existing, { allottedAmount, headcountPlanned: Number(row['HeadcountPlanned'] || row['Headcount'] || existing.headcountPlanned || 0), category: String(row['Category'] || existing.category || 'General'), quarter, notes: String(row['Notes'] || existing.notes || ''), updatedAt: now() });
+            result.updated++;
+          } else {
+            db.allocations.push({ id: crypto.randomUUID(), fiscalYearId: fyId, departmentName: dept, departmentCode: String(row['DepartmentCode'] || row['Department Code'] || ''), headcountPlanned: Number(row['HeadcountPlanned'] || row['Headcount'] || 0), allottedAmount, category: String(row['Category'] || 'General'), quarter, notes: String(row['Notes'] || ''), createdAt: now(), updatedAt: now() });
+            result.imported++;
+          }
+        }
       }
-      return sendJson(res, 200, { message: `CSV parsed: ${imported.length} rows. Use the Excel import for full budget import.`, rows: imported.slice(0, 5) });
+      writeDb(db);
+      result.totalErrors = result.errors.length;
+      return sendJson(res, 200, { type: isActuals ? 'actuals' : 'allocations', ...result });
+    }
+
+    // CSV export — generates real data from DB as downloadable CSV
+    if (route.startsWith('/api/budget/export-csv') && req.method === 'GET') {
+      const type = url.searchParams.get('type') || 'allocations';
+      const fyId = url.searchParams.get('fiscalYearId') || '';
+      let csvLines = [];
+      if (type === 'actuals') {
+        csvLines.push('FiscalYearLabel,DepartmentName,SpendCategory,Amount,SpendDate,InvoiceReference,VendorName,Notes');
+        const items = fyId ? db.actuals.filter(a => a.fiscalYearId === fyId) : db.actuals;
+        for (const a of items) {
+          const fy = db.fiscalYears.find(f => f.id === a.fiscalYearId);
+          const q = v => `"${String(v || '').replace(/"/g, '""')}"`;
+          csvLines.push([q(fy?.fiscalYearLabel || ''), q(a.departmentName), q(a.spendCategory), a.amount, q(a.spendDate), q(a.invoiceReference), q(a.vendorName), q(a.notes)].join(','));
+        }
+      } else {
+        csvLines.push('FiscalYearLabel,DepartmentName,DepartmentCode,AllottedAmount,HeadcountPlanned,Category,Quarter,Notes');
+        const items = fyId ? db.allocations.filter(a => a.fiscalYearId === fyId) : db.allocations;
+        for (const a of items) {
+          const fy = db.fiscalYears.find(f => f.id === a.fiscalYearId);
+          const q = v => `"${String(v || '').replace(/"/g, '""')}"`;
+          csvLines.push([q(fy?.fiscalYearLabel || ''), q(a.departmentName), q(a.departmentCode), a.allottedAmount, a.headcountPlanned, q(a.category), q(a.quarter), q(a.notes)].join(','));
+        }
+      }
+      const csvBuf = Buffer.from(csvLines.join('\r\n'), 'utf8');
+      const fname = `Budget_${type}_${new Date().toISOString().slice(0,10)}.csv`;
+      res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${fname}"`, 'Content-Length': csvBuf.length });
+      res.end(csvBuf);
+      return;
     }
 
     // Export stubs (return empty xlsx)

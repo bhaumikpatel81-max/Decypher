@@ -49,6 +49,10 @@ import {
         <button class="btn btn-sm btn-outline-import" (click)="downloadBudgetTemplate()">📥 DOWNLOAD BLANK TEMPLATE</button>
         <button class="btn btn-sm btn-outline-import" (click)="budgetExcelInput.click()">📤 UPLOAD BUDGET EXCEL</button>
         <input #budgetExcelInput type="file" accept=".xlsx" style="display:none" (change)="onBudgetExcelUpload($event)">
+        <button class="btn btn-sm btn-outline-import" (click)="budgetCsvInput.click()">📄 UPLOAD CSV</button>
+        <input #budgetCsvInput type="file" accept=".csv" style="display:none" (change)="onBudgetCsvUpload($event)">
+        <button class="btn btn-sm btn-outline-import" (click)="exportCsv('allocations')">⬇ EXPORT ALLOCATIONS CSV</button>
+        <button class="btn btn-sm btn-outline-import" (click)="exportCsv('actuals')">⬇ EXPORT ACTUALS CSV</button>
       </div>
     </div>
     <div class="import-strip-sample">
@@ -56,8 +60,8 @@ import {
       <a class="import-strip-link" (click)="downloadBudgetSample()">📎 VIEW & DOWNLOAD SAMPLE (pre-filled example)</a>
     </div>
     <div class="import-strip-result" *ngIf="budgetImportResult">
-      <span *ngIf="budgetImportResult.totalErrors === 0" style="color:#059669">✅ Import complete — {{budgetImportResult.fiscalYears.imported + budgetImportResult.allocations.imported + budgetImportResult.lineItems.imported + budgetImportResult.actuals.imported}} rows imported across all sheets.</span>
-      <span *ngIf="budgetImportResult.totalErrors > 0" style="color:#d97706">⚠️ Import complete with {{budgetImportResult.totalErrors}} error(s). Fiscal Years: {{budgetImportResult.fiscalYears.imported}} | Allocations: {{budgetImportResult.allocations.imported}} | Line Items: {{budgetImportResult.lineItems.imported}} | Actuals: {{budgetImportResult.actuals.imported}}</span>
+      <span *ngIf="budgetImportResult.totalErrors === 0" style="color:#059669">✅ Import complete — {{budgetImportResult.fiscalYears?.imported + budgetImportResult.allocations?.imported + budgetImportResult.lineItems?.imported + budgetImportResult.actuals?.imported + (budgetImportResult.imported || 0)}} rows imported.</span>
+      <span *ngIf="budgetImportResult.totalErrors > 0" style="color:#d97706">⚠️ Import complete with {{budgetImportResult.totalErrors}} error(s). Rows imported: {{(budgetImportResult.fiscalYears?.imported || 0) + (budgetImportResult.allocations?.imported || 0) + (budgetImportResult.imported || 0)}} | Updated: {{budgetImportResult.updated || 0}}</span>
     </div>
   </div>
 
@@ -1319,5 +1323,39 @@ export class BudgetComponent implements OnInit {
       }
     });
     input.value = '';
+  }
+
+  onBudgetCsvUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    const apiUrl = environment.apiUrl;
+    this.http.post<any>(`${apiUrl}/api/budget/import-csv`, fd).subscribe({
+      next: res => {
+        this.budgetImportResult = res;
+        this.loadFiscalYears();
+      },
+      error: err => {
+        alert('CSV Import failed: ' + (err?.error?.error ?? 'Unknown error'));
+      }
+    });
+    input.value = '';
+  }
+
+  exportCsv(type: 'allocations' | 'actuals') {
+    const apiUrl = environment.apiUrl;
+    const fyParam = this.selectedFyId ? `&fiscalYearId=${this.selectedFyId}` : '';
+    this.http.get(`${apiUrl}/api/budget/export-csv?type=${type}${fyParam}`, { responseType: 'blob' }).subscribe(blob => {
+      const label = this.selectedFyId ? (this.fiscalYears.find((f: any) => f.id === this.selectedFyId)?.fiscalYearLabel || '') : 'All';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Budget_${type}_${label}_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
   }
 }

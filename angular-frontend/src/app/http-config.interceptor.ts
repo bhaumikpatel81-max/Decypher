@@ -25,8 +25,9 @@ export class HttpConfigInterceptor implements HttpInterceptor {
       });
     }
 
-    // Add Content-Type if not already set
-    if (!request.headers.has('Content-Type')) {
+    // Add Content-Type for JSON requests only — skip FormData so the browser
+    // can auto-set multipart/form-data with the correct boundary.
+    if (!request.headers.has('Content-Type') && !(request.body instanceof FormData)) {
       request = request.clone({
         setHeaders: {
           'Content-Type': 'application/json'
