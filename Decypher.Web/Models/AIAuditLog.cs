@@ -14,38 +14,38 @@ namespace Decypher.Web.Models
         public long Id { get; set; }
 
         [Required, MaxLength(100)]
-        public string EventType { get; set; }           // "resume_screening", "jd_generation", etc.
+        public string EventType { get; set; } = string.Empty;
 
         [MaxLength(100)]
-        public string AgentName { get; set; }
+        public string? AgentName { get; set; }
 
         [MaxLength(50)]
-        public string EntityId { get; set; }            // ApplicationId, RequirementId, etc.
+        public string? EntityId { get; set; }
 
         [Required]
-        public string InputHash { get; set; }           // SHA-256 of PII-redacted input
+        public string InputHash { get; set; } = string.Empty;
 
         [Required]
-        public string OutputHash { get; set; }          // SHA-256 of output JSON
+        public string OutputHash { get; set; } = string.Empty;
 
         [Required, MaxLength(100)]
-        public string ModelVersion { get; set; }        // e.g. "gpt-4o-2024-05-13"
+        public string ModelVersion { get; set; } = string.Empty;
 
         [Required, MaxLength(50)]
-        public string PromptVersion { get; set; }       // e.g. "v3.2.1"
+        public string PromptVersion { get; set; } = string.Empty;
 
         public double Confidence { get; set; }
 
-        public bool RequiredHumanReview { get; set; }   // true when confidence < threshold
+        public bool RequiredHumanReview { get; set; }
 
         [MaxLength(100)]
-        public string ActorId { get; set; }             // UserId who triggered action
+        public string? ActorId { get; set; }
 
         [Required]
-        public string Checksum { get; set; }            // SHA-256 of entire row for tamper evidence
+        public string Checksum { get; set; } = string.Empty;
 
         [Required]
-        public string TenantId { get; set; }
+        public string TenantId { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

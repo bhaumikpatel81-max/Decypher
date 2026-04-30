@@ -264,11 +264,6 @@ namespace Decypher.Web.Controllers
                 var row = dataRows[i];
                 var rowNum = i + 2; // 1-based, +1 for header
 
-                string Get(string field) =>
-                    fieldIndex.TryGetValue(field, out var idx) && idx < row.Length
-                        ? row[idx]?.Trim() ?? ""
-                        : "";
-
                 try
                 {
                     var success = req.Feature switch
@@ -427,12 +422,12 @@ namespace Decypher.Web.Controllers
         //  Private: Feature-specific import methods
         // ═══════════════════════════════════════════════════════════════════════
 
-        private async Task<bool> ImportRequisitionRow(string[] row, Dictionary<string, int> fi, Guid tenantId, string userId, int rowNum, List<ImportWarning> warns, List<ImportError> errs)
+        private Task<bool> ImportRequisitionRow(string[] row, Dictionary<string, int> fi, Guid tenantId, string userId, int rowNum, List<ImportWarning> warns, List<ImportError> errs)
         {
             string Get(string f) => fi.TryGetValue(f, out var i) && i < row.Length ? row[i]?.Trim() ?? "" : "";
 
             var title = Get("Title");
-            if (string.IsNullOrEmpty(title)) { errs.Add(new ImportError { Row = rowNum, Message = "Title is required.", RawData = string.Join(",", row) }); return false; }
+            if (string.IsNullOrEmpty(title)) { errs.Add(new ImportError { Row = rowNum, Message = "Title is required.", RawData = string.Join(",", row) }); return Task.FromResult(false); }
 
             var dept = Get("Department");
             _ = int.TryParse(Get("Headcount"), out var headcount);
@@ -456,7 +451,7 @@ namespace Decypher.Web.Controllers
                 CreatedAt = DateTime.UtcNow
             };
             _db.Requisitions.Add(req);
-            return true;
+            return Task.FromResult(true);
         }
 
         private async Task<bool> ImportCandidateRow(string[] row, Dictionary<string, int> fi, Guid tenantId, int rowNum, List<ImportWarning> warns, List<ImportError> errs)
@@ -716,14 +711,14 @@ namespace Decypher.Web.Controllers
             return true;
         }
 
-        private async Task<bool> ImportRecruiterPerformanceRow(string[] row, Dictionary<string, int> fi, Guid tenantId, int rowNum, List<ImportWarning> warns, List<ImportError> errs)
+        private Task<bool> ImportRecruiterPerformanceRow(string[] row, Dictionary<string, int> fi, Guid tenantId, int rowNum, List<ImportWarning> warns, List<ImportError> errs)
         {
             string Get(string f) => fi.TryGetValue(f, out var i) && i < row.Length ? row[i]?.Trim() ?? "" : "";
 
             var name = Get("RecruiterName");
             var empId = Get("EmployeeId");
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(empId))
-            { errs.Add(new ImportError { Row = rowNum, Message = "RecruiterName and EmployeeId are required.", RawData = string.Join(",", row) }); return false; }
+            { errs.Add(new ImportError { Row = rowNum, Message = "RecruiterName and EmployeeId are required.", RawData = string.Join(",", row) }); return Task.FromResult(false); }
 
             _ = int.TryParse(Get("Month"), out var month);
             _ = int.TryParse(Get("Year"), out var year);
@@ -757,7 +752,7 @@ namespace Decypher.Web.Controllers
                 JoiningRatio = joinRatio,
                 CreatedAt = DateTime.UtcNow
             });
-            return true;
+            return Task.FromResult(true);
         }
 
         private bool ImportGenericRow(string feature, string[] row, Dictionary<string, int> fi, int rowNum, List<ImportWarning> warns)

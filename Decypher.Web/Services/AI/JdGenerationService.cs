@@ -68,15 +68,18 @@ Additional Context: {req.AdditionalContext ?? "None"}";
                 var resp = await _http.PostAsJsonAsync("chat/completions", body, ct);
                 resp.EnsureSuccessStatusCode();
                 var openAiResult = await resp.Content.ReadFromJsonAsync<OpenAIChatResponse>(ct);
+                var content = openAiResult?.Choices?[0]?.Message?.Content
+                    ?? throw new InvalidOperationException("Empty response from OpenAI");
                 var jdData = JsonSerializer.Deserialize<JdData>(
-                    openAiResult.Choices[0].Message.Content,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? throw new InvalidOperationException("Failed to deserialize JD data");
 
                 await _audit.LogAIDecisionAsync(
-                    "jd_generation", "JD Generation Agent", req.JobTitle,
+                    "jd_generation", "JD Generation Agent", req.JobTitle ?? "",
                     new { req.JobTitle, req.Department }, jdData,
                     MODEL, PROMPT_VERSION, 0.90, false,
-                    req.TenantId, req.ActorId);
+                    req.TenantId ?? "", req.ActorId ?? "");
 
                 return new JdGenerationResult
                 {
@@ -97,23 +100,23 @@ Additional Context: {req.AdditionalContext ?? "None"}";
 
     public record JdGenerationRequest
     {
-        public string JobTitle { get; init; }
-        public string Department { get; init; }
+        public string? JobTitle { get; init; }
+        public string? Department { get; init; }
         public List<string> RequiredSkills { get; init; } = new();
         public int MinYearsExperience { get; init; }
         public int MaxYearsExperience { get; init; }
         public string EmploymentType { get; init; } = "Full-time";
-        public string AdditionalContext { get; init; }
-        public string TenantId { get; init; }
-        public string ActorId { get; init; }
+        public string? AdditionalContext { get; init; }
+        public string? TenantId { get; init; }
+        public string? ActorId { get; init; }
     }
 
     public class JdData
     {
         [System.Text.Json.Serialization.JsonPropertyName("title")]
-        public string Title { get; set; }
+        public string? Title { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("overview")]
-        public string Overview { get; set; }
+        public string? Overview { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("responsibilities")]
         public List<string> Responsibilities { get; set; } = new();
         [System.Text.Json.Serialization.JsonPropertyName("requirements")]
@@ -123,18 +126,18 @@ Additional Context: {req.AdditionalContext ?? "None"}";
         [System.Text.Json.Serialization.JsonPropertyName("benefits")]
         public List<string> Benefits { get; set; } = new();
         [System.Text.Json.Serialization.JsonPropertyName("employmentType")]
-        public string EmploymentType { get; set; }
+        public string? EmploymentType { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("experienceRange")]
-        public string ExperienceRange { get; set; }
+        public string? ExperienceRange { get; set; }
     }
 
     public record JdGenerationResult
     {
         public bool Success { get; init; }
-        public JdData Data { get; init; }
-        public string ModelVersion { get; init; }
-        public string PromptVersion { get; init; }
+        public JdData? Data { get; init; }
+        public string? ModelVersion { get; init; }
+        public string? PromptVersion { get; init; }
         public DateTime Timestamp { get; init; }
-        public string ErrorMessage { get; init; }
+        public string? ErrorMessage { get; init; }
     }
 }

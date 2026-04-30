@@ -83,7 +83,7 @@ namespace Decypher.Web.Services.AI
 
         private static object RedactPII(object input)
         {
-            if (input == null) return null;
+            if (input == null) return new object();
             var json = JsonSerializer.Serialize(input);
             var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new();
             foreach (var key in PII_KEYS)

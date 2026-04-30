@@ -57,8 +57,10 @@ Analyze.";
                 var resp = await _http.PostAsJsonAsync("chat/completions", body, ct);
                 resp.EnsureSuccessStatusCode();
                 var result = await resp.Content.ReadFromJsonAsync<OpenAIChatResponse>(ct);
-                var biasData = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                    result.Choices[0].Message.Content);
+                var content = result?.Choices?[0]?.Message?.Content
+                    ?? throw new InvalidOperationException("Empty response from OpenAI");
+                var biasData = JsonSerializer.Deserialize<Dictionary<string, object>>(content)
+                    ?? throw new InvalidOperationException("Failed to deserialize bias data");
 
                 return new AgentResult
                 {

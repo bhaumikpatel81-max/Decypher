@@ -76,7 +76,8 @@ Generate the detailed recruiter explanation as JSON.";
                 var resp = await _http.PostAsJsonAsync("chat/completions", body, ct);
                 resp.EnsureSuccessStatusCode();
                 var result = await resp.Content.ReadFromJsonAsync<OpenAIChatResponse>(ct);
-                var json   = result.Choices[0].Message.Content.Trim();
+                var json   = (result?.Choices?[0]?.Message?.Content
+                    ?? throw new InvalidOperationException("Empty response from OpenAI")).Trim();
 
                 using var doc  = JsonDocument.Parse(json);
                 var root = doc.RootElement;

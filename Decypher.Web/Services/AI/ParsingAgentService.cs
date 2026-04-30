@@ -53,8 +53,10 @@ Schema:
                 var resp = await _http.PostAsJsonAsync("chat/completions", body, ct);
                 resp.EnsureSuccessStatusCode();
                 var result = await resp.Content.ReadFromJsonAsync<OpenAIChatResponse>(ct);
-                var parsed = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                    result.Choices[0].Message.Content);
+                var content = result?.Choices?[0]?.Message?.Content
+                    ?? throw new InvalidOperationException("Empty response from OpenAI");
+                var parsed = JsonSerializer.Deserialize<Dictionary<string, object>>(content)
+                    ?? throw new InvalidOperationException("Failed to deserialize parsed resume");
 
                 return new AgentResult
                 {

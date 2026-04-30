@@ -114,7 +114,7 @@ namespace Decypher.Web.Controllers
 
     public record ScreeningRequest
     {
-        public string JobDescription { get; init; }
-        public string ResumeText { get; init; }
+        public string? JobDescription { get; init; }
+        public string? ResumeText { get; init; }
     }
 }

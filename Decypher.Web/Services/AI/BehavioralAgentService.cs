@@ -103,8 +103,10 @@ Analyze this candidate's behavioral and soft-skill profile based solely on the e
                 var resp = await _http.PostAsJsonAsync("chat/completions", body, ct);
                 resp.EnsureSuccessStatusCode();
                 var result = await resp.Content.ReadFromJsonAsync<OpenAIChatResponse>(ct);
-                var behavioralData = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                    result.Choices[0].Message.Content);
+                var content = result?.Choices?[0]?.Message?.Content
+                    ?? throw new InvalidOperationException("Empty response from OpenAI");
+                var behavioralData = JsonSerializer.Deserialize<Dictionary<string, object>>(content)
+                    ?? throw new InvalidOperationException("Failed to deserialize behavioral data");
 
                 // Extract confidence from payload if present; default to 0.85
                 double confidence = 0.85;

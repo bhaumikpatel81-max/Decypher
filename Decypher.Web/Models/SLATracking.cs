@@ -14,10 +14,10 @@ namespace Decypher.Web.Models
         public Guid RequirementId { get; set; }
 
         [ForeignKey("RequirementId")]
-        public virtual Requirement Requirement { get; set; }
+        public virtual Requirement? Requirement { get; set; }
 
         [Required, MaxLength(50)]
-        public string Stage { get; set; }               // "Applied","Screened","Interview","Offer","Hired"
+        public string Stage { get; set; } = string.Empty;
 
         public DateTime StageStartDate { get; set; }
         public DateTime? StageEndDate { get; set; }
@@ -27,13 +27,13 @@ namespace Decypher.Web.Models
         public int TargetDays { get; set; } = 20;       // Configurable; default 20 days
 
         [MaxLength(20)]
-        public string Status { get; set; }              // "OnTrack", "Warning", "Overdue"
+        public string? Status { get; set; }
 
         public DateTime? PredictedCompletionDate { get; set; }  // AI SLA prediction
         public double PredictionConfidence { get; set; }
 
         [Required]
-        public string TenantId { get; set; }
+        public string TenantId { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

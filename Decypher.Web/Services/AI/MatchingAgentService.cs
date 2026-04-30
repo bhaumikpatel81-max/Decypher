@@ -22,8 +22,8 @@ namespace Decypher.Web.Services.AI
         {
             try
             {
-                var jdEmb = await GetEmbeddingAsync(input.JobDescription, ct);
-                var cvEmb = await GetEmbeddingAsync(input.ResumeText, ct);
+                var jdEmb = await GetEmbeddingAsync(input.JobDescription ?? "", ct);
+                var cvEmb = await GetEmbeddingAsync(input.ResumeText ?? "", ct);
                 var similarity = CosineSimilarity(jdEmb, cvEmb);
 
                 return new AgentResult
@@ -46,7 +46,8 @@ namespace Decypher.Web.Services.AI
             var resp = await _http.PostAsJsonAsync("embeddings", new { model = MODEL, input = text }, ct);
             resp.EnsureSuccessStatusCode();
             var result = await resp.Content.ReadFromJsonAsync<OpenAIEmbeddingResponse>(ct);
-            return result.Data[0].Embedding;
+            return result?.Data?[0]?.Embedding
+                ?? throw new InvalidOperationException("Empty embedding response from OpenAI");
         }
 
         private static double CosineSimilarity(float[] a, float[] b)

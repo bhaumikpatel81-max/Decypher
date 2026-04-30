@@ -8,7 +8,7 @@ namespace Decypher.Web.Services.AI
         Task<MultiAgentResult> RunAsync(
             string jobDescription, string resumeText,
             string tenantId, string actorId,
-            IProgress<AgentProgress> progress = null,
+            IProgress<AgentProgress>? progress = null,
             CancellationToken ct = default);
     }
 
@@ -43,7 +43,7 @@ namespace Decypher.Web.Services.AI
         public async Task<MultiAgentResult> RunAsync(
             string jobDescription, string resumeText,
             string tenantId, string actorId,
-            IProgress<AgentProgress> progress = null,
+            IProgress<AgentProgress>? progress = null,
             CancellationToken ct = default)
         {
             double confidenceThreshold = _config.GetValue<double>("AI:ConfidenceThreshold", 0.60);
@@ -66,17 +66,17 @@ namespace Decypher.Web.Services.AI
 
             // ── Pipeline: 6 agents in sequence ─────────────────────────────
             var parsing = Run("Parsing Agent", 1, () => _parsing.ProcessAsync(input, ct));
-            input = input with { Context = new Dictionary<string, object>(input.Context) { ["ParsedData"] = parsing.Data } };
+            input = input with { Context = new Dictionary<string, object>(input.Context) { ["ParsedData"] = parsing.Data ?? new object() } };
 
             var matching = Run("Matching Agent", 2, () => _matching.ProcessAsync(input, ct));
-            input = input with { Context = new Dictionary<string, object>(input.Context) { ["MatchData"] = matching.Data } };
+            input = input with { Context = new Dictionary<string, object>(input.Context) { ["MatchData"] = matching.Data ?? new object() } };
 
             var ranking = Run("Ranking Agent", 3, () => _ranking.ProcessAsync(input, ct));
-            input = input with { Context = new Dictionary<string, object>(input.Context) { ["RankingData"] = ranking.Data } };
+            input = input with { Context = new Dictionary<string, object>(input.Context) { ["RankingData"] = ranking.Data ?? new object() } };
 
             // Behavioral runs after parsing so it has structured resume data in context
             var behavioral = Run("Behavioral Intelligence Agent", 4, () => _behavioral.ProcessAsync(input, ct));
-            input = input with { Context = new Dictionary<string, object>(input.Context) { ["BehavioralData"] = behavioral.Data } };
+            input = input with { Context = new Dictionary<string, object>(input.Context) { ["BehavioralData"] = behavioral.Data ?? new object() } };
 
             // Explanation now has access to behavioral insights as well
             var explanation = Run("Explanation Agent", 5, () => _explanation.ProcessAsync(input, ct));
@@ -97,8 +97,8 @@ namespace Decypher.Web.Services.AI
             {
                 await _audit.LogAIDecisionAsync(
                     "resume_screening", agent, jobId,
-                    new { JobDescriptionLength = jobDescription.Length }, result.Data,
-                    result.ModelVersion, result.PromptVersion,
+                    new { JobDescriptionLength = jobDescription.Length }, result.Data ?? new object(),
+                    result.ModelVersion ?? "", result.PromptVersion ?? "",
                     result.Confidence, needsReview, tenantId, actorId);
             }
 
@@ -122,15 +122,15 @@ namespace Decypher.Web.Services.AI
 
     public record MultiAgentResult
     {
-        public string      JobId               { get; init; }
-        public AgentResult ParsingResult       { get; init; }
-        public AgentResult MatchingResult      { get; init; }
-        public AgentResult RankingResult       { get; init; }
-        public AgentResult BehavioralResult    { get; init; }
-        public AgentResult ExplanationResult   { get; init; }
-        public AgentResult BiasDetectionResult { get; init; }
-        public bool        RequiresHumanReview { get; init; }
-        public string      HumanReviewReason   { get; init; }
-        public DateTime    Timestamp           { get; init; }
+        public string?      JobId               { get; init; }
+        public AgentResult? ParsingResult       { get; init; }
+        public AgentResult? MatchingResult      { get; init; }
+        public AgentResult? RankingResult       { get; init; }
+        public AgentResult? BehavioralResult    { get; init; }
+        public AgentResult? ExplanationResult   { get; init; }
+        public AgentResult? BiasDetectionResult { get; init; }
+        public bool         RequiresHumanReview { get; init; }
+        public string?      HumanReviewReason   { get; init; }
+        public DateTime     Timestamp           { get; init; }
     }
 }
