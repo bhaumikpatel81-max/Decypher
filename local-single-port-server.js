@@ -230,6 +230,15 @@ const seed = {
       interviewedEarlier: false
     }
   ],
+  requisitions: [
+    { id: 'req-001', title: 'Senior .NET Developer', department: 'Engineering', headcount: 2, budgetMin: 1800000, budgetMax: 2500000, priority: 'High', status: 'Approved', justification: 'Team expansion for new product line', createdAt: new Date(Date.now() - 10 * 86400000).toISOString() },
+    { id: 'req-002', title: 'Product Manager', department: 'Product', headcount: 1, budgetMin: 2000000, budgetMax: 2800000, priority: 'Critical', status: 'Approved', justification: 'Lead Q3 roadmap delivery', createdAt: new Date(Date.now() - 7 * 86400000).toISOString() },
+    { id: 'req-003', title: 'UI/UX Designer', department: 'Design', headcount: 1, budgetMin: 1200000, budgetMax: 1800000, priority: 'Medium', status: 'Pending', justification: 'Redesign candidate portal', createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
+    { id: 'req-004', title: 'DevOps Engineer', department: 'Engineering', headcount: 1, budgetMin: 1600000, budgetMax: 2200000, priority: 'High', status: 'Approved', justification: 'CI/CD pipeline ownership', createdAt: new Date(Date.now() - 5 * 86400000).toISOString() }
+  ],
+  broadcasts: [],
+  commMessages: [],
+  onboarding: [],
   fiscalYears: [],
   allocations: [],
   lineItems: [],
@@ -1427,6 +1436,237 @@ async function handleApi(req, res, url) {
     }
 
     return sendJson(res, 404, { error: 'Budget API route not found', path: url.pathname });
+  }
+
+  // ─── Requisitions ─────────────────────────────────────────────────────────
+  if (route === '/api/requisitions' && req.method === 'GET') {
+    const db = readDb();
+    const status = url.searchParams.get('status');
+    const items = status ? (db.requisitions || []).filter(r => r.status === status) : (db.requisitions || []);
+    return sendJson(res, 200, items);
+  }
+
+  if (route === '/api/requisitions' && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    const item = {
+      id: crypto.randomUUID(),
+      title: body.title || 'Untitled',
+      department: body.department || 'General',
+      headcount: Number(body.headcount || 1),
+      budgetMin: body.budgetMin || null,
+      budgetMax: body.budgetMax || null,
+      priority: body.priority || 'Medium',
+      status: 'Pending',
+      justification: body.justification || '',
+      createdAt: now()
+    };
+    db.requisitions = db.requisitions || [];
+    db.requisitions.push(item);
+    writeDb(db);
+    return sendJson(res, 200, item);
+  }
+
+  const reqApproveMatch = route.match(/^\/api\/requisitions\/([^/]+)\/approve$/);
+  if (reqApproveMatch && req.method === 'PUT') {
+    const db = readDb();
+    const r = (db.requisitions || []).find(x => x.id === reqApproveMatch[1]);
+    if (!r) return sendJson(res, 404, { error: 'Not found' });
+    r.status = 'Approved';
+    writeDb(db);
+    return sendJson(res, 200, r);
+  }
+
+  const reqRejectMatch = route.match(/^\/api\/requisitions\/([^/]+)\/reject$/);
+  if (reqRejectMatch && req.method === 'PUT') {
+    const db = readDb();
+    const body = await readBody(req);
+    const r = (db.requisitions || []).find(x => x.id === reqRejectMatch[1]);
+    if (!r) return sendJson(res, 404, { error: 'Not found' });
+    r.status = 'Rejected';
+    r.rejectionReason = body.reason || '';
+    writeDb(db);
+    return sendJson(res, 200, r);
+  }
+
+  // ─── Onboarding ───────────────────────────────────────────────────────────
+  const OB_ITEMS = [
+    { category: 'ITSetup',         title: 'Laptop & Equipment Provisioned',  requiresSignature: false },
+    { category: 'ITSetup',         title: 'Email & System Access Created',   requiresSignature: false },
+    { category: 'Documents',       title: 'Offer Letter Collected',          requiresSignature: false },
+    { category: 'Documents',       title: 'ID & Address Proof Verified',     requiresSignature: false },
+    { category: 'Documents',       title: 'Bank Details Submitted',          requiresSignature: false },
+    { category: 'Orientation',     title: 'Induction Session Scheduled',     requiresSignature: false },
+    { category: 'Orientation',     title: 'Team Introduction Completed',     requiresSignature: false },
+    { category: 'BackgroundCheck', title: 'Employment History Verified',     requiresSignature: false },
+    { category: 'BackgroundCheck', title: 'Education Credentials Verified',  requiresSignature: false },
+    { category: 'ESignature',      title: 'Employment Agreement Signed',     requiresSignature: true  },
+    { category: 'ESignature',      title: 'NDA / Confidentiality Agreement', requiresSignature: true  },
+  ];
+
+  if (route === '/api/onboarding' && req.method === 'GET') {
+    const db = readDb();
+    return sendJson(res, 200, db.onboarding || []);
+  }
+
+  if (route === '/api/onboarding' && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    db.onboarding = db.onboarding || [];
+    const existing = db.onboarding.find(o => o.candidateId === body.candidateId);
+    if (existing) return sendJson(res, 200, existing);
+    const record = {
+      id: crypto.randomUUID(),
+      candidateId: body.candidateId || '',
+      candidateName: body.candidateName || body.candidateId || '',
+      jobTitle: body.jobTitle || '',
+      offerId: body.offerId || '',
+      overallStatus: 'Pending',
+      expectedStartDate: body.expectedStartDate || null,
+      createdAt: now(),
+      items: OB_ITEMS.map(t => ({
+        id: crypto.randomUUID(), category: t.category, title: t.title,
+        requiresSignature: t.requiresSignature, status: 'Pending',
+        signed: false, notes: null, completedAt: null
+      }))
+    };
+    db.onboarding.push(record);
+    writeDb(db);
+    return sendJson(res, 200, record);
+  }
+
+  const obCandidateMatch = route.match(/^\/api\/onboarding\/candidate\/([^/]+)$/);
+  if (obCandidateMatch && req.method === 'GET') {
+    const db = readDb();
+    const r = (db.onboarding || []).find(o => o.candidateId === obCandidateMatch[1]);
+    return r ? sendJson(res, 200, r) : sendJson(res, 404, { error: 'Not found' });
+  }
+
+  const obItemMatch = route.match(/^\/api\/onboarding\/([^/]+)\/item$/);
+  if (obItemMatch && req.method === 'PATCH') {
+    const db = readDb();
+    const body = await readBody(req);
+    const itemId = obItemMatch[1];
+    let updated = null;
+    for (const rec of (db.onboarding || [])) {
+      const item = (rec.items || []).find(i => i.id === itemId);
+      if (item) {
+        if (body.status != null) item.status = body.status;
+        if (body.notes  != null) item.notes  = body.notes;
+        if (body.signed != null) item.signed = body.signed;
+        if (item.status === 'Complete') item.completedAt = now();
+        const all = rec.items || [];
+        rec.overallStatus = all.every(i => i.status === 'Complete') ? 'Complete'
+          : all.some(i => i.status === 'InProgress' || i.status === 'Complete') ? 'InProgress' : 'Pending';
+        updated = item;
+        break;
+      }
+    }
+    writeDb(db);
+    return updated ? sendJson(res, 200, updated) : sendJson(res, 404, { error: 'Item not found' });
+  }
+
+  // ─── Notifications / Communication Center ─────────────────────────────────
+  if (route === '/api/notifications/history' && req.method === 'GET') {
+    const db = readDb();
+    const items = (db.commMessages || []).slice().reverse().slice(0, 100);
+    return sendJson(res, 200, items);
+  }
+
+  if (route === '/api/notifications/email' && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    const ids = Array.isArray(body.candidateIds) ? body.candidateIds : [];
+    db.commMessages = db.commMessages || [];
+    for (const id of ids) {
+      const c = (db.candidates || []).find(x => x.id === id);
+      db.commMessages.push({
+        id: crypto.randomUUID(),
+        channel: 'Email',
+        candidateId: id,
+        candidateName: c ? `${c.firstName} ${c.lastName}` : id,
+        recipientAddress: c ? c.email : '',
+        subject: body.subject || '',
+        body: body.body || '',
+        status: 'Sent',
+        sentAt: now()
+      });
+    }
+    writeDb(db);
+    return sendJson(res, 200, { sent: ids.length });
+  }
+
+  if (route === '/api/notifications/sms' && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    const ids = Array.isArray(body.candidateIds) ? body.candidateIds : [];
+    db.commMessages = db.commMessages || [];
+    for (const id of ids) {
+      const c = (db.candidates || []).find(x => x.id === id);
+      db.commMessages.push({
+        id: crypto.randomUUID(),
+        channel: 'SMS',
+        candidateId: id,
+        candidateName: c ? `${c.firstName} ${c.lastName}` : id,
+        recipientAddress: c ? c.phone : '',
+        subject: '',
+        body: body.message || '',
+        status: 'Sent',
+        sentAt: now()
+      });
+    }
+    writeDb(db);
+    return sendJson(res, 200, { sent: ids.length });
+  }
+
+  if (route === '/api/notifications/whatsapp' && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    const ids = Array.isArray(body.candidateIds) ? body.candidateIds : [];
+    db.commMessages = db.commMessages || [];
+    for (const id of ids) {
+      const c = (db.candidates || []).find(x => x.id === id);
+      db.commMessages.push({
+        id: crypto.randomUUID(),
+        channel: 'WhatsApp',
+        candidateId: id,
+        candidateName: c ? `${c.firstName} ${c.lastName}` : id,
+        recipientAddress: c ? c.phone : '',
+        subject: body.templateId || '',
+        body: JSON.stringify(body.variables || {}),
+        status: 'Sent',
+        sentAt: now()
+      });
+    }
+    writeDb(db);
+    return sendJson(res, 200, { sent: ids.length });
+  }
+
+  // ─── Job Broadcasting ──────────────────────────────────────────────────────
+  const broadcastMatch = route.match(/^\/api\/requisitions\/([^/]+)\/broadcast$/);
+  if (broadcastMatch && req.method === 'POST') {
+    const db = readDb();
+    const body = await readBody(req);
+    const channels = Array.isArray(body.channels) ? body.channels : [];
+    const record = { id: crypto.randomUUID(), requisitionId: broadcastMatch[1], channels, broadcastAt: now() };
+    db.broadcasts = db.broadcasts || [];
+    db.broadcasts.push(record);
+    writeDb(db);
+    return sendJson(res, 200, { success: true, broadcastedChannels: channels, broadcastAt: record.broadcastAt });
+  }
+
+  const broadcastStatusMatch = route.match(/^\/api\/requisitions\/([^/]+)\/broadcast-status$/);
+  if (broadcastStatusMatch && req.method === 'GET') {
+    const db = readDb();
+    const reqId = broadcastStatusMatch[1];
+    const history = (db.broadcasts || []).filter(b => b.requisitionId === reqId);
+    const channelMap = {};
+    for (const b of history) {
+      for (const ch of (b.channels || [])) {
+        channelMap[ch] = { channelId: ch, lastPosted: b.broadcastAt, status: 'Posted' };
+      }
+    }
+    return sendJson(res, 200, { channels: Object.values(channelMap), history: history.slice().reverse() });
   }
 
   return sendJson(res, 404, { error: 'API route not found', path: url.pathname });

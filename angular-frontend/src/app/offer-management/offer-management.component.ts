@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -36,6 +37,7 @@ import { environment } from '../../environments/environment';
             </div>
             <span class="chip" [style.background]="statusColour(o.status)">{{ o.status }}</span>
             <button class="btn btn-ghost btn-sm" (click)="sendOffer(o.id)" *ngIf="o.status==='Draft'">Send</button>
+            <button class="btn btn-primary btn-sm" (click)="initiateOnboarding(o)" *ngIf="o.status==='Accepted'" style="background:#10b981;border-color:#10b981;">🚀 Onboard</button>
           </div>
           <div *ngIf="!pending.length" style="color:var(--text-3);text-align:center;padding:20px;">
             No pending offers.
@@ -55,7 +57,7 @@ export class OfferManagementComponent implements OnInit {
   saveOk = false;
   form = { candidateId: '', jobId: '', salary: 0, currency: 'INR', startDate: '', expiryDate: '', benefits: [] };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() { this.loadPending(); }
 
@@ -76,6 +78,16 @@ export class OfferManagementComponent implements OnInit {
   sendOffer(id: string) {
     this.http.put(`${environment.apiUrl}/api/offers/${id}/send`, {})
       .subscribe({ next: () => this.loadPending(), error: () => {} });
+  }
+
+  initiateOnboarding(offer: any) {
+    this.http.post(`${environment.apiUrl}/api/onboarding`, {
+      candidateId: offer.candidateId,
+      candidateName: offer.candidateName || offer.candidateId,
+      jobTitle: offer.jobTitle || '',
+      offerId: offer.id,
+      expectedStartDate: offer.startDate
+    }).subscribe({ next: () => this.router.navigate(['/onboarding']), error: () => this.router.navigate(['/onboarding']) });
   }
 
   statusColour(s: string) {

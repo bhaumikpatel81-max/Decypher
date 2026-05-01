@@ -32,8 +32,12 @@ import { BudgetComponent } from './budget/budget.component';
 import { ImportCenterComponent } from './import-center/import-center.component';
 import { InternalJobPostingsComponent } from './internal-job-postings/internal-job-postings.component';
 import { ReportsComponent } from './reports/reports.component';
+import { JobBroadcastingComponent } from './job-broadcasting/job-broadcasting.component';
+import { CommunicationCenterComponent } from './communication-center/communication-center.component';
+import { OnboardingComponent } from './onboarding/onboarding.component';
 
 import { AppComponent } from './app.component';
+import { AIFeaturesComponent } from './ai-features/ai-features.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { VendorsComponent } from './vendors/vendors.component';
@@ -241,48 +245,276 @@ export class CvDatabaseComponent implements OnInit {
 @Component({
   selector: 'app-recruiters',
   template: `
-    <section class="cards-grid">
-      <article class="card candidate-card" *ngFor="let recruiter of recruiters">
-        <div class="candidate-head">
-          <div><h3>{{ recruiter.name }}</h3><p>{{ recruiter.role }}</p></div>
-          <strong>{{ recruiter.joinings }} joins</strong>
+    <div class="page-container page-enter">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h1 class="page-title">Recruiter Performance</h1>
+          <p class="text-sm" style="color:var(--text-3)">Leaderboard, placements &amp; pipeline health</p>
         </div>
-        <div class="metric-line"><span>Submissions</span><b>{{ recruiter.submissions }}</b></div>
-        <div class="metric-line"><span>Selections</span><b>{{ recruiter.selections }}</b></div>
-        <div class="metric-line"><span>Selection Ratio</span><b>{{ recruiter.selectionRatio }}%</b></div>
-      </article>
-    </section>
-  `
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" [class.btn-primary]="period==='month'"   (click)="setPeriod('month')">Month</button>
+          <button class="btn btn-ghost btn-sm" [class.btn-primary]="period==='quarter'" (click)="setPeriod('quarter')">Quarter</button>
+          <button class="btn btn-ghost btn-sm" [class.btn-primary]="period==='year'"    (click)="setPeriod('year')">Year</button>
+        </div>
+      </div>
+
+      <!-- Podium (top 3) -->
+      <div class="rec-podium" *ngIf="recruiters.length >= 3">
+        <div class="rec-podium-item rec-p2">
+          <div class="rec-medal">🥈</div>
+          <div class="rec-podium-name">{{ recruiters[1]?.name }}</div>
+          <div class="rec-podium-stat">{{ recruiters[1]?.joinings ?? recruiters[1]?.placements ?? recruiters[1]?.selections }} placements</div>
+          <div class="rec-podium-block" style="height:80px;background:#c0c0c0;opacity:.3;border-radius:6px 6px 0 0;margin-top:8px;"></div>
+        </div>
+        <div class="rec-podium-item rec-p1">
+          <div class="rec-medal">🥇</div>
+          <div class="rec-podium-name" style="font-size:16px;">{{ recruiters[0]?.name }}</div>
+          <div class="rec-podium-stat">{{ recruiters[0]?.joinings ?? recruiters[0]?.placements ?? recruiters[0]?.selections }} placements</div>
+          <div class="rec-podium-block" style="height:110px;background:var(--brand-violet-500);opacity:.2;border-radius:6px 6px 0 0;margin-top:8px;"></div>
+        </div>
+        <div class="rec-podium-item rec-p3">
+          <div class="rec-medal">🥉</div>
+          <div class="rec-podium-name">{{ recruiters[2]?.name }}</div>
+          <div class="rec-podium-stat">{{ recruiters[2]?.joinings ?? recruiters[2]?.placements ?? recruiters[2]?.selections }} placements</div>
+          <div class="rec-podium-block" style="height:55px;background:#cd7f32;opacity:.3;border-radius:6px 6px 0 0;margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Leaderboard table -->
+      <div class="card mb-6">
+        <h3 class="card-title mb-4">Leaderboard</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+              <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Rank</th>
+              <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Recruiter</th>
+              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Submissions</th>
+              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Selections</th>
+              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Joinings</th>
+              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Hit Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of recruiters; let i = index" style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px 10px;">
+                <span class="rank-badge-r"
+                  [style.background]="i===0?'rgba(251,191,36,.2)':i===1?'rgba(192,192,192,.2)':i===2?'rgba(205,127,50,.2)':'var(--surface-alt)'"
+                  [style.color]="i===0?'#b45309':i===1?'#6b7280':i===2?'#92400e':'var(--text-3)'">
+                  {{ i + 1 }}
+                </span>
+              </td>
+              <td style="padding:12px 10px;">
+                <div style="font-weight:600;">{{ r.name }}</div>
+                <div style="font-size:12px;color:var(--text-3);">{{ r.role }}</div>
+              </td>
+              <td style="padding:12px 10px;text-align:center;">{{ r.submissions ?? '—' }}</td>
+              <td style="padding:12px 10px;text-align:center;">{{ r.selections ?? r.offers ?? '—' }}</td>
+              <td style="padding:12px 10px;text-align:center;font-weight:700;">{{ r.joinings ?? r.placements ?? '—' }}</td>
+              <td style="padding:12px 10px;text-align:center;">
+                <span style="padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;"
+                  [style.background]="(r.selectionRatio??r.acceptanceRate??0)>=30?'#d1fae5':'#fef3c7'"
+                  [style.color]="(r.selectionRatio??r.acceptanceRate??0)>=30?'#065f46':'#92400e'">
+                  {{ r.selectionRatio ?? r.acceptanceRate ?? 0 }}%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Attention Needed -->
+      <div class="card" *ngIf="attentionItems.length">
+        <h3 class="card-title mb-4">Attention Needed</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div *ngFor="let item of attentionItems"
+            style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(251,146,60,.05);border-left:3px solid #f97316;border-radius:0 8px 8px 0;">
+            <span style="font-size:18px;">⚠️</span>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:13px;">{{ item.title }}</div>
+              <div style="font-size:12px;color:var(--text-3);">{{ item.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .rec-podium { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; align-items:flex-end; }
+    .rec-podium-item { text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 12px 0; }
+    .rec-medal { font-size:36px; margin-bottom:8px; }
+    .rec-podium-name { font-weight:700; font-size:14px; }
+    .rec-podium-stat { font-size:12px; color:var(--text-3); margin-top:4px; }
+    .rank-badge-r { display:inline-block; padding:3px 10px; border-radius:6px; font-weight:700; font-size:13px; }
+  `]
 })
 export class RecruitersPageComponent implements OnInit {
   recruiters: any[] = [];
+  period: 'month' | 'quarter' | 'year' = 'month';
+  attentionItems: { title: string; description: string }[] = [];
+
   constructor(private http: HttpClient) {}
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => this.recruiters = data);
+
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => {
+      this.recruiters = [...data].sort((a, b) =>
+        (b.joinings ?? b.placements ?? b.selections ?? 0) - (a.joinings ?? a.placements ?? a.selections ?? 0)
+      );
+      this.buildAttentionItems();
+    });
+  }
+
+  setPeriod(p: 'month' | 'quarter' | 'year') {
+    this.period = p;
+    this.load();
+  }
+
+  buildAttentionItems() {
+    const items: { title: string; description: string }[] = [];
+    const low = this.recruiters.filter(r => (r.selectionRatio ?? r.acceptanceRate ?? 100) < 20);
+    if (low.length) items.push({ title: `${low[0].name} has low hit rate`, description: `${low[0].selectionRatio ?? low[0].acceptanceRate ?? 0}% — investigation recommended` });
+    const top = this.recruiters[0];
+    if (top) items.push({ title: `${top.name} is leading this ${this.period}`, description: `${top.joinings ?? top.placements ?? top.selections} placements — consider recognition` });
+    this.attentionItems = items;
   }
 }
 
 @Component({
   selector: 'app-dropout',
   template: `
-    <section class="stack-page">
-      <div class="cards-grid">
-        <article class="card candidate-card" *ngFor="let item of candidates">
-          <div class="candidate-head">
-            <div><h3>{{ item.firstName }} {{ item.lastName }}</h3><p>{{ item.stage }} - {{ item.currentCompany }}</p></div>
-            <strong [class.risk-high]="item.dropoutRisk >= 70">{{ item.dropoutRisk }}%</strong>
-          </div>
-          <p>{{ item.dropoutRisk >= 70 ? 'Immediate recruiter follow-up recommended.' : 'Risk level is currently manageable.' }}</p>
-        </article>
+    <div class="page-container page-enter">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h1 class="page-title">Dropout Predictor</h1>
+          <p class="text-sm" style="color:var(--text-3)">AI-powered candidate dropout risk analysis</p>
+        </div>
       </div>
-    </section>
-  `
+
+      <!-- Overview row: donut + distribution -->
+      <div class="dp-overview-grid">
+        <!-- Donut -->
+        <div class="card dp-donut-card">
+          <div style="font-size:13px;font-weight:600;color:var(--text-3);margin-bottom:8px;">At-Risk Candidates</div>
+          <svg viewBox="0 0 120 120" width="140" height="140" style="display:block;margin:0 auto;">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#e5e7eb" stroke-width="14"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#ef4444" stroke-width="14"
+              [attr.stroke-dasharray]="((atRiskCount/(totalCandidates||1))*301.6)+' 301.6'"
+              stroke-dashoffset="75.4" transform="rotate(-90 60 60)" stroke-linecap="round"/>
+            <text x="60" y="56" text-anchor="middle" font-size="20" font-weight="800" fill="#ef4444">{{ atRiskCount }}</text>
+            <text x="60" y="72" text-anchor="middle" font-size="10" fill="#9ca3af">of {{ totalCandidates }}</text>
+          </svg>
+          <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--text-3);">
+            {{ totalCandidates ? ((atRiskCount/totalCandidates)*100 | number:'1.0-0') : 0 }}% at risk
+          </div>
+        </div>
+
+        <!-- Distribution bars -->
+        <div class="card" style="flex:1;min-width:0;">
+          <h3 class="card-title mb-4">Risk Distribution</h3>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div *ngFor="let d of riskDistribution" style="display:grid;grid-template-columns:140px 1fr 40px;gap:10px;align-items:center;">
+              <div style="font-size:12px;font-weight:600;" [style.color]="d.color">{{ d.label }}</div>
+              <div style="height:20px;background:var(--surface-alt);border-radius:4px;overflow:hidden;">
+                <div [style.width.%]="d.percentage" [style.background]="d.color" style="height:100%;border-radius:4px;transition:width .4s;"></div>
+              </div>
+              <div style="font-weight:700;text-align:right;" [style.color]="d.color">{{ d.count }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- High-risk candidates list -->
+      <div class="card">
+        <h3 class="card-title mb-4">High-Risk Candidates</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div *ngFor="let c of atRiskCandidates" class="dp-candidate-card">
+            <div class="dp-card-top">
+              <div>
+                <div style="font-weight:700;font-size:14px;">{{ c.firstName ? c.firstName+' '+c.lastName : c.name }}</div>
+                <div style="font-size:12px;color:var(--text-3);">{{ c.stage }} · {{ c.currentCompany || c.currentTitle || '' }}</div>
+              </div>
+              <span class="dp-risk-pill"
+                [style.background]="getRiskColor(c.dropoutRisk)+'1a'"
+                [style.color]="getRiskColor(c.dropoutRisk)"
+                [style.border-color]="getRiskColor(c.dropoutRisk)">
+                {{ c.dropoutRisk }}% · {{ getRiskLabel(c.dropoutRisk) }}
+              </span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+              <span *ngFor="let f of getRiskFactors(c)" style="font-size:11px;background:var(--surface-alt);padding:2px 8px;border-radius:4px;color:var(--text-3);">{{ f }}</span>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text-3);">
+              {{ c.dropoutRisk >= 70 ? 'Immediate recruiter follow-up recommended.' : 'Monitor closely — risk is elevated.' }}
+            </div>
+          </div>
+          <div *ngIf="!atRiskCandidates.length" style="text-align:center;padding:40px;color:var(--text-3);">
+            No high-risk candidates found.
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .dp-overview-grid { display:flex; gap:20px; margin-bottom:24px; }
+    .dp-donut-card { min-width:180px; text-align:center; }
+    .dp-candidate-card { padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+    .dp-candidate-card:hover { border-color:var(--brand-violet-400); box-shadow:var(--shadow-sm); }
+    .dp-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    .dp-risk-pill { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid; white-space:nowrap; }
+  `]
 })
 export class DropoutPageComponent implements OnInit {
-  candidates: any[] = [];
+  allCandidates: any[] = [];
+  atRiskCandidates: any[] = [];
+  atRiskCount = 0;
+  totalCandidates = 0;
+  riskDistribution = [
+    { label: 'Critical (80%+)', count: 0, percentage: 0, color: '#ef4444' },
+    { label: 'High (60–79%)',   count: 0, percentage: 0, color: '#f97316' },
+    { label: 'Medium (40–59%)', count: 0, percentage: 0, color: '#eab308' },
+    { label: 'Low (<40%)',      count: 0, percentage: 0, color: '#22c55e' },
+  ];
+
   constructor(private http: HttpClient) {}
+
   ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/candidates`).subscribe(data => this.candidates = data);
+    this.http.get<any[]>(`${environment.apiUrl}/api/candidates`).subscribe(data => {
+      this.allCandidates = data;
+      this.totalCandidates = data.length;
+      this.atRiskCandidates = data.filter(c => (c.dropoutRisk ?? 0) >= 40).sort((a, b) => b.dropoutRisk - a.dropoutRisk);
+      this.atRiskCount = this.atRiskCandidates.length;
+      this.updateDistribution();
+    });
+  }
+
+  updateDistribution() {
+    const all = this.allCandidates;
+    const total = all.length || 1;
+    this.riskDistribution = [
+      { label: 'Critical (80%+)', count: all.filter(c => c.dropoutRisk >= 80).length,                             percentage: 0, color: '#ef4444' },
+      { label: 'High (60–79%)',   count: all.filter(c => c.dropoutRisk >= 60 && c.dropoutRisk < 80).length,       percentage: 0, color: '#f97316' },
+      { label: 'Medium (40–59%)', count: all.filter(c => c.dropoutRisk >= 40 && c.dropoutRisk < 60).length,       percentage: 0, color: '#eab308' },
+      { label: 'Low (<40%)',      count: all.filter(c => (c.dropoutRisk ?? 0) < 40).length,                       percentage: 0, color: '#22c55e' },
+    ];
+    this.riskDistribution.forEach(d => d.percentage = Math.round((d.count / total) * 100));
+  }
+
+  getRiskColor(risk: number): string {
+    return risk >= 80 ? '#ef4444' : risk >= 60 ? '#f97316' : risk >= 40 ? '#eab308' : '#22c55e';
+  }
+
+  getRiskLabel(risk: number): string {
+    return risk >= 80 ? 'Critical' : risk >= 60 ? 'High' : risk >= 40 ? 'Medium' : 'Low';
+  }
+
+  getRiskFactors(c: any): string[] {
+    const f: string[] = [];
+    if ((c.dropoutRisk ?? 0) >= 80) f.push('Very high risk');
+    if ((c.matchScore ?? 100) < 60)  f.push('Poor JD match');
+    if (c.stage)                      f.push(`Stage: ${c.stage}`);
+    return f.length ? f : ['Risk score elevated'];
   }
 }
 
@@ -385,10 +617,17 @@ const routes: Routes = [
   { path: 'competency-ranker',    component: GenericToolComponent },
   { path: 'jd-checker',           component: GenericToolComponent },
   { path: 'jd-generator',         component: JdGeneratorComponent },
+  { path: 'ai-features',          component: AIFeaturesComponent },
   // Budget Module
   { path: 'budget',               component: BudgetComponent },
   // Import Center
   { path: 'import-center',        component: ImportCenterComponent },
+  // Job Broadcasting
+  { path: 'job-broadcasting', component: JobBroadcastingComponent },
+  // Communication Center
+  { path: 'communications', component: CommunicationCenterComponent },
+  // Onboarding
+  { path: 'onboarding', component: OnboardingComponent },
   // Internal Job Postings
   { path: 'internal-job-postings', component: InternalJobPostingsComponent },
   // Reports
@@ -411,6 +650,7 @@ const routes: Routes = [
     UsersAdminComponent,
     SafeHtmlPipe,
     TimeAgoPipe,
+    AIFeaturesComponent,
     AIScorecardComponent,
     SlaDashboardComponent,
     JdGeneratorComponent,
@@ -427,7 +667,10 @@ const routes: Routes = [
     BudgetComponent,
     ImportCenterComponent,
     InternalJobPostingsComponent,
-    ReportsComponent
+    ReportsComponent,
+    JobBroadcastingComponent,
+    CommunicationCenterComponent,
+    OnboardingComponent
   ],
   imports: [
     BrowserModule,

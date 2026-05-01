@@ -153,6 +153,55 @@ namespace Decypher.Web.Controllers
                 .ToListAsync();
             return Ok(history);
         }
+
+        [HttpPost("{id}/broadcast")]
+        public async Task<IActionResult> Broadcast(Guid id, [FromBody] BroadcastRequest req)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            if (req.Channels == null || !req.Channels.Any())
+                return BadRequest(new { error = "At least one channel is required." });
+
+            var broadcast = new JobBroadcast
+            {
+                RequisitionId = id,
+                Channels = req.Channels,
+                BroadcastAt = DateTime.UtcNow,
+                TenantId = user.TenantId
+            };
+            _db.JobBroadcasts.Add(broadcast);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { success = true, broadcastedChannels = req.Channels, broadcastAt = broadcast.BroadcastAt });
+        }
+
+        [HttpGet("{id}/broadcast-status")]
+        public async Task<IActionResult> GetBroadcastStatus(Guid id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var history = await _db.JobBroadcasts
+                .Where(b => b.RequisitionId == id && b.TenantId == user.TenantId)
+                .OrderByDescending(b => b.BroadcastAt)
+                .ToListAsync();
+
+            // Build per-channel summary: latest post time per channel
+            var channelMap = history
+                .SelectMany(b => b.Channels.Select(ch => new { channelId = ch, b.BroadcastAt }))
+                .GroupBy(x => x.channelId)
+                .Select(g => new {
+                    channelId = g.Key,
+                    lastPosted = g.Max(x => x.BroadcastAt),
+                    status = "Posted"
+                });
+
+            return Ok(new {
+                channels = channelMap,
+                history = history.Select(b => new { b.Channels, b.BroadcastAt })
+            });
+        }
     }
 
     public class HoldRequisitionRequest { public string Reason { get; set; } = string.Empty; }

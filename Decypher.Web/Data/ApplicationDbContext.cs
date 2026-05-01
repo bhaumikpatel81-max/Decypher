@@ -58,6 +58,10 @@ namespace Decypher.Web.Data
 
         // ─── Requisition extensions ────────────────────────────────────────
         public DbSet<RequisitionStatusHistory> RequisitionStatusHistories { get; set; }
+        public DbSet<JobBroadcast> JobBroadcasts { get; set; }
+        public DbSet<CommMessage> CommMessages { get; set; }
+        public DbSet<OnboardingRecord> OnboardingRecords { get; set; }
+        public DbSet<OnboardingChecklistItem> OnboardingChecklistItems { get; set; }
 
         // ─── Internal Job Postings ──────────────────────────────────────────
         public DbSet<InternalJobPosting> InternalJobPostings { get; set; }
@@ -305,6 +309,42 @@ namespace Decypher.Web.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.TenantId).IsUnique();
                 entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            // ─── Communication Center ─────────────────────────────────
+            builder.Entity<CommMessage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.Channel });
+                entity.HasIndex(e => new { e.TenantId, e.SentAt });
+            });
+
+            // ─── Onboarding ────────────────────────────────────────────────
+            builder.Entity<OnboardingRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.CandidateId });
+                entity.HasMany(o => o.Items)
+                    .WithOne(i => i.OnboardingRecord)
+                    .HasForeignKey(i => i.OnboardingRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<OnboardingChecklistItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.OnboardingRecordId });
+            });
+
+            // ─── Job Broadcasting ──────────────────────────────────────────
+            builder.Entity<JobBroadcast>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.RequisitionId });
+                entity.Property(e => e.Channels).HasColumnType("jsonb");
             });
 
             // Seed data

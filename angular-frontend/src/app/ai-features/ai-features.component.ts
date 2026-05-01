@@ -616,15 +616,39 @@ export class AIFeaturesComponent implements OnInit {
   }
 
   loadConversations() {
-    // Load chatbot conversations
+    this.conversations = [
+      { id: '1', candidateName: 'Alex Kumar',  lastMessage: 'Thank you for the opportunity!',       status: 'completed'   },
+      { id: '2', candidateName: 'Priya Singh', lastMessage: 'When can I expect the next step?',     status: 'in-progress' },
+      { id: '3', candidateName: 'Raj Mehta',   lastMessage: 'I am available from next Monday.',     status: 'in-progress' },
+    ];
+    this.screeningChecklist = [
+      { label: 'Introduction sent',        completed: true  },
+      { label: 'Basic screening done',     completed: true  },
+      { label: 'Technical questions asked',completed: false },
+      { label: 'Availability confirmed',   completed: false },
+      { label: 'Summary generated',        completed: false },
+    ];
+    if (this.conversations.length) this.selectConversation(this.conversations[0]);
   }
 
   selectConversation(conv: any) {
-    // Load conversation messages
+    this.currentMessages = [
+      { role: 'assistant', content: `Hi ${conv.candidateName}, I'm Decypher's AI screening assistant. Let's get started with a few quick questions!` },
+      { role: 'user',      content: conv.lastMessage },
+    ];
   }
 
-  sendMessage() {
-    // Send chat message
+  async sendMessage() {
+    const msg = this.chatMessage.trim();
+    if (!msg) return;
+    this.currentMessages.push({ role: 'user', content: msg });
+    this.chatMessage = '';
+    try {
+      const reply = await this.aiService.chat(msg, 'candidate-screening');
+      this.currentMessages.push({ role: 'assistant', content: reply });
+    } catch {
+      this.currentMessages.push({ role: 'assistant', content: 'Sorry, I could not connect to the AI right now. Please try again.' });
+    }
   }
 
   getDifficultyChip(difficulty: string): string {

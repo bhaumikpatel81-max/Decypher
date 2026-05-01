@@ -34,4 +34,18 @@ namespace Decypher.Web.Models
     {
         public string Reason { get; set; } = string.Empty;
     }
+
+    public class JobBroadcast
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid RequisitionId { get; set; }
+        public List<string> Channels { get; set; } = new();
+        public DateTime BroadcastAt { get; set; } = DateTime.UtcNow;
+        public Guid TenantId { get; set; }
+    }
+
+    public class BroadcastRequest
+    {
+        public List<string> Channels { get; set; } = new();
+    }
 }

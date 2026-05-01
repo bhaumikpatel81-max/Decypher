@@ -7,6 +7,7 @@ namespace Decypher.Web.Services
     {
         Task SendEmailAsync(string to, string subject, string htmlBody);
         Task SendSmsAsync(string to, string body);
+        Task SendWhatsAppAsync(string to, string templateId, Dictionary<string, string> variables);
     }
 
     public class NotificationService : INotificationService
@@ -42,7 +43,6 @@ namespace Decypher.Web.Services
             }
             else
             {
-                // Stub: log only
                 _logger.LogInformation("EMAIL (stub) to={To} subject={Subject}", to, subject);
             }
         }
@@ -51,6 +51,14 @@ namespace Decypher.Web.Services
         {
             // Twilio integration placeholder — stub logs for now
             _logger.LogInformation("SMS (stub) to={To} body={Body}", to, body);
+            await Task.CompletedTask;
+        }
+
+        public async Task SendWhatsAppAsync(string to, string templateId, Dictionary<string, string> variables)
+        {
+            // WhatsApp Business API placeholder (e.g. Twilio / Meta Cloud API)
+            _logger.LogInformation("WHATSAPP (stub) to={To} template={TemplateId} vars={Vars}",
+                to, templateId, string.Join(", ", variables.Select(kv => $"{kv.Key}={kv.Value}")));
             await Task.CompletedTask;
         }
     }
