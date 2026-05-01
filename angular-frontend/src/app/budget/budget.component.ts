@@ -1155,7 +1155,7 @@ export class BudgetComponent implements OnInit {
 
   filterActuals() {
     this.filteredActuals = this.actuals.filter(a => {
-      if (this.actualsFilter.dept && a.departmentName?.toLowerCase().indexOf(this.actualsFilter.dept.toLowerCase()) < 0) return false;
+      if (this.actualsFilter.dept && (a.departmentName ?? '').toLowerCase().indexOf(this.actualsFilter.dept.toLowerCase()) < 0) return false;
       if (this.actualsFilter.category && a.spendCategory !== this.actualsFilter.category) return false;
       if (this.actualsFilter.from && a.spendDate < this.actualsFilter.from) return false;
       if (this.actualsFilter.to && a.spendDate > this.actualsFilter.to) return false;
