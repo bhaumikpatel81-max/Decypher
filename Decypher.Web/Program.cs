@@ -158,6 +158,7 @@ builder.Services.AddScoped<ITalentPoolService, TalentPoolService>();
 builder.Services.AddScoped<IRequisitionService, RequisitionService>();
 builder.Services.AddScoped<ISourceTrackingService, SourceTrackingService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDuplicateDetectionService, DuplicateDetectionService>();
 // ─── Budget Module ────────────────────────────────────────────
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IBudgetExportService, BudgetExportService>();

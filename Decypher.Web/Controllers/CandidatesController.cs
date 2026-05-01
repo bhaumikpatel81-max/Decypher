@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Decypher.Web.Services;
 using Decypher.Web.DTOs;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Decypher.Web.Controllers
@@ -13,10 +14,12 @@ namespace Decypher.Web.Controllers
     public class CandidatesController : ControllerBase
     {
         private readonly ICandidateService _candidateService;
+        private readonly IDuplicateDetectionService _duplicateService;
 
-        public CandidatesController(ICandidateService candidateService)
+        public CandidatesController(ICandidateService candidateService, IDuplicateDetectionService duplicateService)
         {
             _candidateService = candidateService;
+            _duplicateService = duplicateService;
         }
 
         private string GetTenantId() => User.FindFirst("TenantId")?.Value ?? "11111111-1111-1111-1111-111111111111";
@@ -91,5 +94,29 @@ namespace Decypher.Web.Controllers
             var counts = await _candidateService.GetCandidateCountByStageAsync(GetTenantId());
             return Ok(counts);
         }
+
+        [HttpGet("duplicates")]
+        public async Task<IActionResult> GetDuplicates()
+        {
+            var groups = await _duplicateService.GetDuplicatesAsync(GetTenantId());
+            return Ok(groups);
+        }
+
+        [HttpPost("merge")]
+        public async Task<IActionResult> MergeCandidates([FromBody] MergeRequest req)
+        {
+            var ok = await _duplicateService.MergeCandidatesAsync(req.PrimaryId, req.DuplicateIds, GetTenantId());
+            return ok ? Ok(new { merged = true }) : NotFound();
+        }
+
+        [HttpPost("dismiss-duplicate")]
+        public async Task<IActionResult> DismissDuplicate([FromBody] DismissRequest req)
+        {
+            await _duplicateService.DismissDuplicatesAsync(req.CandidateIds, GetTenantId());
+            return Ok(new { dismissed = true });
+        }
     }
+
+    public record MergeRequest(Guid PrimaryId, List<Guid> DuplicateIds);
+    public record DismissRequest(List<Guid> CandidateIds);
 }

@@ -35,6 +35,8 @@ import { ReportsComponent } from './reports/reports.component';
 import { JobBroadcastingComponent } from './job-broadcasting/job-broadcasting.component';
 import { CommunicationCenterComponent } from './communication-center/communication-center.component';
 import { OnboardingComponent } from './onboarding/onboarding.component';
+import { VideoInterviewsComponent } from './video-interviews/video-interviews.component';
+import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.component';
 
 import { AppComponent } from './app.component';
 import { AIFeaturesComponent } from './ai-features/ai-features.component';
@@ -628,6 +630,10 @@ const routes: Routes = [
   { path: 'communications', component: CommunicationCenterComponent },
   // Onboarding
   { path: 'onboarding', component: OnboardingComponent },
+  // Video Interviews
+  { path: 'video-interviews', component: VideoInterviewsComponent },
+  // Integrations Hub
+  { path: 'integrations', component: IntegrationsHubComponent },
   // Internal Job Postings
   { path: 'internal-job-postings', component: InternalJobPostingsComponent },
   // Reports
@@ -670,7 +676,9 @@ const routes: Routes = [
     ReportsComponent,
     JobBroadcastingComponent,
     CommunicationCenterComponent,
-    OnboardingComponent
+    OnboardingComponent,
+    VideoInterviewsComponent,
+    IntegrationsHubComponent
   ],
   imports: [
     BrowserModule,

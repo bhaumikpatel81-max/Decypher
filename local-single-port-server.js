@@ -239,6 +239,8 @@ const seed = {
   broadcasts: [],
   commMessages: [],
   onboarding: [],
+  videoInterviews: [],
+  integrations: [],
   fiscalYears: [],
   allocations: [],
   lineItems: [],
@@ -605,6 +607,48 @@ async function handleApi(req, res, url) {
 
   if (route === '/api/candidates' && req.method === 'GET') {
     return sendJson(res, 200, db.candidates);
+  }
+
+  if (route === '/api/candidates/duplicates' && req.method === 'GET') {
+    // Group by normalized email, then by normalized name
+    const norm = s => (s || '').trim().toLowerCase();
+    const groups = [];
+    const seen = new Set();
+    const byEmail = {};
+    db.candidates.forEach(c => {
+      if (!c.email) return;
+      const key = norm(c.email);
+      (byEmail[key] = byEmail[key] || []).push(c);
+    });
+    Object.values(byEmail).filter(g => g.length > 1).forEach(g => {
+      const sorted = [...g].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      sorted.forEach(c => seen.add(c.id));
+      groups.push({ matchReason: 'Same email', candidates: sorted.map(c => ({ id: c.id, name: c.name || c.candidateName, email: c.email, phone: c.phone, stage: c.stage, submissionDate: c.createdAt })) });
+    });
+    const byName = {};
+    db.candidates.filter(c => !seen.has(c.id)).forEach(c => {
+      const key = norm(c.name || c.candidateName || '');
+      if (key.length < 4) return;
+      (byName[key] = byName[key] || []).push(c);
+    });
+    Object.values(byName).filter(g => g.length > 1).forEach(g => {
+      const sorted = [...g].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      groups.push({ matchReason: 'Same name', candidates: sorted.map(c => ({ id: c.id, name: c.name || c.candidateName, email: c.email, phone: c.phone, stage: c.stage, submissionDate: c.createdAt })) });
+    });
+    return sendJson(res, 200, groups);
+  }
+
+  if (route === '/api/candidates/merge' && req.method === 'POST') {
+    return withBody(req, body => {
+      const { primaryId, duplicateIds } = body;
+      db.candidates = db.candidates.filter(c => !duplicateIds.includes(c.id));
+      save();
+      sendJson(res, 200, { merged: true });
+    });
+  }
+
+  if (route === '/api/candidates/dismiss-duplicate' && req.method === 'POST') {
+    return withBody(req, () => sendJson(res, 200, { dismissed: true }));
   }
 
   if (route === '/api/recruiters' && req.method === 'GET') {
@@ -1667,6 +1711,81 @@ async function handleApi(req, res, url) {
       }
     }
     return sendJson(res, 200, { channels: Object.values(channelMap), history: history.slice().reverse() });
+  }
+
+  // ── Integrations Hub ─────────────────────────────────────────────────────
+  if (route === '/api/integrations' && req.method === 'GET') {
+    const db = readDb();
+    return sendJson(res, 200, db.integrations || []);
+  }
+
+  const intgMatch = route.match(/^\/api\/integrations\/([^/]+)$/);
+  if (intgMatch && req.method === 'POST') {
+    return withBody(req, body => {
+      const db = readDb();
+      db.integrations = db.integrations || [];
+      const idx = db.integrations.findIndex(i => i.id === intgMatch[1]);
+      const record = { id: intgMatch[1], connected: !!body.connected, lastSync: body.connected ? now() : null };
+      if (idx >= 0) db.integrations[idx] = { ...db.integrations[idx], ...record };
+      else db.integrations.push(record);
+      writeDb(db);
+      sendJson(res, 200, record);
+    });
+  }
+
+  // ── Video Interviews ─────────────────────────────────────────────────────
+  if (route === '/api/interviews/video' && req.method === 'GET') {
+    const db = readDb();
+    return sendJson(res, 200, (db.videoInterviews || []).map(v => ({
+      ...v, questionCount: (v.questions || []).length,
+      responses: (v.responses || []).length
+    })));
+  }
+
+  if (route === '/api/interviews/video-link' && req.method === 'POST') {
+    return withBody(req, body => {
+      const db = readDb();
+      db.videoInterviews = db.videoInterviews || [];
+      const token = Math.random().toString(36).slice(2, 14);
+      const inv = {
+        id: crypto.randomUUID(),
+        candidateId: body.candidateId || '',
+        candidateName: body.candidateName || '',
+        jobTitle: body.jobTitle || '',
+        questions: body.questions || [],
+        deadline: body.deadline || null,
+        link: `https://interviews.decypher.app/v/${token}`,
+        status: 'Sent',
+        createdAt: now(),
+        responses: []
+      };
+      db.videoInterviews.push(inv);
+      writeDb(db);
+      sendJson(res, 200, { id: inv.id, link: inv.link, status: inv.status });
+    });
+  }
+
+  const videoResponseMatch = route.match(/^\/api\/interviews\/video-responses\/([^/]+)$/);
+  if (videoResponseMatch && req.method === 'GET') {
+    const db = readDb();
+    const inv = (db.videoInterviews || []).find(v => v.id === videoResponseMatch[1]);
+    if (!inv) return sendJson(res, 404, { error: 'Not found' });
+    // Seed mock responses for demo
+    const mockResponses = (inv.questions || []).slice(0, Math.max(1, Math.floor((inv.questions || []).length / 2))).map((_, qi) => ({
+      id: crypto.randomUUID(), questionIndex: qi,
+      transcript: ['Strong technical background demonstrated with concrete examples.', 'Candidate showed enthusiasm and clear communication skills.', 'Relevant experience aligned with role requirements.'][qi % 3],
+      sentiment: ['Confident', 'Enthusiastic', 'Clear'][qi % 3],
+      aiScore: 72 + qi * 5,
+      duration: `0:${30 + qi * 7}`,
+      recordedAt: now()
+    }));
+    const enriched = { ...inv, responses: inv.responses.length ? inv.responses : mockResponses };
+    if (!inv.responses.length && mockResponses.length) {
+      inv.responses = mockResponses;
+      inv.status = mockResponses.length >= (inv.questions || []).length ? 'Completed' : 'Partial';
+      writeDb(db);
+    }
+    return sendJson(res, 200, enriched);
   }
 
   return sendJson(res, 404, { error: 'API route not found', path: url.pathname });

@@ -63,6 +63,10 @@ namespace Decypher.Web.Data
         public DbSet<OnboardingRecord> OnboardingRecords { get; set; }
         public DbSet<OnboardingChecklistItem> OnboardingChecklistItems { get; set; }
 
+        // ─── Video Interviews ───────────────────────────────────────────────
+        public DbSet<VideoInterview> VideoInterviews { get; set; }
+        public DbSet<VideoResponse> VideoResponses { get; set; }
+
         // ─── Internal Job Postings ──────────────────────────────────────────
         public DbSet<InternalJobPosting> InternalJobPostings { get; set; }
 
@@ -345,6 +349,25 @@ namespace Decypher.Web.Data
                 entity.HasIndex(e => e.TenantId);
                 entity.HasIndex(e => new { e.TenantId, e.RequisitionId });
                 entity.Property(e => e.Channels).HasColumnType("jsonb");
+            });
+
+            // ─── Video Interviews ──────────────────────────────────────────
+            builder.Entity<VideoInterview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => e.CandidateId);
+                entity.Property(e => e.Questions).HasColumnType("jsonb");
+                entity.HasMany(v => v.Responses)
+                    .WithOne(r => r.VideoInterview)
+                    .HasForeignKey(r => r.VideoInterviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<VideoResponse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.VideoInterviewId);
+                entity.HasIndex(e => e.TenantId);
             });
 
             // Seed data
