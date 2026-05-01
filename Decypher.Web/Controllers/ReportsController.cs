@@ -358,6 +358,405 @@ namespace Decypher.Web.Controllers
             });
         }
 
+        // ─── Talent Acquisition P3 Reports (#27–34) ──────────────────────────────
+
+        // #27 – TA Volume by BU + Project
+        [HttpGet("ta-volume-by-bu")]
+        public async Task<IActionResult> TaVolumeByBu(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fromD = from ?? DateTime.UtcNow.AddMonths(-1);
+            var toD   = to   ?? DateTime.UtcNow;
+
+            var reqs = await _db.Requirements
+                .Where(r => r.TenantId == tenantId && !r.IsDeleted &&
+                            r.CreatedAt >= fromD && r.CreatedAt <= toD)
+                .Select(r => new {
+                    Group   = r.Department ?? "—",
+                    Project = r.RequirementCode,
+                    r.JobTitle,
+                    r.Positions,
+                    r.Status
+                }).ToListAsync();
+
+            var rows = reqs
+                .GroupBy(r => new { r.Group, r.Project })
+                .Select(g => new Dictionary<string, object> {
+                    [groupBy]         = g.Key.Group,
+                    ["Project"]       = g.Key.Project,
+                    ["Total Positions"] = g.Sum(r => r.Positions),
+                    ["Open"]          = g.Count(r => r.Status == "Open" || r.Status == "InProgress"),
+                    ["Closed"]        = g.Count(r => r.Status == "Closed")
+                }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = $"Total {groupBy}s", value = rows.Select(r => r[groupBy]).Distinct().Count() },
+                    new { label = "Total Positions",   value = reqs.Sum(r => r.Positions) },
+                    new { label = "Open Reqs",         value = reqs.Count(r => r.Status == "Open" || r.Status == "InProgress") },
+                    new { label = "Closed Reqs",       value = reqs.Count(r => r.Status == "Closed") }
+                },
+                chartType = "bar",
+                chartMeta = new { xAxis = groupBy, series = new[] { "Open", "Closed" } },
+                columns = new[] { groupBy, "Project", "Total Positions", "Open", "Closed" },
+                rows
+            });
+        }
+
+        // #28 – Full Year Demand + Phasing (Dual Line Chart)
+        [HttpGet("full-year-demand")]
+        public async Task<IActionResult> FullYearDemand(
+            [FromQuery] int? year,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fy = year ?? DateTime.UtcNow.Year;
+            var start = new DateTime(fy, 1, 1);
+            var end   = new DateTime(fy, 12, 31);
+
+            var reqs = await _db.Requirements
+                .Where(r => r.TenantId == tenantId && !r.IsDeleted &&
+                            r.CreatedAt >= start && r.CreatedAt <= end)
+                .Select(r => new { r.Department, r.Positions, Month = r.CreatedAt.Month })
+                .ToListAsync();
+
+            var joined = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.Stage == "Joined" &&
+                            c.JoiningDate >= start && c.JoiningDate <= end)
+                .Select(c => new { Month = c.JoiningDate!.Value.Month })
+                .ToListAsync();
+
+            var rows = Enumerable.Range(1, 12).Select(m => new Dictionary<string, object> {
+                ["Month"]    = new DateTime(fy, m, 1).ToString("MMM"),
+                ["Demand"]   = reqs.Where(r => r.Month == m).Sum(r => r.Positions),
+                ["Fulfilled"] = joined.Count(j => j.Month == m)
+            }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "FY Demand",    value = reqs.Sum(r => r.Positions) },
+                    new { label = "FY Fulfilled", value = joined.Count },
+                    new { label = "Fulfillment %", value = reqs.Sum(r => r.Positions) > 0
+                        ? $"{(double)joined.Count / reqs.Sum(r => r.Positions) * 100:F1}%" : "—" }
+                },
+                chartType = "dualLine",
+                chartMeta = new { xAxis = "Month", series = new[] { "Demand", "Fulfilled" } },
+                columns   = new[] { "Month", "Demand", "Fulfilled" },
+                rows,
+                year = fy
+            });
+        }
+
+        // #29 – Open Positions with aging + criticality
+        [HttpGet("open-positions-aging")]
+        public async Task<IActionResult> OpenPositionsAging([FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+
+            var reqs = await _db.Requirements
+                .Where(r => r.TenantId == tenantId && !r.IsDeleted &&
+                            (r.Status == "Open" || r.Status == "InProgress"))
+                .Select(r => new {
+                    Group    = r.Department ?? "—",
+                    Role     = r.JobTitle,
+                    Grade    = r.ExperienceRange ?? "—",
+                    Priority = r.Priority,
+                    DaysOpen = (int)(DateTime.UtcNow - r.CreatedAt).TotalDays,
+                    r.Positions
+                }).ToListAsync();
+
+            // Map priority to P1/P2/P3 labels
+            string PriorityLabel(string p) => p switch {
+                "Critical" => "P1", "High" => "P2", "Medium" => "P3", _ => "P4"
+            };
+
+            var rows = reqs.Select(r => new Dictionary<string, object> {
+                [groupBy]      = r.Group,
+                ["Role"]       = r.Role,
+                ["Grade"]      = r.Grade,
+                ["Criticality"] = PriorityLabel(r.Priority),
+                ["Positions"]  = r.Positions,
+                ["Days Open"]  = r.DaysOpen,
+                ["Aging Band"] = r.DaysOpen switch {
+                    < 15  => "0-14d",
+                    < 30  => "15-29d",
+                    < 45  => "30-44d",
+                    < 60  => "45-59d",
+                    _     => "60d+"
+                }
+            }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Total Open",      value = reqs.Count },
+                    new { label = "P1 (Critical)",   value = reqs.Count(r => r.Priority == "Critical") },
+                    new { label = "P2 (High)",        value = reqs.Count(r => r.Priority == "High") },
+                    new { label = "Aged >45d",        value = reqs.Count(r => r.DaysOpen > 45) },
+                    new { label = "Avg Days Open",    value = reqs.Any() ? (int)reqs.Average(r => r.DaysOpen) : 0 }
+                },
+                chartType = "kpiTable",
+                columns   = new[] { groupBy, "Role", "Grade", "Criticality", "Positions", "Days Open", "Aging Band" },
+                rows
+            });
+        }
+
+        // #30 – Positions Closed MTD
+        [HttpGet("positions-closed-mtd")]
+        public async Task<IActionResult> PositionsClosedMtd([FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+
+            var closed = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.Stage == "Joined" &&
+                            c.JoiningDate >= startOfMonth)
+                .Join(_db.Requirements, c => c.RequirementId, r => r.Id,
+                      (c, r) => new { Group = r.Department ?? "—", r.JobTitle })
+                .ToListAsync();
+
+            var rows = closed
+                .GroupBy(x => x.Group)
+                .Select(g => new Dictionary<string, object> {
+                    [groupBy]          = g.Key,
+                    ["Positions Closed"] = g.Count()
+                }).OrderByDescending(r => (int)r["Positions Closed"]).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Positions Closed MTD", value = closed.Count },
+                    new { label = $"{groupBy}s Active",   value = rows.Count }
+                },
+                chartType = "bar",
+                chartMeta = new { xAxis = groupBy, series = new[] { "Positions Closed" } },
+                columns   = new[] { groupBy, "Positions Closed" },
+                rows
+            });
+        }
+
+        // #31 – Cost per Hire by BU
+        [HttpGet("cost-per-hire")]
+        public async Task<IActionResult> CostPerHire(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fromD = from ?? DateTime.UtcNow.AddMonths(-1);
+            var toD   = to   ?? DateTime.UtcNow;
+
+            var hires = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.Stage == "Joined" &&
+                            c.JoiningDate >= fromD && c.JoiningDate <= toD)
+                .Join(_db.Requirements, c => c.RequirementId, r => r.Id,
+                      (c, r) => new {
+                          Group = r.Department ?? "—",
+                          c.OfferedCTC
+                      }).ToListAsync();
+
+            var orgAvg = hires.Any() ? hires.Average(h => (double)h.OfferedCTC) : 0;
+
+            var rows = hires
+                .GroupBy(h => h.Group)
+                .Select(g => new Dictionary<string, object> {
+                    [groupBy]         = g.Key,
+                    ["Hires"]         = g.Count(),
+                    ["Avg Cost"]      = g.Any() ? (long)g.Average(h => (double)h.OfferedCTC) : 0,
+                    ["vs Org Avg"]    = g.Any()
+                        ? $"{(g.Average(h => (double)h.OfferedCTC) - orgAvg) / (orgAvg > 0 ? orgAvg : 1) * 100:+0.#;-0.#;0}%"
+                        : "—"
+                }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Total Hires",    value = hires.Count },
+                    new { label = "Org Avg Cost",   value = (long)orgAvg },
+                    new { label = $"{groupBy}s",    value = rows.Count }
+                },
+                chartType = "bar",
+                chartMeta = new { xAxis = groupBy, series = new[] { "Avg Cost" }, benchmarkLine = (long)orgAvg },
+                columns   = new[] { groupBy, "Hires", "Avg Cost", "vs Org Avg" },
+                rows
+            });
+        }
+
+        // #32 – Hiring Pipeline by Stage (Funnel)
+        [HttpGet("hiring-pipeline-stage")]
+        public async Task<IActionResult> HiringPipelineStage(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fromD = from ?? DateTime.UtcNow.AddDays(-7); // weekly default
+            var toD   = to   ?? DateTime.UtcNow;
+
+            var candidates = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted &&
+                            c.SubmittedDate >= fromD && c.SubmittedDate <= toD)
+                .Join(_db.Requirements, c => c.RequirementId, r => r.Id,
+                      (c, r) => new { Group = r.Department ?? "—", c.Stage })
+                .ToListAsync();
+
+            // Funnel stages matching the spec: Screen → Phone → Tech → Final → Offer
+            var stageMap = new Dictionary<string, string> {
+                ["Submitted"]  = "Screen",
+                ["Screening"]  = "Screen",
+                ["L1"]         = "Phone",
+                ["L2"]         = "Tech",
+                ["L3"]         = "Final",
+                ["HR"]         = "Final",
+                ["Selected"]   = "Offer",
+                ["Joined"]     = "Offer"
+            };
+            var funnelStages = new[] { "Screen", "Phone", "Tech", "Final", "Offer" };
+
+            var total = candidates.Count;
+            var rows = funnelStages.Select(stage => {
+                var count = candidates.Count(c => stageMap.TryGetValue(c.Stage, out var s) && s == stage);
+                return new Dictionary<string, object> {
+                    ["Stage"]        = stage,
+                    ["Count"]        = count,
+                    ["Conversion %"] = total > 0 ? $"{(double)count / total * 100:F1}%" : "—"
+                };
+            }).ToList();
+
+            // Per-BU breakdown
+            var buBreakdown = candidates
+                .GroupBy(c => c.Group)
+                .Select(g => {
+                    var row = new Dictionary<string, object> { [groupBy] = g.Key };
+                    foreach (var stage in funnelStages)
+                        row[stage] = g.Count(c => stageMap.TryGetValue(c.Stage, out var s) && s == stage);
+                    return row;
+                }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Total in Pipeline", value = total },
+                    new { label = "At Offer Stage",    value = candidates.Count(c => c.Stage == "Selected" || c.Stage == "Joined") },
+                    new { label = "Offer Conversion",  value = total > 0
+                        ? $"{(double)candidates.Count(c => c.Stage == "Selected" || c.Stage == "Joined") / total * 100:F1}%" : "—" }
+                },
+                chartType = "funnel",
+                chartMeta = new { stages = funnelStages },
+                columns   = new[] { "Stage", "Count", "Conversion %" },
+                rows,
+                buBreakdownColumns = new[] { groupBy }.Concat(funnelStages).ToArray(),
+                buBreakdown
+            });
+        }
+
+        // #33 – Avg Time to Hire by BU
+        [HttpGet("avg-time-to-hire")]
+        public async Task<IActionResult> AvgTimeToHireByBu(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] int targetDays = 30,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fromD = from ?? DateTime.UtcNow.AddMonths(-1);
+            var toD   = to   ?? DateTime.UtcNow;
+
+            var hires = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.Stage == "Joined" &&
+                            c.JoiningDate >= fromD && c.JoiningDate <= toD)
+                .Join(_db.Requirements, c => c.RequirementId, r => r.Id,
+                      (c, r) => new {
+                          Group   = r.Department ?? "—",
+                          TATDays = c.JoiningDate.HasValue
+                              ? (int)(c.JoiningDate.Value - r.CreatedAt).TotalDays : 0
+                      }).ToListAsync();
+
+            var rows = hires
+                .GroupBy(h => h.Group)
+                .Select(g => new Dictionary<string, object> {
+                    [groupBy]          = g.Key,
+                    ["Hires"]          = g.Count(),
+                    ["Avg Days"]       = g.Any() ? (int)g.Average(h => h.TATDays) : 0,
+                    ["Target Days"]    = targetDays,
+                    ["vs Target"]      = g.Any()
+                        ? $"{(int)g.Average(h => h.TATDays) - targetDays:+0;-0;0}d"
+                        : "—",
+                    ["Status"]         = g.Any() && (int)g.Average(h => h.TATDays) <= targetDays
+                        ? "On Target" : "Over Target"
+                }).OrderBy(r => (int)r["Avg Days"]).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Hires in Period", value = hires.Count },
+                    new { label = "Org Avg (days)",  value = hires.Any() ? (int)hires.Average(h => h.TATDays) : 0 },
+                    new { label = "Target (days)",   value = targetDays },
+                    new { label = "On Target BUs",   value = rows.Count(r => r["Status"].ToString() == "On Target") }
+                },
+                chartType = "bar",
+                chartMeta = new { xAxis = groupBy, series = new[] { "Avg Days" }, targetLine = targetDays },
+                columns   = new[] { groupBy, "Hires", "Avg Days", "Target Days", "vs Target", "Status" },
+                rows
+            });
+        }
+
+        // #34 – Gender Ratio in Hiring by BU
+        [HttpGet("gender-ratio-hiring")]
+        public async Task<IActionResult> GenderRatioHiring(
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] string groupBy = "Department")
+        {
+            var tenantId = GetTenantId();
+            _db.SetCurrentTenant(tenantId);
+            var fromD = from ?? DateTime.UtcNow.AddMonths(-1);
+            var toD   = to   ?? DateTime.UtcNow;
+
+            // Gender is derived from Candidate.Gender if present (add to model to enable live data)
+            var hires = await _db.Candidates
+                .Where(c => c.TenantId == tenantId && !c.IsDeleted && c.Stage == "Joined" &&
+                            c.JoiningDate >= fromD && c.JoiningDate <= toD)
+                .Join(_db.Requirements, c => c.RequirementId, r => r.Id,
+                      (c, r) => new {
+                          Group  = r.Department ?? "—",
+                          Gender = EF.Property<string?>(c, "Gender") ?? "Not Specified"
+                      }).ToListAsync();
+
+            var rows = hires
+                .GroupBy(h => h.Group)
+                .Select(g => {
+                    var male   = g.Count(h => h.Gender == "Male");
+                    var female = g.Count(h => h.Gender == "Female");
+                    var other  = g.Count(h => h.Gender != "Male" && h.Gender != "Female");
+                    var total  = g.Count();
+                    return new Dictionary<string, object> {
+                        [groupBy]  = g.Key,
+                        ["Total"]  = total,
+                        ["Male"]   = male,
+                        ["Female"] = female,
+                        ["Other"]  = other,
+                        ["M:F Ratio"] = female > 0 ? $"{(double)male / female:F1}:1" : "—",
+                        ["Female %"]  = total > 0 ? $"{(double)female / total * 100:F1}%" : "—"
+                    };
+                }).ToList();
+
+            return Ok(new {
+                kpis = new object[] {
+                    new { label = "Total New Joins", value = hires.Count },
+                    new { label = "Male",            value = hires.Count(h => h.Gender == "Male") },
+                    new { label = "Female",          value = hires.Count(h => h.Gender == "Female") },
+                    new { label = "Female %",        value = hires.Any()
+                        ? $"{(double)hires.Count(h => h.Gender == "Female") / hires.Count * 100:F1}%" : "—" }
+                },
+                chartType  = "donut",
+                chartMeta  = new { segments = new[] { "Male", "Female", "Other" }, groupBy },
+                columns    = new[] { groupBy, "Total", "Male", "Female", "Other", "M:F Ratio", "Female %" },
+                rows,
+                note = "Add a 'Gender' string field to the Candidate model to enable live gender tracking."
+            });
+        }
+
         // Generic stub for remaining report types (offer-dropout, diversity-hiring)
         [HttpGet("{reportType}")]
         public IActionResult Generic(string reportType)
