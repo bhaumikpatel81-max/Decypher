@@ -2,18 +2,13 @@ version: '3.9'
 
 services:
   nginx:
-    image: nginx:1.25-alpine
+    image: ghcr.io/bhaumikpatel81-max/decypher-web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
-      - "${PORT}:80"
-    volumes:
-      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - frontend_dist:/usr/share/nginx/html:ro
+      - "${PORT:-8080}:80"
     depends_on:
       api:
         condition: service_healthy
-      frontend-builder:
-        condition: service_completed_successfully
     profiles: [prod]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -22,9 +17,7 @@ services:
       retries: 3
 
   api:
-    build:
-      context: .
-      dockerfile: Decypher.Web/Dockerfile
+    image: ghcr.io/bhaumikpatel81-max/decypher-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -47,14 +40,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-
-  frontend-builder:
-    build:
-      context: ./angular-frontend
-      dockerfile: Dockerfile.build
-    volumes:
-      - frontend_dist:/app/dist
-    profiles: [prod]
 
   db:
     image: postgres:16-alpine
@@ -88,4 +73,3 @@ services:
 
 volumes:
   postgres_data:
-  frontend_dist:

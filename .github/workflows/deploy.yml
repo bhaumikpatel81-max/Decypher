@@ -136,6 +136,7 @@ jobs:
             OPENAI_API_KEY=${OPENAI_API_KEY}
             SENDGRID_API_KEY=${SENDGRID_API_KEY}
             PORT=8080
+            IMAGE_TAG=${{ github.sha }}
             ENV
 
             # Rolling restart
