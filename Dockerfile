@@ -5,6 +5,7 @@ COPY angular-frontend/package*.json ./
 RUN npm install
 
 COPY angular-frontend .
+COPY styles/ /styles/
 RUN npm run build -- --output-path=dist/decypher-frontend
 
 # Build stage for .NET backend, including Angular static output
