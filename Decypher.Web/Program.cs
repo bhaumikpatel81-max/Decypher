@@ -11,6 +11,9 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Run as a Windows Service (no-op when started normally)
+builder.Host.UseWindowsService(options => options.ServiceName = "Decypher");
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -201,12 +204,34 @@ var app = builder.Build();
 // Ensure database is created and migrations are applied
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    // Wait for PostgreSQL to be ready (important when running as a Windows Service,
+    // since the DB service and app service may start in parallel)
+    for (int attempt = 1; attempt <= 10; attempt++)
+    {
+        try
+        {
+            await context.Database.CanConnectAsync();
+            Log.Information("Database connection established on attempt {Attempt}", attempt);
+            break;
+        }
+        catch (Exception ex)
+        {
+            if (attempt == 10)
+            {
+                Log.Error(ex, "Could not connect to database after 10 attempts. Startup aborted.");
+                throw;
+            }
+            Log.Warning("Database not ready (attempt {Attempt}/10), retrying in {Delay}s...", attempt, attempt * 3);
+            await Task.Delay(TimeSpan.FromSeconds(attempt * 3));
+        }
+    }
+
     try
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        
         await context.Database.EnsureCreatedAsync();
 
         // Ensure new tables exist (safe to run on every startup)

@@ -5,12 +5,15 @@ services:
     image: nginx:1.25-alpine
     restart: unless-stopped
     ports:
-      - "${PORT:-8080}:80"
+      - "${PORT}:80"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - frontend_dist:/usr/share/nginx/html:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+      frontend-builder:
+        condition: service_completed_successfully
     profiles: [prod]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
