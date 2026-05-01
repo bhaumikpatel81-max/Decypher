@@ -8,7 +8,105 @@ import { environment } from '../../environments/environment';
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
 
-        <!-- ── TAB 1: Talent Pool ── -->
+        <!-- ── TAB 1: Analytics ── -->
+        <mat-tab label="Analytics">
+          <div style="padding-top:20px;">
+
+            <div class="kpi-grid" style="margin-bottom:24px;">
+              <article class="kpi-tile">
+                <div class="kpi-label">Total in Pool</div>
+                <div class="kpi-value">{{ entries.length }}</div>
+                <div class="kpi-meta">Passive candidates</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Active Nurturing</div>
+                <div class="kpi-value" style="color:#10b981;">{{ activeNurtureCount }}</div>
+                <div class="kpi-meta">Engaged this month</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Duplicate Groups</div>
+                <div class="kpi-value" style="color:#f59e0b;">{{ dupGroups.length }}</div>
+                <div class="kpi-meta">Pending deduplication</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Unique Tags</div>
+                <div class="kpi-value" style="color:#7c3aed;">{{ uniqueTagCount }}</div>
+                <div class="kpi-meta">Skill categories</div>
+              </article>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+              <!-- Nurture Status Donut -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">Nurture Status</h3>
+                <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+                  <svg viewBox="0 0 120 120" width="140" height="140">
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" stroke-width="16"
+                      [attr.stroke-dasharray]="activeDash + ' 283'"
+                      stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#7c3aed" stroke-width="16"
+                      [attr.stroke-dasharray]="nurturingDash + ' 283'"
+                      [attr.stroke-dashoffset]="-activeDash" transform="rotate(-90 60 60)"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="16"
+                      [attr.stroke-dasharray]="coldDash + ' 283'"
+                      [attr.stroke-dashoffset]="-(activeDash + nurturingDash)" transform="rotate(-90 60 60)"/>
+                    <text x="60" y="55" text-anchor="middle" font-size="18" font-weight="700" fill="#1e293b">{{ entries.length }}</text>
+                    <text x="60" y="70" text-anchor="middle" font-size="9" fill="#94a3b8">TOTAL</text>
+                  </svg>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div *ngFor="let ns of nurtureStatusStats"
+                         style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                      <span [style.background]="ns.color"
+                            style="width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;"></span>
+                      {{ ns.label }} <b style="margin-left:4px;">{{ ns.count }}</b>
+                    </div>
+                    <div *ngIf="!entries.length" style="color:var(--text-3);font-size:12px;">No data yet</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Tags Bar Chart -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">Top Skills / Tags</h3>
+                <div *ngFor="let t of topTags" style="margin-bottom:14px;">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+                    <span class="chip chip-brand" style="padding:2px 8px;font-size:11px;">{{ t.tag }}</span>
+                    <b>{{ t.count }}</b>
+                  </div>
+                  <div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                    <div [style.width.%]="t.pct" style="height:100%;background:#7c3aed;border-radius:4px;transition:width .4s;"></div>
+                  </div>
+                </div>
+                <div *ngIf="!topTags.length" style="color:var(--text-3);text-align:center;padding:20px;">
+                  No tagged candidates yet
+                </div>
+              </div>
+            </div>
+
+            <!-- Trend Line -->
+            <div class="card" style="padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Pool Growth Trend</h3>
+                <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
+              </div>
+              <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
+                <line x1="0" y1="33" x2="500" y2="33" stroke="#f1f5f9" stroke-width="1"/>
+                <line x1="0" y1="66" x2="500" y2="66" stroke="#f1f5f9" stroke-width="1"/>
+                <polyline [attr.points]="tpAreaPoints" fill="rgba(124,58,237,0.08)" stroke="none"/>
+                <polyline [attr.points]="tpLinePoints" fill="none" stroke="#7c3aed" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                <circle *ngFor="let pt of tpDotPoints" [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#7c3aed"/>
+              </svg>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;">
+                <span *ngFor="let m of tpMonths" style="font-size:11px;color:var(--text-3);">{{ m }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- ── TAB 2: Talent Pool ── -->
         <mat-tab label="Talent Pool">
           <div style="padding-top:20px;">
             <div class="card form-row" style="margin-bottom:0;">
@@ -199,6 +297,57 @@ export class TalentPoolComponent implements OnInit {
   // Duplicates tab
   dupGroups: any[] = [];
   dupLoading = false;
+
+  // Analytics
+  readonly tpMonths    = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
+  readonly tpTrendData = [8, 14, 19, 26, 31, 42];
+
+  get activeNurtureCount()  { return this.entries.filter(e => e.nurtureStatus === 'Active').length; }
+  get uniqueTagCount() {
+    const tags = new Set<string>();
+    this.entries.forEach(e => (e.tags || []).forEach((t: string) => tags.add(t)));
+    return tags.size;
+  }
+  get nurtureStatusStats(): {label: string, count: number, color: string}[] {
+    const statusMap: Record<string, string> = {
+      Active: '#10b981', Nurturing: '#7c3aed', Cold: '#f59e0b', Unresponsive: '#94a3b8'
+    };
+    const counts: Record<string, number> = {};
+    this.entries.forEach(e => {
+      const s = e.nurtureStatus || 'Unknown';
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return Object.entries(counts).map(([label, count]) => ({ label, count, color: statusMap[label] || '#cbd5e1' }));
+  }
+  private statusDash(status: string) {
+    const c = this.entries.filter(e => e.nurtureStatus === status).length;
+    return Math.round((c / (this.entries.length || 1)) * 283);
+  }
+  get activeDash()    { return this.statusDash('Active'); }
+  get nurturingDash() { return this.statusDash('Nurturing'); }
+  get coldDash()      { return this.statusDash('Cold'); }
+
+  get topTags(): {tag: string, count: number, pct: number}[] {
+    const counts: Record<string, number> = {};
+    this.entries.forEach(e => (e.tags || []).forEach((t: string) => { counts[t] = (counts[t] || 0) + 1; }));
+    const max = Math.max(...Object.values(counts), 1);
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+      .map(([tag, count]) => ({ tag, count, pct: Math.round((count / max) * 100) }));
+  }
+
+  get tpLinePoints(): string {
+    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+  }
+  get tpAreaPoints(): string {
+    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+    return `0,90 ${line} 500,90`;
+  }
+  get tpDotPoints(): {x: number, y: number}[] {
+    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
+  }
 
   constructor(private http: HttpClient) {}
 

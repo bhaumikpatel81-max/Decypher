@@ -15,6 +15,115 @@ export interface RecruiterPerformance {
 @Component({
   selector: 'app-recruiters',
   template: `
+    <section class="stack-page">
+      <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
+
+        <!-- ── TAB 1: Analytics ── -->
+        <mat-tab label="Analytics">
+          <div style="padding-top:20px;">
+
+            <div class="kpi-grid" style="margin-bottom:24px;">
+              <article class="kpi-tile">
+                <div class="kpi-label">Total Recruiters</div>
+                <div class="kpi-value">{{ recruiters.length }}</div>
+                <div class="kpi-meta">Active team members</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Total Placements</div>
+                <div class="kpi-value" style="color:#7c3aed;">{{ totalPlacements }}</div>
+                <div class="kpi-meta">This period</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Avg Acceptance</div>
+                <div class="kpi-value" style="color:#10b981;">{{ avgAcceptance }}%</div>
+                <div class="kpi-meta">Offer acceptance rate</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Avg Time to Close</div>
+                <div class="kpi-value" style="color:#06b6d4;">{{ avgTimeClose }}d</div>
+                <div class="kpi-meta">Days from open to join</div>
+              </article>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+              <!-- Placements Bar Chart -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">Placements Leaderboard</h3>
+                <div *ngFor="let r of recruiters; let i = index" style="margin-bottom:16px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="rec-rank"
+                            [style.background]="i===0?'rgba(251,191,36,.15)':i===1?'rgba(192,192,192,.15)':i===2?'rgba(205,127,50,.15)':'#f8fafc'"
+                            [style.color]="i===0?'#b45309':i===1?'#6b7280':i===2?'#92400e':'var(--text-3)'">
+                        {{ i + 1 }}
+                      </span>
+                      <span style="font-weight:600;font-size:13px;">{{ r.name }}</span>
+                    </div>
+                    <b style="font-size:14px;color:#7c3aed;">{{ r.placements }}</b>
+                  </div>
+                  <div style="height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;">
+                    <div [style.width.%]="r.placements * 100 / maxPlacements"
+                         [style.background]="i===0?'#7c3aed':i===1?'#06b6d4':i===2?'#10b981':'#6366f1'"
+                         style="height:100%;border-radius:5px;transition:width .4s;"></div>
+                  </div>
+                </div>
+                <div *ngIf="!recruiters.length" style="color:var(--text-3);text-align:center;padding:20px;">No data</div>
+              </div>
+
+              <!-- Acceptance Rate Donut -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">Acceptance Rate Distribution</h3>
+                <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                  <svg viewBox="0 0 120 120" width="140" height="140">
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
+                    <ng-container *ngFor="let seg of acceptanceSegments">
+                      <circle cx="60" cy="60" r="45" fill="none" stroke-width="16"
+                        [attr.stroke]="seg.color"
+                        [attr.stroke-dasharray]="seg.dash + ' 283'"
+                        [attr.stroke-dashoffset]="-seg.offset"
+                        transform="rotate(-90 60 60)"/>
+                    </ng-container>
+                    <text x="60" y="55" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">{{ avgAcceptance }}%</text>
+                    <text x="60" y="70" text-anchor="middle" font-size="9" fill="#94a3b8">AVG</text>
+                  </svg>
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div *ngFor="let r of recruiters; let i = index"
+                         style="display:flex;align-items:center;gap:8px;font-size:12px;max-width:160px;">
+                      <span style="width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"
+                            [style.background]="i===0?'#7c3aed':i===1?'#06b6d4':i===2?'#10b981':'#6366f1'"></span>
+                      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.name }}</span>
+                      <b style="margin-left:auto;padding-left:4px;">{{ r.acceptanceRate }}%</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trend Line -->
+            <div class="card" style="padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Placement Trend</h3>
+                <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
+              </div>
+              <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
+                <line x1="0" y1="33" x2="500" y2="33" stroke="#f1f5f9" stroke-width="1"/>
+                <line x1="0" y1="66" x2="500" y2="66" stroke="#f1f5f9" stroke-width="1"/>
+                <polyline [attr.points]="recAreaPts" fill="rgba(124,58,237,0.08)" stroke="none"/>
+                <polyline [attr.points]="recLinePts" fill="none" stroke="#7c3aed" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                <circle *ngFor="let pt of recDotPts" [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#7c3aed"/>
+              </svg>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;">
+                <span *ngFor="let m of recMonths" style="font-size:11px;color:var(--text-3);">{{ m }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- ── TAB 2: Leaderboard ── -->
+        <mat-tab label="Leaderboard">
+          <div style="padding-top:20px;">
     <div class="recruiters-container page-enter">
       <!-- Header -->
       <div class="page-header">
@@ -104,8 +213,17 @@ export interface RecruiterPerformance {
         </div>
       </div>
     </div>
+          </div>
+        </mat-tab>
+
+      </mat-tab-group>
+    </section>
   `,
   styles: [`
+    .rec-rank {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:24px; height:24px; border-radius:6px; font-weight:700; font-size:12px; flex-shrink:0;
+    }
     .recruiters-container {
       padding: 24px;
     }
@@ -177,11 +295,54 @@ export interface RecruiterPerformance {
   `]
 })
 export class RecruitersComponent implements OnInit {
+  activeTab = 0;
   recruiters: RecruiterPerformance[] = [];
   topRecruiter: RecruiterPerformance | null = null;
   top2Recruiter: RecruiterPerformance | null = null;
   top3Recruiter: RecruiterPerformance | null = null;
   selectedPeriod: 'month' | 'quarter' | 'year' = 'month';
+
+  readonly recMonths    = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
+  readonly recTrendData = [4, 7, 11, 9, 14, 18];
+
+  get totalPlacements() { return this.recruiters.reduce((s, r) => s + r.placements, 0); }
+  get maxPlacements()   { return Math.max(...this.recruiters.map(r => r.placements), 1); }
+  get avgAcceptance()   {
+    return this.recruiters.length
+      ? Math.round(this.recruiters.reduce((s, r) => s + r.acceptanceRate, 0) / this.recruiters.length)
+      : 0;
+  }
+  get avgTimeClose()    {
+    return this.recruiters.length
+      ? Math.round(this.recruiters.reduce((s, r) => s + r.avgTimeToClose, 0) / this.recruiters.length)
+      : 0;
+  }
+
+  get acceptanceSegments(): {color: string, dash: number, offset: number}[] {
+    const colors = ['#7c3aed', '#06b6d4', '#10b981', '#6366f1', '#f59e0b'];
+    const total = this.recruiters.reduce((s, r) => s + r.acceptanceRate, 0) || 1;
+    let offset = 0;
+    return this.recruiters.map((r, i) => {
+      const dash = (r.acceptanceRate / total) * 283;
+      const seg = { color: colors[i % 5], dash, offset };
+      offset += dash;
+      return seg;
+    });
+  }
+
+  get recLinePts(): string {
+    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+  }
+  get recAreaPts(): string {
+    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+    return `0,90 ${line} 500,90`;
+  }
+  get recDotPts(): {x: number, y: number}[] {
+    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
+  }
   attentionItems = [
     {
       title: 'Raj has low acceptance rate',

@@ -6,51 +6,194 @@ import { environment } from '../../environments/environment';
   selector: 'app-requisitions',
   template: `
     <section class="stack-page">
-      <div class="grid grid-cols-2 gap-6">
-        <!-- Create Requisition -->
-        <div class="card form-card">
-          <h3>New Headcount Request</h3>
-          <input class="input" placeholder="Job title" [(ngModel)]="form.title">
-          <select class="select" [(ngModel)]="form.department">
-            <option *ngFor="let d of departments">{{ d }}</option>
-          </select>
-          <input class="input" type="number" placeholder="Headcount" [(ngModel)]="form.headcount">
-          <div style="display:flex;gap:8px;">
-            <input class="input" type="number" placeholder="Min salary" [(ngModel)]="form.budgetMin" style="flex:1;">
-            <input class="input" type="number" placeholder="Max salary" [(ngModel)]="form.budgetMax" style="flex:1;">
-          </div>
-          <select class="select" [(ngModel)]="form.priority">
-            <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
-          </select>
-          <textarea class="textarea" rows="3" placeholder="Justification…" [(ngModel)]="form.justification"></textarea>
-          <button class="btn btn-primary" (click)="create()" [disabled]="saving">
-            {{ saving ? 'Submitting…' : 'Submit Request' }}
-          </button>
-          <div *ngIf="saveOk" style="color:#10b981;margin-top:8px;">Request submitted for approval.</div>
-        </div>
+      <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
 
-        <!-- Requisition List -->
-        <div class="card">
-          <h3>Requisitions</h3>
-          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm" *ngFor="let s of statusFilters"
-              [class.active]="statusFilter===s" (click)="statusFilter=s;load()">{{ s || 'All' }}</button>
-          </div>
-          <div *ngFor="let r of requisitions" class="req-row">
-            <div class="req-info">
-              <b>{{ r.title }}</b>
-              <span style="font-size:12px;color:var(--text-3);">{{ r.department }} · {{ r.headcount }} position(s)</span>
+        <!-- ── TAB 1: Analytics ── -->
+        <mat-tab label="Analytics">
+          <div style="padding-top:20px;">
+
+            <div class="kpi-grid" style="margin-bottom:24px;">
+              <article class="kpi-tile">
+                <div class="kpi-label">Total Requisitions</div>
+                <div class="kpi-value">{{ requisitions.length }}</div>
+                <div class="kpi-meta">All requests</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Pending Approval</div>
+                <div class="kpi-value" style="color:#f59e0b;">{{ pendingCount }}</div>
+                <div class="kpi-meta">Awaiting decision</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Approved</div>
+                <div class="kpi-value" style="color:#10b981;">{{ approvedCount }}</div>
+                <div class="kpi-meta">Ready to hire</div>
+              </article>
+              <article class="kpi-tile">
+                <div class="kpi-label">Filled</div>
+                <div class="kpi-value" style="color:#7c3aed;">{{ filledCount }}</div>
+                <div class="kpi-meta">Positions closed</div>
+              </article>
             </div>
-            <span class="chip" [style.background]="priorityColour(r.priority)">{{ r.priority }}</span>
-            <span class="chip" [style.color]="statusTextColour(r.status)">{{ r.status }}</span>
-            <div style="display:flex;gap:4px;" *ngIf="r.status==='Pending'">
-              <button class="btn btn-primary btn-sm" (click)="approve(r.id)">Approve</button>
-              <button class="btn btn-ghost btn-sm" (click)="reject(r.id)">Reject</button>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+              <!-- Status Donut -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">Status Distribution</h3>
+                <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+                  <svg viewBox="0 0 120 120" width="140" height="140">
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" stroke-width="16"
+                      [attr.stroke-dasharray]="pendingDash + ' 283'"
+                      stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" stroke-width="16"
+                      [attr.stroke-dasharray]="approvedDash + ' 283'"
+                      [attr.stroke-dashoffset]="-pendingDash" transform="rotate(-90 60 60)"/>
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#7c3aed" stroke-width="16"
+                      [attr.stroke-dasharray]="filledDash + ' 283'"
+                      [attr.stroke-dashoffset]="-(pendingDash + approvedDash)" transform="rotate(-90 60 60)"/>
+                    <text x="60" y="55" text-anchor="middle" font-size="18" font-weight="700" fill="#1e293b">{{ requisitions.length }}</text>
+                    <text x="60" y="70" text-anchor="middle" font-size="10" fill="#94a3b8">TOTAL</text>
+                  </svg>
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                      <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;"></span>
+                      Pending <b style="margin-left:4px;">{{ pendingCount }}</b>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                      <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;"></span>
+                      Approved <b style="margin-left:4px;">{{ approvedCount }}</b>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                      <span style="width:10px;height:10px;border-radius:50%;background:#7c3aed;display:inline-block;flex-shrink:0;"></span>
+                      Filled <b style="margin-left:4px;">{{ filledCount }}</b>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                      <span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;flex-shrink:0;"></span>
+                      Rejected <b style="margin-left:4px;">{{ rejectedCount }}</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Department Bar Chart -->
+              <div class="card" style="padding:24px;">
+                <h3 style="margin:0 0 20px;">By Department</h3>
+                <div *ngFor="let d of deptStats" style="margin-bottom:14px;">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+                    <span>{{ d.dept }}</span><b>{{ d.count }}</b>
+                  </div>
+                  <div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                    <div [style.width.%]="d.pct" style="height:100%;background:#7c3aed;border-radius:4px;transition:width .4s;"></div>
+                  </div>
+                </div>
+                <div *ngIf="!deptStats.length" style="color:var(--text-3);text-align:center;padding:20px;">
+                  No requisitions yet
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly Trend Line -->
+            <div class="card" style="padding:24px;margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Requisition Trend</h3>
+                <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
+              </div>
+              <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
+                <line x1="0" y1="33" x2="500" y2="33" stroke="#f1f5f9" stroke-width="1"/>
+                <line x1="0" y1="66" x2="500" y2="66" stroke="#f1f5f9" stroke-width="1"/>
+                <polyline [attr.points]="reqAreaPoints" fill="rgba(124,58,237,0.08)" stroke="none"/>
+                <polyline [attr.points]="reqLinePoints" fill="none" stroke="#7c3aed" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                <circle *ngFor="let pt of reqDotPoints" [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#7c3aed"/>
+              </svg>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;">
+                <span *ngFor="let m of reqMonths" style="font-size:11px;color:var(--text-3);">{{ m }}</span>
+              </div>
+            </div>
+
+            <!-- Priority × Status Pivot -->
+            <div class="card" style="padding:24px;">
+              <h3 style="margin:0 0 16px;">Priority × Status Pivot</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Priority</th>
+                    <th *ngFor="let s of pivotStatuses">{{ s }}</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of priorityPivot">
+                    <td>
+                      <span class="chip" [style.background]="priorityColour(row.priority)">{{ row.priority }}</span>
+                    </td>
+                    <td *ngFor="let s of pivotStatuses">{{ row.counts[s] || 0 }}</td>
+                    <td><b>{{ row.total }}</b></td>
+                  </tr>
+                  <tr *ngIf="!priorityPivot.length">
+                    <td [attr.colspan]="pivotStatuses.length + 2" style="text-align:center;color:var(--text-3);padding:20px;">
+                      No data yet
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <div *ngIf="!requisitions.length" style="color:var(--text-3);text-align:center;padding:20px;">No requisitions found.</div>
-        </div>
-      </div>
+        </mat-tab>
+
+        <!-- ── TAB 2: Manage ── -->
+        <mat-tab label="Manage">
+          <div style="padding-top:20px;">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="card form-card">
+                <h3>New Headcount Request</h3>
+                <input class="input" placeholder="Job title" [(ngModel)]="form.title">
+                <select class="select" [(ngModel)]="form.department">
+                  <option *ngFor="let d of departments">{{ d }}</option>
+                </select>
+                <input class="input" type="number" placeholder="Headcount" [(ngModel)]="form.headcount">
+                <div style="display:flex;gap:8px;">
+                  <input class="input" type="number" placeholder="Min salary" [(ngModel)]="form.budgetMin" style="flex:1;">
+                  <input class="input" type="number" placeholder="Max salary" [(ngModel)]="form.budgetMax" style="flex:1;">
+                </div>
+                <select class="select" [(ngModel)]="form.priority">
+                  <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+                </select>
+                <textarea class="textarea" rows="3" placeholder="Justification…" [(ngModel)]="form.justification"></textarea>
+                <button class="btn btn-primary" (click)="create()" [disabled]="saving">
+                  {{ saving ? 'Submitting…' : 'Submit Request' }}
+                </button>
+                <div *ngIf="saveOk" style="color:#10b981;margin-top:8px;">Request submitted for approval.</div>
+              </div>
+
+              <div class="card">
+                <h3>Requisitions</h3>
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                  <button class="btn btn-ghost btn-sm" *ngFor="let s of statusFilters"
+                    [class.active]="statusFilter===s" (click)="statusFilter=s;load()">{{ s || 'All' }}</button>
+                </div>
+                <div *ngFor="let r of requisitions" class="req-row">
+                  <div class="req-info">
+                    <b>{{ r.title }}</b>
+                    <span style="font-size:12px;color:var(--text-3);">{{ r.department }} · {{ r.headcount }} position(s)</span>
+                  </div>
+                  <span class="chip" [style.background]="priorityColour(r.priority)">{{ r.priority }}</span>
+                  <span class="chip" [style.color]="statusTextColour(r.status)">{{ r.status }}</span>
+                  <div style="display:flex;gap:4px;" *ngIf="r.status==='Pending'">
+                    <button class="btn btn-primary btn-sm" (click)="approve(r.id)">Approve</button>
+                    <button class="btn btn-ghost btn-sm" (click)="reject(r.id)">Reject</button>
+                  </div>
+                </div>
+                <div *ngIf="!requisitions.length" style="color:var(--text-3);text-align:center;padding:20px;">
+                  No requisitions found.
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+      </mat-tab-group>
     </section>
   `,
   styles: [`
@@ -60,13 +203,18 @@ import { environment } from '../../environments/environment';
   `]
 })
 export class RequisitionsComponent implements OnInit {
+  activeTab = 0;
   requisitions: any[] = [];
   saving = false;
   saveOk = false;
   statusFilter = '';
   statusFilters = ['', 'Pending', 'Approved', 'Rejected', 'Filled'];
   departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Operations'];
-  form = { title: '', department: 'Engineering', headcount: 1, budgetMin: null, budgetMax: null, priority: 'Medium', justification: '' };
+  form: any = { title: '', department: 'Engineering', headcount: 1, budgetMin: null, budgetMax: null, priority: 'Medium', justification: '' };
+
+  readonly reqMonths = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
+  readonly reqTrendData = [2, 5, 8, 12, 9, 14];
+  readonly pivotStatuses = ['Pending', 'Approved', 'Filled', 'Rejected'];
 
   constructor(private http: HttpClient) {}
 
@@ -97,6 +245,53 @@ export class RequisitionsComponent implements OnInit {
     if (!reason) return;
     this.http.put(`${environment.apiUrl}/api/requisitions/${id}/reject`, { reason })
       .subscribe({ next: () => this.load(), error: () => {} });
+  }
+
+  get pendingCount()  { return this.requisitions.filter(r => r.status === 'Pending').length; }
+  get approvedCount() { return this.requisitions.filter(r => r.status === 'Approved').length; }
+  get filledCount()   { return this.requisitions.filter(r => r.status === 'Filled').length; }
+  get rejectedCount() { return this.requisitions.filter(r => r.status === 'Rejected').length; }
+
+  private pctDash(count: number) { return Math.round((count / (this.requisitions.length || 1)) * 283); }
+  get pendingDash()  { return this.pctDash(this.pendingCount); }
+  get approvedDash() { return this.pctDash(this.approvedCount); }
+  get filledDash()   { return this.pctDash(this.filledCount); }
+
+  get deptStats(): {dept: string, count: number, pct: number}[] {
+    const counts: Record<string, number> = {};
+    this.requisitions.forEach(r => { counts[r.department] = (counts[r.department] || 0) + 1; });
+    const max = Math.max(...Object.values(counts), 1);
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+      .map(([dept, count]) => ({ dept, count, pct: Math.round((count / max) * 100) }));
+  }
+
+  get priorityPivot(): {priority: string, counts: Record<string, number>, total: number}[] {
+    return ['Critical', 'High', 'Medium', 'Low'].map(priority => {
+      const rows = this.requisitions.filter(r => r.priority === priority);
+      const counts: Record<string, number> = {};
+      this.pivotStatuses.forEach(s => { counts[s] = rows.filter(r => r.status === s).length; });
+      return { priority, counts, total: rows.length };
+    }).filter(r => r.total > 0);
+  }
+
+  get reqLinePoints(): string {
+    const pts = this.reqTrendData;
+    const max = Math.max(...pts, 1);
+    const step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+  }
+  get reqAreaPoints(): string {
+    const pts = this.reqTrendData;
+    const max = Math.max(...pts, 1);
+    const step = 500 / (pts.length - 1);
+    const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
+    return `0,90 ${line} 500,90`;
+  }
+  get reqDotPoints(): {x: number, y: number}[] {
+    const pts = this.reqTrendData;
+    const max = Math.max(...pts, 1);
+    const step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
   }
 
   priorityColour(p: string) { return p === 'Critical' ? '#fee2e2' : p === 'High' ? '#fef3c7' : '#f1f5f9'; }
