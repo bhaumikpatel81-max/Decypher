@@ -5,7 +5,7 @@ COPY angular-frontend/package*.json ./
 RUN npm install
 
 COPY angular-frontend .
-RUN npm run build
+RUN npm run build -- --output-path=dist/decypher-frontend
 
 # Build stage for .NET backend, including Angular static output
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS backend-build
