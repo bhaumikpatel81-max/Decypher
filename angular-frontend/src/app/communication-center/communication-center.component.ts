@@ -60,7 +60,7 @@ interface MsgTemplate {
               <label class="field-label">Template Variables</label>
               <div *ngFor="let v of selectedTemplate.variables" style="margin-bottom:8px;">
                 <div style="font-size:12px;color:var(--text-3);margin-bottom:3px;">
-                  &#123;&#123;{{ v }}&#125;&#125;
+                  {{ '{{' + v + '}}' }}
                 </div>
                 <input class="input" [placeholder]="'Value for ' + v"
                        [(ngModel)]="variableValues[v]"

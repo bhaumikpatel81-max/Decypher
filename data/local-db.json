@@ -338,5 +338,60 @@
     "costPerHireTargetAmount": 50000,
     "approvalThresholdAmount": 100000,
     "brandColor": "#6C3EB8"
-  }
+  },
+  "requisitions": [
+    {
+      "id": "req-001",
+      "title": "Senior .NET Developer",
+      "department": "Engineering",
+      "headcount": 2,
+      "budgetMin": 1800000,
+      "budgetMax": 2500000,
+      "priority": "High",
+      "status": "Approved",
+      "justification": "Team expansion for new product line",
+      "createdAt": "2026-04-21T11:12:28.196Z"
+    },
+    {
+      "id": "req-002",
+      "title": "Product Manager",
+      "department": "Product",
+      "headcount": 1,
+      "budgetMin": 2000000,
+      "budgetMax": 2800000,
+      "priority": "Critical",
+      "status": "Approved",
+      "justification": "Lead Q3 roadmap delivery",
+      "createdAt": "2026-04-24T11:12:28.196Z"
+    },
+    {
+      "id": "req-003",
+      "title": "UI/UX Designer",
+      "department": "Design",
+      "headcount": 1,
+      "budgetMin": 1200000,
+      "budgetMax": 1800000,
+      "priority": "Medium",
+      "status": "Pending",
+      "justification": "Redesign candidate portal",
+      "createdAt": "2026-04-28T11:12:28.196Z"
+    },
+    {
+      "id": "req-004",
+      "title": "DevOps Engineer",
+      "department": "Engineering",
+      "headcount": 1,
+      "budgetMin": 1600000,
+      "budgetMax": 2200000,
+      "priority": "High",
+      "status": "Approved",
+      "justification": "CI/CD pipeline ownership",
+      "createdAt": "2026-04-26T11:12:28.196Z"
+    }
+  ],
+  "broadcasts": [],
+  "commMessages": [],
+  "onboarding": [],
+  "videoInterviews": [],
+  "integrations": []
 }

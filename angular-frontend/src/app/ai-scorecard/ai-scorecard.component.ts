@@ -17,7 +17,8 @@ interface BehavioralSkill {
 
 @Component({
   selector: 'app-ai-scorecard',
-  templateUrl: './ai-scorecard.component.html'
+  templateUrl: './ai-scorecard.component.html',
+  styleUrls: ['./ai-scorecard.component.css']
 })
 export class AIScorecardComponent {
   @ViewChild('jdFileInput')     jdFileInput!: ElementRef<HTMLInputElement>;
