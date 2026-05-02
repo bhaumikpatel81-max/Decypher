@@ -120,8 +120,8 @@
       <hr class="sc-print-rule"/>
     </div>
 
-    <!-- ── Row 1: Score Gauges (4-up) ── -->
-    <div class="score-breakdown score-breakdown-4cols mb-6">
+    <!-- ── Row 1: Score Gauges (5-up) ── -->
+    <div class="score-breakdown score-breakdown-5cols mb-6">
 
       <!-- CV-JD Match -->
       <div class="card sc-gauge-card">
@@ -149,6 +149,21 @@
           <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
             [attr.fill]="getGaugeColour(results.competencyScore)">{{ results.competencyScore }}%</text>
         </svg>
+      </div>
+
+      <!-- Stability Score -->
+      <div class="card sc-gauge-card">
+        <div class="card-title mb-2">Stability Score</div>
+        <svg viewBox="0 0 120 120" width="100" height="100" class="sc-gauge-svg">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+          <circle cx="60" cy="60" r="50" fill="none"
+            [attr.stroke]="getGaugeColour(results.stabilityScore)" stroke-width="12" stroke-linecap="round"
+            [attr.stroke-dasharray]="(results.stabilityScore/100*314)+' 314'"
+            stroke-dashoffset="78.5" transform="rotate(-90 60 60)"/>
+          <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="800"
+            [attr.fill]="getGaugeColour(results.stabilityScore)">{{ results.stabilityScore }}%</text>
+        </svg>
+        <div class="text-sm mt-1 sc-text-muted">{{ results.stabilityLevel }} Stability</div>
       </div>
 
       <!-- Behavioral Average -->
@@ -197,6 +212,11 @@
           <span>🚪 Dropout Risk</span>
           <strong>{{ results.dropoutRiskLevel }}</strong>
         </div>
+        <div class="risk-badge" [ngClass]="getStabilityRiskClass(results.stabilityLevel)">
+          <span>🏢 Stability</span>
+          <strong>{{ results.stabilityLevel }}</strong>
+          <span class="sc-stability-detail" *ngIf="results.stabilityDetail">{{ results.stabilityDetail }}</span>
+        </div>
       </div>
     </div>
 
@@ -228,18 +248,27 @@
         <div class="score-card">
           <div class="score-value">{{ results.breakdown?.skillsMatch }}%</div>
           <div class="score-label">Skills Match</div>
+          <div class="sc-weight-label">wt 35%</div>
         </div>
         <div class="score-card">
           <div class="score-value">{{ results.breakdown?.experienceMatch }}%</div>
           <div class="score-label">Experience</div>
+          <div class="sc-weight-label">wt 25%</div>
         </div>
         <div class="score-card">
           <div class="score-value">{{ results.breakdown?.educationMatch }}%</div>
           <div class="score-label">Education</div>
+          <div class="sc-weight-label">wt 15%</div>
         </div>
         <div class="score-card">
           <div class="score-value">{{ results.breakdown?.cultureFit }}%</div>
           <div class="score-label">Culture Fit</div>
+          <div class="sc-weight-label">wt 10%</div>
+        </div>
+        <div class="score-card sc-stability-card">
+          <div class="score-value">{{ results.breakdown?.stabilityScore }}%</div>
+          <div class="score-label">Stability</div>
+          <div class="sc-weight-label">wt 15%</div>
         </div>
       </div>
     </div>

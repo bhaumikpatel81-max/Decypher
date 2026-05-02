@@ -24,6 +24,14 @@
 .sc-extract-error { color: #ef4444; font-size: 12px; margin: 4px 0; }
 
 .score-breakdown-4cols { grid-template-columns: repeat(4, 1fr); }
+.score-breakdown-5cols { grid-template-columns: repeat(5, 1fr); }
+
+.sc-stability-card { border-top: 3px solid #6d44f0; }
+.sc-weight-label   { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+.sc-stability-detail {
+  font-size: 10px; color: var(--text-3); margin-top: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+}
 .sc-gauge-card { text-align: center; padding: 24px 16px; }
 .sc-gauge-svg  { margin: 0 auto; display: block; }
 

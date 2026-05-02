@@ -147,10 +147,17 @@ export class AIScorecardComponent {
       recommendationRationale: ''
     };
 
+    const stabilityScore  = ranking.breakdown?.stabilityScore  ?? 0;
+    const stabilityLevel  = ranking.breakdown?.stabilityLevel  ?? 'Moderate';
+    const stabilityDetail = ranking.breakdown?.stabilityDetail ?? '';
+
     return {
       overallScore:        ranking.overallScore ?? 0,
       cvJdMatchScore,
       competencyScore,
+      stabilityScore,
+      stabilityLevel,
+      stabilityDetail,
       behavioral,
       biasRiskLevel:       biasScore >= 0.9 ? 'Low' : biasScore >= 0.7 ? 'Medium' : 'High',
       dropoutRiskLevel:    dropoutRisk < 40  ? 'Low' : dropoutRisk < 70 ? 'Medium' : 'High',
@@ -332,6 +339,10 @@ export class AIScorecardComponent {
     return c >= 0.8 ? 'High Confidence' : c >= 0.6 ? 'Medium Confidence' : 'Low Confidence — Human Review Required';
   }
   getBiasClass(s: number): string { return s >= 0.9 ? 'safe' : s >= 0.7 ? 'warning' : 'alert'; }
+
+  getStabilityRiskClass(level: string): string {
+    return level === 'High' ? 'risk-low' : level === 'Moderate' ? 'risk-medium' : 'risk-high';
+  }
 
   exportPdf(): void {
     window.print();
