@@ -12,11 +12,16 @@ namespace Decypher.Web.Controllers
     public class ResumeParserController : ControllerBase
     {
         private readonly IResumeParserService _service;
+        private readonly IDocumentExtractorService _extractor;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ResumeParserController(IResumeParserService service, UserManager<ApplicationUser> userManager)
+        public ResumeParserController(
+            IResumeParserService service,
+            IDocumentExtractorService extractor,
+            UserManager<ApplicationUser> userManager)
         {
-            _service = service;
+            _service   = service;
+            _extractor = extractor;
             _userManager = userManager;
         }
 
@@ -64,5 +69,45 @@ namespace Decypher.Web.Controllers
             if (result == null) return NotFound();
             return Ok(result);
         }
+
+        /// <summary>
+        /// Accepts a base64-encoded file (PDF, DOCX, DOC, JPG, PNG) and returns extracted plain text.
+        /// Called by the AI Scorecard upload zone.
+        /// </summary>
+        [HttpPost("extract-text")]
+        public async Task<IActionResult> ExtractText([FromBody] ExtractTextRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.FileData))
+                return BadRequest(new { error = "fileData is required." });
+            if (string.IsNullOrWhiteSpace(request.FileName))
+                return BadRequest(new { error = "fileName is required." });
+
+            byte[] bytes;
+            try { bytes = Convert.FromBase64String(request.FileData); }
+            catch { return BadRequest(new { error = "fileData is not valid base64." }); }
+
+            try
+            {
+                var text = await _extractor.ExtractTextAsync(bytes, request.FileName, request.MimeType ?? "application/octet-stream");
+                if (string.IsNullOrWhiteSpace(text))
+                    return BadRequest(new { error = "No text could be extracted from the file." });
+                return Ok(new { text });
+            }
+            catch (NotSupportedException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Extraction failed: {ex.Message}" });
+            }
+        }
+    }
+
+    public class ExtractTextRequest
+    {
+        public string FileData { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public string? MimeType { get; set; }
     }
 }

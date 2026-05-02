@@ -150,6 +150,7 @@ builder.Services.AddHttpClient();
 
 // ── New ATS services ─────────────────────────────────────────
 builder.Services.AddScoped<IResumeParserService, ResumeParserService>();
+builder.Services.AddScoped<IDocumentExtractorService, DocumentExtractorService>();
 builder.Services.AddScoped<IPipelineBoardService, PipelineBoardService>();
 builder.Services.AddScoped<ICandidatePortalService, CandidatePortalService>();
 builder.Services.AddScoped<IInterviewSchedulerService, InterviewSchedulerService>();
