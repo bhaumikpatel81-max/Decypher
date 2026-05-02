@@ -1,0 +1,12 @@
+# Local-dev image — no network needed during build.
+# Artifacts are pre-built on the host via:
+#   ng build --output-path=../Decypher.Web/wwwroot
+#   dotnet publish Decypher.Web -c Release -o ./localdev_publish
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY localdev_publish .
+EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:5000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+ENTRYPOINT ["dotnet", "Decypher.Web.dll"]

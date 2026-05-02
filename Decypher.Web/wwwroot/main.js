@@ -2410,7 +2410,7 @@ class AIScorecardComponent {
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](4, "AI Resume Scorecard");
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](5, "p", 5);
-          _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](6, "6-agent AI screening \u2014 CV match, competency, behavioral intelligence, bias & dropout risk");
+          _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](6, "6-agent AI screening \u2014 CV match, competency, stability, behavioral intelligence, bias & dropout risk");
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]()();
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtemplate"](7, AIScorecardComponent_button_7_Template, 2, 0, "button", 6);
           _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
