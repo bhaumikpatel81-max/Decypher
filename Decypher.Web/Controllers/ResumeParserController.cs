@@ -75,6 +75,7 @@ namespace Decypher.Web.Controllers
         /// Called by the AI Scorecard upload zone.
         /// </summary>
         [HttpPost("extract-text")]
+        [AllowAnonymous]
         public async Task<IActionResult> ExtractText([FromBody] ExtractTextRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.FileData))
