@@ -56,11 +56,27 @@ export class HttpConfigInterceptor implements HttpInterceptor {
       ),
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          this.authService.logout();
+          // Only logout when the token is absent or genuinely expired.
+          // A 401 from a backend logic failure (e.g. user record not found) should not
+          // destroy the session — the user would be trapped in a logout loop.
+          if (this.isTokenMissingOrExpired()) {
+            this.authService.logout();
+          }
         }
         console.error('HTTP Error:', { status: error.status, message: error.message, url: error.url });
         return throwError(() => error);
       })
     );
+  }
+
+  private isTokenMissingOrExpired(): boolean {
+    const token = this.authService.getToken();
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp ? (Date.now() / 1000 >= payload.exp) : true;
+    } catch {
+      return true;
+    }
   }
 }

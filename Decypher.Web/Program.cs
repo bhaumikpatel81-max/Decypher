@@ -94,23 +94,34 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// Add JWT Bearer as default auth scheme for API endpoints
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Add JWT Bearer as default auth scheme for API endpoints.
+// IMPORTANT: AddIdentity (above) sets DefaultAuthenticateScheme to the cookie scheme.
+// We must explicitly override ALL three default schemes here, otherwise [Authorize] will
+// use cookie auth, find no cookie in API requests, and return 401 → logout loop.
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme             = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtKey = builder.Configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("Jwt:Key is not configured");
+    // MapInboundClaims = true ensures the JWT 'sub' claim is mapped to
+    // ClaimTypes.NameIdentifier so UserManager.GetUserAsync(User) can find the user.
+    options.MapInboundClaims = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        var jwtKey = builder.Configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Jwt:Key is not configured");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
-            ValidAudience            = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
+        ValidateIssuer           = true,
+        ValidateAudience         = true,
+        ValidateLifetime         = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+        ValidAudience            = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
 
 // Add HttpContextAccessor for multi-tenancy
 builder.Services.AddHttpContextAccessor();
