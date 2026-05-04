@@ -117,7 +117,41 @@
         Model: {{ results.modelVersion }} &nbsp;|&nbsp;
         Prompt: {{ results.promptVersion }}
       </div>
+      <div class="sc-print-candidate-row" *ngIf="results.candidateName !== '—'">
+        <span><strong>Candidate:</strong> {{ results.candidateName }}</span>
+        <span *ngIf="results.candidateEmail !== '—'">&nbsp;|&nbsp;<strong>Email:</strong> {{ results.candidateEmail }}</span>
+        <span *ngIf="results.candidatePhone !== '—'">&nbsp;|&nbsp;<strong>Phone:</strong> {{ results.candidatePhone }}</span>
+      </div>
       <hr class="sc-print-rule"/>
+    </div>
+
+    <!-- ── Candidate Info Card ── -->
+    <div class="card mb-6 sc-candidate-card"
+         *ngIf="results.candidateName !== '—' || results.candidateEmail !== '—' || results.candidatePhone !== '—'">
+      <h3 class="card-title mb-3">Candidate Profile</h3>
+      <div class="sc-candidate-info">
+        <div class="sc-cand-item" *ngIf="results.candidateName !== '—'">
+          <span class="sc-cand-icon">👤</span>
+          <div>
+            <div class="sc-cand-label">Name</div>
+            <div class="sc-cand-value">{{ results.candidateName }}</div>
+          </div>
+        </div>
+        <div class="sc-cand-item" *ngIf="results.candidateEmail !== '—'">
+          <span class="sc-cand-icon">✉️</span>
+          <div>
+            <div class="sc-cand-label">Email</div>
+            <div class="sc-cand-value">{{ results.candidateEmail }}</div>
+          </div>
+        </div>
+        <div class="sc-cand-item" *ngIf="results.candidatePhone !== '—'">
+          <span class="sc-cand-icon">📱</span>
+          <div>
+            <div class="sc-cand-label">Phone</div>
+            <div class="sc-cand-value">{{ results.candidatePhone }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── Row 1: Score Gauges (5-up) ── -->
@@ -466,4 +500,64 @@
       <span>Generated: {{ results.timestamp | date:'medium' }}</span>
     </div>
   </div><!-- /sc-printable -->
+
+  <!-- ── Previous Search History ── -->
+  <div class="card mt-8 sc-no-print" *ngIf="searchHistory.length > 0">
+    <div class="sc-history-header">
+      <div>
+        <h3 class="card-title sc-title-no-margin">Previous Screenings</h3>
+        <p class="sc-history-subtitle">Last {{ searchHistory.length }} screening{{ searchHistory.length !== 1 ? 's' : '' }} — stored locally in your browser</p>
+      </div>
+      <button type="button" class="btn btn-secondary sc-history-clear-btn" (click)="clearHistory()">Clear All</button>
+    </div>
+    <div class="sc-history-table-wrap">
+      <table class="sc-history-table">
+        <thead>
+          <tr>
+            <th>Date &amp; Time</th>
+            <th>Candidate</th>
+            <th>Contact / Email</th>
+            <th>Resume File</th>
+            <th>JD Preview</th>
+            <th>Match %</th>
+            <th>Overall</th>
+            <th>Decision</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of searchHistory" class="sc-hist-row">
+            <td class="sc-hist-date">{{ h.timestamp | date:'dd/MM/yy HH:mm' }}</td>
+            <td class="sc-hist-name">
+              <div class="sc-hist-primary">{{ h.candidateName }}</div>
+            </td>
+            <td class="sc-hist-contact">
+              <div *ngIf="h.candidatePhone !== '—'" class="sc-hist-primary">{{ h.candidatePhone }}</div>
+              <div *ngIf="h.candidateEmail !== '—'" class="sc-hist-sub">{{ h.candidateEmail }}</div>
+              <span *ngIf="h.candidatePhone === '—' && h.candidateEmail === '—'" class="sc-hist-muted">—</span>
+            </td>
+            <td class="sc-hist-file">{{ h.resumeFileName }}</td>
+            <td class="sc-hist-jd" [title]="h.jdSnippet">{{ h.jdSnippet }}…</td>
+            <td class="sc-hist-score-cell">
+              <span class="sc-hist-score-val">{{ h.matchPercentage | number:'1.0-1' }}%</span>
+            </td>
+            <td class="sc-hist-score-cell">
+              <span class="sc-hist-score-val sc-hist-overall">{{ h.overallScore | number:'1.0-1' }}%</span>
+            </td>
+            <td>
+              <span class="ai-exp-rec-badge" [ngClass]="getRecommendationClass(h.recommendation)">
+                {{ h.recommendation }}
+              </span>
+            </td>
+            <td>
+              <button type="button" class="sc-hist-view-btn" (click)="loadFromHistory(h)" title="Restore this screening result">
+                View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>

@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -20,7 +20,7 @@ interface BehavioralSkill {
   templateUrl: './ai-scorecard.component.html',
   styleUrls: ['./ai-scorecard.component.css']
 })
-export class AIScorecardComponent {
+export class AIScorecardComponent implements OnInit {
   @ViewChild('jdFileInput')     jdFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('resumeFileInput') resumeFileInput!: ElementRef<HTMLInputElement>;
 
@@ -29,6 +29,9 @@ export class AIScorecardComponent {
   isProcessing = false;
   results: any = null;
   errorMessage = '';
+
+  searchHistory: any[] = [];
+  private readonly HISTORY_KEY = 'decypher_scorecard_history';
 
   // JD file upload
   jdFile: File | null = null;
@@ -67,6 +70,10 @@ export class AIScorecardComponent {
 
   constructor(private http: HttpClient) {}
 
+  ngOnInit(): void {
+    this.loadHistory();
+  }
+
   async runAIAgents(): Promise<void> {
     if (!this.jdText.trim() || !this.resumeText.trim()) {
       this.errorMessage = 'Please provide both Job Description and Resume text.';
@@ -93,6 +100,7 @@ export class AIScorecardComponent {
 
       this.agents.forEach(a => { a.status = 'complete'; a.statusText = 'Complete'; });
       this.results = this.mapResults(response);
+      this.saveToHistory();
 
     } catch (err: any) {
       this.agents.forEach(a => {
@@ -110,6 +118,7 @@ export class AIScorecardComponent {
     const bias       = r.biasDetectionResult?.data ?? {};
     const matching   = r.matchingResult?.data ?? {};
     const behavData  = r.behavioralResult?.data;
+    const parsed     = r.parsingResult?.data ?? {};
 
     const cvJdMatchScore  = matching.matchPercentage ?? 0;
     const competencyScore = ranking.breakdown?.skillsMatch ?? 0;
@@ -159,6 +168,9 @@ export class AIScorecardComponent {
       stabilityLevel,
       stabilityDetail,
       behavioral,
+      candidateName:       parsed.name  ?? '—',
+      candidateEmail:      parsed.email ?? '—',
+      candidatePhone:      parsed.phone ?? '—',
       biasRiskLevel:       biasScore >= 0.9 ? 'Low' : biasScore >= 0.7 ? 'Medium' : 'High',
       dropoutRiskLevel:    dropoutRisk < 40  ? 'Low' : dropoutRisk < 70 ? 'Medium' : 'High',
       matchedSkills:       matching.matchedSkills ?? [],
@@ -350,6 +362,44 @@ export class AIScorecardComponent {
 
   getRecommendationClass(rec: string): string {
     return rec === 'SHORTLIST' ? 'rec-shortlist' : rec === 'REVIEW' ? 'rec-review' : rec === 'REJECT' ? 'rec-reject' : 'rec-unknown';
+  }
+
+  // ── Search History ───────────────────────────────────────────
+
+  private loadHistory(): void {
+    try {
+      const raw = localStorage.getItem(this.HISTORY_KEY);
+      this.searchHistory = raw ? JSON.parse(raw) : [];
+    } catch { this.searchHistory = []; }
+  }
+
+  private saveToHistory(): void {
+    if (!this.results) return;
+    const entry = {
+      id:             Date.now().toString(),
+      timestamp:      new Date().toISOString(),
+      candidateName:  this.results.candidateName,
+      candidateEmail: this.results.candidateEmail,
+      candidatePhone: this.results.candidatePhone,
+      jdSnippet:      this.jdText.slice(0, 120).trim(),
+      resumeFileName: this.resumeFile?.name ?? 'Manual input',
+      overallScore:   this.results.overallScore,
+      recommendation: this.results.explanationData?.recommendation ?? '—',
+      matchPercentage: this.results.cvJdMatchScore,
+      results:        this.results
+    };
+    this.searchHistory = [entry, ...this.searchHistory].slice(0, 20);
+    try { localStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.searchHistory)); } catch { }
+  }
+
+  clearHistory(): void {
+    this.searchHistory = [];
+    localStorage.removeItem(this.HISTORY_KEY);
+  }
+
+  loadFromHistory(entry: any): void {
+    this.results = entry.results;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   private resetAgents() {
