@@ -266,7 +266,7 @@
   .behavioral-card { break-inside: avoid; page-break-inside: avoid; }
   .ai-exp-card     { break-inside: avoid; page-break-inside: avoid; }
 
-  .score-breakdown { grid-template-columns: repeat(4, 1fr) !important; }
+  .score-breakdown { grid-template-columns: repeat(5, 1fr) !important; }
 
   .bi-summary, .ai-exp-rationale { background: #f8f9fa !important; }
   .behavioral-card { background: #fff !important; }

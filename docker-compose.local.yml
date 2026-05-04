@@ -16,7 +16,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=decypher;Username=decypher;Password=localpass
-      - Jwt__Key=local-dev-jwt-secret-key-minimum-48-characters-long-here
+      - Jwt__Key=f743aeb002bf4a59f6c5d09cee048e7169f5c4077119b2a8f96575045ebc8050
       - AllowedOrigins=http://localhost:5000
       - Notifications__Provider=Stub
       - OpenAI__ApiKey=

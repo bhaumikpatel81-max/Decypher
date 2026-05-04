@@ -67,8 +67,29 @@ namespace Decypher.Web.Services.AI
         /// </summary>
         private static StabilityInfo CalculateStability(Dictionary<string, object> ctx)
         {
-            if (!ctx.TryGetValue("ParsedData", out var pd) || pd is not JsonElement parsed)
+            if (!ctx.TryGetValue("ParsedData", out var pd) || pd == null)
                 return new StabilityInfo(65.0, "Moderate", "Insufficient work history data.");
+
+            // ParsedData arrives as Dictionary<string,object> from ParsingAgent (System.Text.Json deserialises
+            // values as JsonElement). Re-serialise to a JsonElement so the rest of the code is uniform.
+            JsonElement parsed;
+            if (pd is JsonElement je)
+            {
+                parsed = je;
+            }
+            else
+            {
+                try
+                {
+                    var json = JsonSerializer.Serialize(pd);
+                    using var doc = JsonDocument.Parse(json);
+                    parsed = doc.RootElement.Clone();
+                }
+                catch
+                {
+                    return new StabilityInfo(65.0, "Moderate", "Insufficient work history data.");
+                }
+            }
 
             var workHistory = new List<(string Company, double Months)>();
 
