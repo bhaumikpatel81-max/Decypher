@@ -69,13 +69,13 @@ import { AuthService, CurrentUser } from './services/auth.service';
         <nav class="sidebar-nav">
           <!-- Search -->
           <div class="apps-search-wrap">
-            <input class="apps-search-input" placeholder="Search apps..."
+            <input class="apps-search-input" placeholder="Search modules..."
               [value]="appSearch" (input)="onAppSearch($event)">
           </div>
 
-          <!-- Recent Apps -->
-          <div class="apps-section" *ngIf="!appSearch">
-            <div class="apps-section-title">Recent Apps</div>
+          <!-- Recent Modules -->
+          <div class="apps-section" *ngIf="!appSearch && !sidebarCollapsed">
+            <div class="apps-section-title">Recent</div>
             <div class="apps-grid">
               <a *ngFor="let item of recentApps"
                 [routerLink]="item.path"
@@ -88,10 +88,12 @@ import { AuthService, CurrentUser } from './services/auth.service';
             </div>
           </div>
 
-          <!-- All Apps / Search Results -->
+          <!-- All Modules / Search Results -->
           <div class="apps-section">
-            <div class="apps-section-title">{{ appSearch ? 'Results' : 'All Apps' }}</div>
-            <div class="apps-grid">
+            <div class="apps-section-title">{{ appSearch ? 'Results' : 'All Modules' }}</div>
+
+            <!-- Collapsed sidebar: flat icon list -->
+            <div class="apps-grid" *ngIf="sidebarCollapsed">
               <a *ngFor="let item of filteredApps"
                 [routerLink]="item.path"
                 routerLinkActive="active"
@@ -101,6 +103,49 @@ import { AuthService, CurrentUser } from './services/auth.service';
                 <span class="app-tile-label">{{ item.shortLabel || item.label }}</span>
               </a>
             </div>
+
+            <!-- Expanded + search: flat results -->
+            <div class="apps-grid" *ngIf="!sidebarCollapsed && appSearch">
+              <a *ngFor="let item of filteredApps"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                class="app-tile"
+                [title]="item.label">
+                <div class="app-tile-icon" [style.background]="item.color">{{ item.symbol }}</div>
+                <span class="app-tile-label">{{ item.shortLabel || item.label }}</span>
+              </a>
+            </div>
+
+            <!-- Expanded + no search: grouped view -->
+            <ng-container *ngIf="!sidebarCollapsed && !appSearch">
+              <!-- Dashboard pinned -->
+              <a routerLink="/dashboard" routerLinkActive="active" class="module-pinned-tile" title="Dashboard">
+                <div class="app-tile-icon" style="background:#292966">D</div>
+                <span class="app-tile-label">Dashboard</span>
+              </a>
+
+              <!-- Collapsible groups -->
+              <div *ngFor="let group of visibleModuleGroups" class="module-group">
+                <div class="module-group-header" (click)="toggleGroup(group.id)">
+                  <div class="module-group-icon" [style.background]="group.color">{{ group.symbol }}</div>
+                  <span class="module-group-label">{{ group.label }}</span>
+                  <span class="module-group-count">{{ group.modules.length }}</span>
+                  <span class="module-group-arrow" [class.open]="group.expanded">&#8250;</span>
+                </div>
+                <div class="module-group-tiles" [class.open]="group.expanded">
+                  <div class="apps-grid">
+                    <a *ngFor="let item of group.modules"
+                      [routerLink]="item.path"
+                      routerLinkActive="active"
+                      class="app-tile"
+                      [title]="item.label">
+                      <div class="app-tile-icon" [style.background]="item.color">{{ item.symbol }}</div>
+                      <span class="app-tile-label">{{ item.shortLabel || item.label }}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
           </div>
         </nav>
 
@@ -527,6 +572,68 @@ export class AppComponent implements OnInit {
   coreNav = this.allApps.filter(a => !a.adminOnly).slice(0, 12);
   aiNav   = this.allApps.slice(12, 18);
   adminNav = this.allApps.filter(a => a.adminOnly);
+
+  private readonly groupDefs = [
+    {
+      id: 'recruitment',
+      label: 'Recruitment',
+      symbol: 'RE',
+      color: '#2563eb',
+      paths: ['/requisitions', '/job-broadcasting', '/cv-database', '/pipeline-board',
+              '/interview-scheduler', '/video-interviews', '/offer-management', '/source-tracking']
+    },
+    {
+      id: 'talent',
+      label: 'Talent & Engagement',
+      symbol: 'TE',
+      color: '#10b981',
+      paths: ['/onboarding', '/talent-pool', '/internal-job-postings', '/communications']
+    },
+    {
+      id: 'ai',
+      label: 'AI & Intelligence',
+      symbol: 'AI',
+      color: '#7c3aed',
+      paths: ['/resume-parser', '/ai-scorecard', '/dropout-predictor', '/competency-ranker',
+              '/jd-checker', '/jd-generator']
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics & Performance',
+      symbol: 'AP',
+      color: '#0f766e',
+      paths: ['/reports', '/recruiters', '/sla-dashboard', '/budget']
+    },
+    {
+      id: 'admin',
+      label: 'Administration',
+      symbol: 'AD',
+      color: '#374151',
+      paths: ['/vendors', '/users', '/import-center', '/integrations', '/compliance']
+    }
+  ];
+
+  expandedGroups = new Set<string>(['recruitment']);
+
+  get visibleModuleGroups() {
+    return this.groupDefs
+      .map(g => ({
+        ...g,
+        expanded: this.expandedGroups.has(g.id),
+        modules: this.allApps.filter(a =>
+          g.paths.includes(a.path) && (!a.adminOnly || this.canAccessAdmin)
+        )
+      }))
+      .filter(g => g.modules.length > 0);
+  }
+
+  toggleGroup(groupId: string) {
+    if (this.expandedGroups.has(groupId)) {
+      this.expandedGroups.delete(groupId);
+    } else {
+      this.expandedGroups.add(groupId);
+    }
+  }
 
   constructor(private authService: AuthService, private router: Router) {}
 
