@@ -4,124 +4,13 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Routes } from '@angular/router';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
-import { BudgetComponent } from './budget/budget.component';
-import { ImportCenterComponent } from './import-center/import-center.component';
-import { InternalJobPostingsComponent } from './internal-job-postings/internal-job-postings.component';
-import { ReportsComponent } from './reports/reports.component';
-import { JobBroadcastingComponent } from './job-broadcasting/job-broadcasting.component';
-import { CommunicationCenterComponent } from './communication-center/communication-center.component';
-import { OnboardingComponent } from './onboarding/onboarding.component';
-import { VideoInterviewsComponent } from './video-interviews/video-interviews.component';
-import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.component';
-// Core HR
-import { EmployeeDirectoryComponent } from './employee-directory/employee-directory.component';
-import { OrgChartComponent } from './org-chart/org-chart.component';
-import { DocumentManagementComponent } from './document-management/document-management.component';
-import { LettersCertificatesComponent } from './letters-certificates/letters-certificates.component';
-import { ExitManagementComponent } from './exit-management/exit-management.component';
-// Attendance & Time
-import { AttendanceComponent } from './attendance/attendance.component';
-import { LeaveManagementComponent } from './leave-management/leave-management.component';
-import { ShiftManagementComponent } from './shift-management/shift-management.component';
-import { TimesheetComponent } from './timesheet/timesheet.component';
-import { OvertimeComponent } from './overtime/overtime.component';
-// Payroll
-import { PayrollComponent } from './payroll/payroll.component';
-import { SalaryStructureComponent } from './salary-structure/salary-structure.component';
-import { TaxStatutoryComponent } from './tax-statutory/tax-statutory.component';
-import { ExpenseManagementComponent } from './expense-management/expense-management.component';
-import { PayslipPortalComponent } from './payslip-portal/payslip-portal.component';
-// Compensation & Benefits
-import { CompensationPlanningComponent } from './compensation-planning/compensation-planning.component';
-import { BenefitsAdminComponent } from './benefits-admin/benefits-admin.component';
-import { SalaryBenchmarkingComponent } from './salary-benchmarking/salary-benchmarking.component';
-import { BonusIncentivesComponent } from './bonus-incentives/bonus-incentives.component';
-// Performance Management
-import { GoalsOkrComponent } from './goals-okr/goals-okr.component';
-import { PerformanceReviewsComponent } from './performance-reviews/performance-reviews.component';
-import { Feedback360Component } from './feedback-360/feedback360.component';
-import { ContinuousFeedbackComponent } from './continuous-feedback/continuous-feedback.component';
-// Learning & Development
-import { LearningManagementComponent } from './learning-management/learning-management.component';
-import { TrainingCalendarComponent } from './training-calendar/training-calendar.component';
-import { SkillGapComponent } from './skill-gap/skill-gap.component';
-import { CertificationTrackerComponent } from './certification-tracker/certification-tracker.component';
-// Policies & Compliance
-import { PolicyManagementComponent } from './policy-management/policy-management.component';
-import { StatutoryComplianceComponent } from './statutory-compliance/statutory-compliance.component';
-import { AuditTrailComponent } from './audit-trail/audit-trail.component';
-// Employer Branding
-import { CareersBuilderComponent } from './careers-builder/careers-builder.component';
-import { TalentCommunityComponent } from './talent-community/talent-community.component';
-import { SocialRecruitingComponent } from './social-recruiting/social-recruiting.component';
-import { CampusConnectComponent } from './campus-connect/campus-connect.component';
-import { EmployeeAdvocacyComponent } from './employee-advocacy/employee-advocacy.component';
-import { EmployerReviewsComponent } from './employer-reviews/employer-reviews.component';
 
 import { AppComponent } from './app.component';
-import { AIFeaturesComponent } from './ai-features/ai-features.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { VendorsComponent } from './vendors/vendors.component';
-import { AIScorecardComponent } from './ai-scorecard/ai-scorecard.component';
-import { SlaDashboardComponent } from './sla-dashboard/sla-dashboard.component';
-import { JdGeneratorComponent } from './jd-generator/jd-generator.component';
-import { ResumeParserComponent } from './resume-parser/resume-parser.component';
-import { PipelineBoardComponent } from './pipeline-board/pipeline-board.component';
-import { CandidatePortalComponent } from './candidate-portal/candidate-portal.component';
-import { InterviewSchedulerComponent } from './interview-scheduler/interview-scheduler.component';
-import { OfferManagementComponent } from './offer-management/offer-management.component';
-import { TalentPoolComponent } from './talent-pool/talent-pool.component';
-import { RequisitionsComponent } from './requisitions/requisitions.component';
-import { SourceTrackingComponent } from './source-tracking/source-tracking.component';
-import { ComplianceComponent } from './compliance/compliance.component';
+import { SharedModule } from './shared.module';
 import { environment } from '../environments/environment';
-
-@Pipe({ name: 'safeHtml' })
-export class SafeHtmlPipe implements PipeTransform {
-  constructor(private sanitizer: DomSanitizer) {}
-  transform(value: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(value);
-  }
-}
-
-@Pipe({ name: 'timeAgo' })
-export class TimeAgoPipe implements PipeTransform {
-  transform(value: Date | string): string {
-    const date = new Date(value);
-    const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  }
-}
 
 @Component({
   selector: 'app-users-admin',
@@ -171,21 +60,14 @@ export class UsersAdminComponent implements OnInit {
   accessKeys = ['dashboard', 'vendors', 'recruiters', 'cvDatabase', 'aiTools', 'users'];
   draft: any = { fullName: '', email: '', password: '', role: 'Recruiter', access: ['dashboard', 'cvDatabase'] };
   private api = `${environment.apiUrl}/api/users`;
-
   constructor(private http: HttpClient) {}
-
   ngOnInit() { this.load(); }
-
-  load() {
-    this.http.get<any[]>(this.api).subscribe(users => this.users = users);
-  }
-
+  load() { this.http.get<any[]>(this.api).subscribe(users => this.users = users); }
   toggleAccess(key: string) {
     this.draft.access = this.draft.access.includes(key)
       ? this.draft.access.filter((item: string) => item !== key)
       : [...this.draft.access, key];
   }
-
   createUser() {
     this.http.post<any>(this.api, this.draft).subscribe(user => {
       this.users = [...this.users, user];
@@ -202,7 +84,6 @@ export class UsersAdminComponent implements OnInit {
         <input class="input" placeholder="Search by skill, name, role, company..." [(ngModel)]="query" (keyup.enter)="search()">
         <button class="btn btn-primary" (click)="search()">Search CVs</button>
       </div>
-
       <div class="card form-card">
         <h3>Add CV Profile</h3>
         <div class="form-grid">
@@ -218,13 +99,11 @@ export class UsersAdminComponent implements OnInit {
           <input type="file" [accept]="allowedTypes" (change)="onFile($event)">
         </label>
         <label class="check-row">
-          <input type="checkbox" [(ngModel)]="draft.interviewedEarlier">
-          Interviewed earlier
+          <input type="checkbox" [(ngModel)]="draft.interviewedEarlier"> Interviewed earlier
         </label>
         <textarea class="textarea" placeholder="Paste CV text here" [(ngModel)]="draft.cvText"></textarea>
         <button class="btn btn-primary" (click)="addCv()">Add to CV database</button>
       </div>
-
       <div class="cards-grid">
         <article class="card candidate-card" *ngFor="let cv of cvs">
           <div class="candidate-head">
@@ -244,33 +123,18 @@ export class CvDatabaseComponent implements OnInit {
   cvs: any[] = [];
   query = '';
   allowedTypes = '.pdf,.docx,.doc,.jpg,.png';
-  draft: any = { name: '', email: '', currentRole: '', company: '', skillsText: '', experience: 0, cvText: '', interviewedEarlier: false, fileName: '', fileType: '', fileData: '' };
+  draft: any = { name:'', email:'', currentRole:'', company:'', skillsText:'', experience:0, cvText:'', interviewedEarlier:false, fileName:'', fileType:'', fileData:'' };
   private api = `${environment.apiUrl}/api/cv-database`;
-
   constructor(private http: HttpClient, private route: ActivatedRoute) {}
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      this.query = params['skills'] || '';
-      this.search();
-    });
-  }
-
-  search() {
-    this.http.get<any[]>(`${this.api}?skills=${encodeURIComponent(this.query)}`).subscribe(cvs => this.cvs = cvs);
-  }
-
+  ngOnInit() { this.route.queryParams.subscribe(params => { this.query = params['skills'] || ''; this.search(); }); }
+  search() { this.http.get<any[]>(`${this.api}?skills=${encodeURIComponent(this.query)}`).subscribe(cvs => this.cvs = cvs); }
   addCv() {
-    const payload = {
-      ...this.draft,
-      skills: this.draft.skillsText.split(',').map((skill: string) => skill.trim()).filter(Boolean)
-    };
+    const payload = { ...this.draft, skills: this.draft.skillsText.split(',').map((s: string) => s.trim()).filter(Boolean) };
     this.http.post<any>(this.api, payload).subscribe(() => {
-      this.draft = { name: '', email: '', currentRole: '', company: '', skillsText: '', experience: 0, cvText: '', interviewedEarlier: false, fileName: '', fileType: '', fileData: '' };
+      this.draft = { name:'', email:'', currentRole:'', company:'', skillsText:'', experience:0, cvText:'', interviewedEarlier:false, fileName:'', fileType:'', fileData:'' };
       this.search();
     });
   }
-
   onFile(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -280,9 +144,7 @@ export class CvDatabaseComponent implements OnInit {
       this.draft.fileName = file.name;
       this.draft.fileType = file.type || file.name.split('.').pop();
       this.draft.fileData = String(reader.result || '');
-      if (!this.draft.name) {
-        this.draft.name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
-      }
+      if (!this.draft.name) this.draft.name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
     };
     reader.readAsDataURL(file);
   }
@@ -292,7 +154,6 @@ export class CvDatabaseComponent implements OnInit {
   selector: 'app-recruiters',
   template: `
     <div class="page-container page-enter">
-      <!-- Header -->
       <div class="flex justify-between items-center mb-6">
         <div>
           <h1 class="page-title">Recruiter Performance</h1>
@@ -304,8 +165,6 @@ export class CvDatabaseComponent implements OnInit {
           <button class="btn btn-ghost btn-sm" [class.btn-primary]="period==='year'"    (click)="setPeriod('year')">Year</button>
         </div>
       </div>
-
-      <!-- Podium (top 3) -->
       <div class="rec-podium" *ngIf="recruiters.length >= 3">
         <div class="rec-podium-item rec-p2">
           <div class="rec-medal">🥈</div>
@@ -326,34 +185,25 @@ export class CvDatabaseComponent implements OnInit {
           <div class="rec-podium-block" style="height:55px;background:#cd7f32;opacity:.3;border-radius:6px 6px 0 0;margin-top:8px;"></div>
         </div>
       </div>
-
-      <!-- Leaderboard table -->
       <div class="card mb-6">
         <h3 class="card-title mb-4">Leaderboard</h3>
         <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border);">
-              <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Rank</th>
-              <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Recruiter</th>
-              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Submissions</th>
-              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Selections</th>
-              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Joinings</th>
-              <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Hit Rate</th>
-            </tr>
-          </thead>
+          <thead><tr style="border-bottom:2px solid var(--border);">
+            <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Rank</th>
+            <th style="padding:10px;text-align:left;font-size:12px;color:var(--text-3);">Recruiter</th>
+            <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Submissions</th>
+            <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Selections</th>
+            <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Joinings</th>
+            <th style="padding:10px;text-align:center;font-size:12px;color:var(--text-3);">Hit Rate</th>
+          </tr></thead>
           <tbody>
             <tr *ngFor="let r of recruiters; let i = index" style="border-bottom:1px solid var(--border);">
               <td style="padding:12px 10px;">
                 <span class="rank-badge-r"
                   [style.background]="i===0?'rgba(251,191,36,.2)':i===1?'rgba(192,192,192,.2)':i===2?'rgba(205,127,50,.2)':'var(--surface-alt)'"
-                  [style.color]="i===0?'#b45309':i===1?'#6b7280':i===2?'#92400e':'var(--text-3)'">
-                  {{ i + 1 }}
-                </span>
+                  [style.color]="i===0?'#b45309':i===1?'#6b7280':i===2?'#92400e':'var(--text-3)'">{{ i + 1 }}</span>
               </td>
-              <td style="padding:12px 10px;">
-                <div style="font-weight:600;">{{ r.name }}</div>
-                <div style="font-size:12px;color:var(--text-3);">{{ r.role }}</div>
-              </td>
+              <td style="padding:12px 10px;"><div style="font-weight:600;">{{ r.name }}</div><div style="font-size:12px;color:var(--text-3);">{{ r.role }}</div></td>
               <td style="padding:12px 10px;text-align:center;">{{ r.submissions ?? '—' }}</td>
               <td style="padding:12px 10px;text-align:center;">{{ r.selections ?? r.offers ?? '—' }}</td>
               <td style="padding:12px 10px;text-align:center;font-weight:700;">{{ r.joinings ?? r.placements ?? '—' }}</td>
@@ -368,55 +218,32 @@ export class CvDatabaseComponent implements OnInit {
           </tbody>
         </table>
       </div>
-
-      <!-- Attention Needed -->
       <div class="card" *ngIf="attentionItems.length">
         <h3 class="card-title mb-4">Attention Needed</h3>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div *ngFor="let item of attentionItems"
-            style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(251,146,60,.05);border-left:3px solid #f97316;border-radius:0 8px 8px 0;">
+          <div *ngFor="let item of attentionItems" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(251,146,60,.05);border-left:3px solid #f97316;border-radius:0 8px 8px 0;">
             <span style="font-size:18px;">⚠️</span>
-            <div style="flex:1;">
-              <div style="font-weight:600;font-size:13px;">{{ item.title }}</div>
-              <div style="font-size:12px;color:var(--text-3);">{{ item.description }}</div>
-            </div>
+            <div style="flex:1;"><div style="font-weight:600;font-size:13px;">{{ item.title }}</div><div style="font-size:12px;color:var(--text-3);">{{ item.description }}</div></div>
           </div>
         </div>
       </div>
     </div>
   `,
-  styles: [`
-    .rec-podium { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; align-items:flex-end; }
-    .rec-podium-item { text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 12px 0; }
-    .rec-medal { font-size:36px; margin-bottom:8px; }
-    .rec-podium-name { font-weight:700; font-size:14px; }
-    .rec-podium-stat { font-size:12px; color:var(--text-3); margin-top:4px; }
-    .rank-badge-r { display:inline-block; padding:3px 10px; border-radius:6px; font-weight:700; font-size:13px; }
-  `]
+  styles: [`.rec-podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;align-items:flex-end}.rec-podium-item{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 12px 0}.rec-medal{font-size:36px;margin-bottom:8px}.rec-podium-name{font-weight:700;font-size:14px}.rec-podium-stat{font-size:12px;color:var(--text-3);margin-top:4px}.rank-badge-r{display:inline-block;padding:3px 10px;border-radius:6px;font-weight:700;font-size:13px}`]
 })
 export class RecruitersPageComponent implements OnInit {
   recruiters: any[] = [];
   period: 'month' | 'quarter' | 'year' = 'month';
   attentionItems: { title: string; description: string }[] = [];
-
   constructor(private http: HttpClient) {}
-
   ngOnInit() { this.load(); }
-
   load() {
     this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => {
-      this.recruiters = [...data].sort((a, b) =>
-        (b.joinings ?? b.placements ?? b.selections ?? 0) - (a.joinings ?? a.placements ?? a.selections ?? 0)
-      );
+      this.recruiters = [...data].sort((a, b) => (b.joinings ?? b.placements ?? b.selections ?? 0) - (a.joinings ?? a.placements ?? a.selections ?? 0));
       this.buildAttentionItems();
     });
   }
-
-  setPeriod(p: 'month' | 'quarter' | 'year') {
-    this.period = p;
-    this.load();
-  }
-
+  setPeriod(p: 'month' | 'quarter' | 'year') { this.period = p; this.load(); }
   buildAttentionItems() {
     const items: { title: string; description: string }[] = [];
     const low = this.recruiters.filter(r => (r.selectionRatio ?? r.acceptanceRate ?? 100) < 20);
@@ -432,15 +259,9 @@ export class RecruitersPageComponent implements OnInit {
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
-        <div>
-          <h1 class="page-title">Dropout Predictor</h1>
-          <p class="text-sm" style="color:var(--text-3)">AI-powered candidate dropout risk analysis</p>
-        </div>
+        <div><h1 class="page-title">Dropout Predictor</h1><p class="text-sm" style="color:var(--text-3)">AI-powered candidate dropout risk analysis</p></div>
       </div>
-
-      <!-- Overview row: donut + distribution -->
       <div class="dp-overview-grid">
-        <!-- Donut -->
         <div class="card dp-donut-card">
           <div style="font-size:13px;font-weight:600;color:var(--text-3);margin-bottom:8px;">At-Risk Candidates</div>
           <svg viewBox="0 0 120 120" width="140" height="140" style="display:block;margin:0 auto;">
@@ -451,115 +272,73 @@ export class RecruitersPageComponent implements OnInit {
             <text x="60" y="56" text-anchor="middle" font-size="20" font-weight="800" fill="#ef4444">{{ atRiskCount }}</text>
             <text x="60" y="72" text-anchor="middle" font-size="10" fill="#9ca3af">of {{ totalCandidates }}</text>
           </svg>
-          <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--text-3);">
-            {{ totalCandidates ? ((atRiskCount/totalCandidates)*100 | number:'1.0-0') : 0 }}% at risk
-          </div>
+          <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--text-3);">{{ totalCandidates ? ((atRiskCount/totalCandidates)*100 | number:'1.0-0') : 0 }}% at risk</div>
         </div>
-
-        <!-- Distribution bars -->
         <div class="card" style="flex:1;min-width:0;">
           <h3 class="card-title mb-4">Risk Distribution</h3>
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div *ngFor="let d of riskDistribution" style="display:grid;grid-template-columns:140px 1fr 40px;gap:10px;align-items:center;">
               <div style="font-size:12px;font-weight:600;" [style.color]="d.color">{{ d.label }}</div>
-              <div style="height:20px;background:var(--surface-alt);border-radius:4px;overflow:hidden;">
-                <div [style.width.%]="d.percentage" [style.background]="d.color" style="height:100%;border-radius:4px;transition:width .4s;"></div>
-              </div>
+              <div style="height:20px;background:var(--surface-alt);border-radius:4px;overflow:hidden;"><div [style.width.%]="d.percentage" [style.background]="d.color" style="height:100%;border-radius:4px;transition:width .4s;"></div></div>
               <div style="font-weight:700;text-align:right;" [style.color]="d.color">{{ d.count }}</div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- High-risk candidates list -->
       <div class="card">
         <h3 class="card-title mb-4">High-Risk Candidates</h3>
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div *ngFor="let c of atRiskCandidates" class="dp-candidate-card">
             <div class="dp-card-top">
-              <div>
-                <div style="font-weight:700;font-size:14px;">{{ c.firstName ? c.firstName+' '+c.lastName : c.name }}</div>
-                <div style="font-size:12px;color:var(--text-3);">{{ c.stage }} · {{ c.currentCompany || c.currentTitle || '' }}</div>
-              </div>
-              <span class="dp-risk-pill"
-                [style.background]="getRiskColor(c.dropoutRisk)+'1a'"
-                [style.color]="getRiskColor(c.dropoutRisk)"
-                [style.border-color]="getRiskColor(c.dropoutRisk)">
-                {{ c.dropoutRisk }}% · {{ getRiskLabel(c.dropoutRisk) }}
-              </span>
+              <div><div style="font-weight:700;font-size:14px;">{{ c.firstName ? c.firstName+' '+c.lastName : c.name }}</div><div style="font-size:12px;color:var(--text-3);">{{ c.stage }} · {{ c.currentCompany || c.currentTitle || '' }}</div></div>
+              <span class="dp-risk-pill" [style.background]="getRiskColor(c.dropoutRisk)+'1a'" [style.color]="getRiskColor(c.dropoutRisk)" [style.border-color]="getRiskColor(c.dropoutRisk)">{{ c.dropoutRisk }}% · {{ getRiskLabel(c.dropoutRisk) }}</span>
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-              <span *ngFor="let f of getRiskFactors(c)" style="font-size:11px;background:var(--surface-alt);padding:2px 8px;border-radius:4px;color:var(--text-3);">{{ f }}</span>
-            </div>
-            <div style="margin-top:8px;font-size:12px;color:var(--text-3);">
-              {{ c.dropoutRisk >= 70 ? 'Immediate recruiter follow-up recommended.' : 'Monitor closely — risk is elevated.' }}
-            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><span *ngFor="let f of getRiskFactors(c)" style="font-size:11px;background:var(--surface-alt);padding:2px 8px;border-radius:4px;color:var(--text-3);">{{ f }}</span></div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text-3);">{{ c.dropoutRisk >= 70 ? 'Immediate recruiter follow-up recommended.' : 'Monitor closely — risk is elevated.' }}</div>
           </div>
-          <div *ngIf="!atRiskCandidates.length" style="text-align:center;padding:40px;color:var(--text-3);">
-            No high-risk candidates found.
-          </div>
+          <div *ngIf="!atRiskCandidates.length" style="text-align:center;padding:40px;color:var(--text-3);">No high-risk candidates found.</div>
         </div>
       </div>
     </div>
   `,
-  styles: [`
-    .dp-overview-grid { display:flex; gap:20px; margin-bottom:24px; }
-    .dp-donut-card { min-width:180px; text-align:center; }
-    .dp-candidate-card { padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
-    .dp-candidate-card:hover { border-color:var(--brand-violet-400); box-shadow:var(--shadow-sm); }
-    .dp-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-    .dp-risk-pill { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid; white-space:nowrap; }
-  `]
+  styles: [`.dp-overview-grid{display:flex;gap:20px;margin-bottom:24px}.dp-donut-card{min-width:180px;text-align:center}.dp-candidate-card{padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px}.dp-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.dp-risk-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid;white-space:nowrap}`]
 })
 export class DropoutPageComponent implements OnInit {
   allCandidates: any[] = [];
   atRiskCandidates: any[] = [];
-  atRiskCount = 0;
-  totalCandidates = 0;
+  atRiskCount = 0; totalCandidates = 0;
   riskDistribution = [
-    { label: 'Critical (80%+)', count: 0, percentage: 0, color: '#ef4444' },
-    { label: 'High (60–79%)',   count: 0, percentage: 0, color: '#f97316' },
-    { label: 'Medium (40–59%)', count: 0, percentage: 0, color: '#eab308' },
-    { label: 'Low (<40%)',      count: 0, percentage: 0, color: '#22c55e' },
+    { label:'Critical (80%+)', count:0, percentage:0, color:'#ef4444' },
+    { label:'High (60–79%)',   count:0, percentage:0, color:'#f97316' },
+    { label:'Medium (40–59%)', count:0, percentage:0, color:'#eab308' },
+    { label:'Low (<40%)',      count:0, percentage:0, color:'#22c55e' },
   ];
-
   constructor(private http: HttpClient) {}
-
   ngOnInit() {
     this.http.get<any[]>(`${environment.apiUrl}/api/candidates`).subscribe(data => {
-      this.allCandidates = data;
-      this.totalCandidates = data.length;
+      this.allCandidates = data; this.totalCandidates = data.length;
       this.atRiskCandidates = data.filter(c => (c.dropoutRisk ?? 0) >= 40).sort((a, b) => b.dropoutRisk - a.dropoutRisk);
       this.atRiskCount = this.atRiskCandidates.length;
       this.updateDistribution();
     });
   }
-
   updateDistribution() {
-    const all = this.allCandidates;
-    const total = all.length || 1;
+    const all = this.allCandidates; const total = all.length || 1;
     this.riskDistribution = [
-      { label: 'Critical (80%+)', count: all.filter(c => c.dropoutRisk >= 80).length,                             percentage: 0, color: '#ef4444' },
-      { label: 'High (60–79%)',   count: all.filter(c => c.dropoutRisk >= 60 && c.dropoutRisk < 80).length,       percentage: 0, color: '#f97316' },
-      { label: 'Medium (40–59%)', count: all.filter(c => c.dropoutRisk >= 40 && c.dropoutRisk < 60).length,       percentage: 0, color: '#eab308' },
-      { label: 'Low (<40%)',      count: all.filter(c => (c.dropoutRisk ?? 0) < 40).length,                       percentage: 0, color: '#22c55e' },
+      { label:'Critical (80%+)', count:all.filter(c => c.dropoutRisk >= 80).length, percentage:0, color:'#ef4444' },
+      { label:'High (60–79%)',   count:all.filter(c => c.dropoutRisk >= 60 && c.dropoutRisk < 80).length, percentage:0, color:'#f97316' },
+      { label:'Medium (40–59%)', count:all.filter(c => c.dropoutRisk >= 40 && c.dropoutRisk < 60).length, percentage:0, color:'#eab308' },
+      { label:'Low (<40%)',      count:all.filter(c => (c.dropoutRisk ?? 0) < 40).length, percentage:0, color:'#22c55e' },
     ];
     this.riskDistribution.forEach(d => d.percentage = Math.round((d.count / total) * 100));
   }
-
-  getRiskColor(risk: number): string {
-    return risk >= 80 ? '#ef4444' : risk >= 60 ? '#f97316' : risk >= 40 ? '#eab308' : '#22c55e';
-  }
-
-  getRiskLabel(risk: number): string {
-    return risk >= 80 ? 'Critical' : risk >= 60 ? 'High' : risk >= 40 ? 'Medium' : 'Low';
-  }
-
+  getRiskColor(risk: number) { return risk >= 80 ? '#ef4444' : risk >= 60 ? '#f97316' : risk >= 40 ? '#eab308' : '#22c55e'; }
+  getRiskLabel(risk: number) { return risk >= 80 ? 'Critical' : risk >= 60 ? 'High' : risk >= 40 ? 'Medium' : 'Low'; }
   getRiskFactors(c: any): string[] {
     const f: string[] = [];
     if ((c.dropoutRisk ?? 0) >= 80) f.push('Very high risk');
-    if ((c.matchScore ?? 100) < 60)  f.push('Poor JD match');
-    if (c.stage)                      f.push(`Stage: ${c.stage}`);
+    if ((c.matchScore ?? 100) < 60) f.push('Poor JD match');
+    if (c.stage) f.push(`Stage: ${c.stage}`);
     return f.length ? f : ['Risk score elevated'];
   }
 }
@@ -570,72 +349,38 @@ export class DropoutPageComponent implements OnInit {
     <section class="stack-page">
       <div class="card form-card">
         <h3>{{ title }}</h3>
-        <label class="upload-box" *ngIf="needsJd">
-          <span>{{ jdFile?.fileName || 'Upload JD (.pdf, .docx, .doc, .jpg, .png)' }}</span>
-          <input type="file" [accept]="allowedTypes" (change)="onUpload($event, 'jd')">
-        </label>
+        <label class="upload-box" *ngIf="needsJd"><span>{{ jdFile?.fileName || 'Upload JD (.pdf, .docx)' }}</span><input type="file" [accept]="allowedTypes" (change)="onUpload($event, 'jd')"></label>
         <textarea class="textarea" *ngIf="needsJd" [(ngModel)]="jdText" placeholder="Or type / paste JD here"></textarea>
-
-        <label class="upload-box" *ngIf="needsResume">
-          <span>{{ resumeFile?.fileName || 'Upload resume (.pdf, .docx, .doc, .jpg, .png)' }}</span>
-          <input type="file" [accept]="allowedTypes" (change)="onUpload($event, 'resume')">
-        </label>
+        <label class="upload-box" *ngIf="needsResume"><span>{{ resumeFile?.fileName || 'Upload resume' }}</span><input type="file" [accept]="allowedTypes" (change)="onUpload($event, 'resume')"></label>
         <textarea class="textarea" *ngIf="needsResume" [(ngModel)]="resumeText" placeholder="Or paste resume text here"></textarea>
-
         <textarea class="textarea" *ngIf="!needsJd && !needsResume" [(ngModel)]="input" [placeholder]="placeholder"></textarea>
         <button class="btn btn-primary" (click)="analyze()">Analyze</button>
       </div>
-      <div class="card" *ngIf="result">
-        <h3>Result</h3>
-        <pre>{{ result | json }}</pre>
-      </div>
+      <div class="card" *ngIf="result"><h3>Result</h3><pre>{{ result | json }}</pre></div>
     </section>
   `
 })
 export class GenericToolComponent {
-  title = 'AI Assistant';
-  placeholder = 'Paste CV, JD, or skills here...';
-  input = '';
-  jdText = '';
-  resumeText = '';
-  jdFile: any = null;
-  resumeFile: any = null;
-  allowedTypes = '.pdf,.docx,.doc,.jpg,.png';
-  needsJd = false;
-  needsResume = false;
-  result: any;
+  title = 'AI Assistant'; placeholder = 'Paste CV, JD, or skills here...';
+  input = ''; jdText = ''; resumeText = ''; jdFile: any = null; resumeFile: any = null;
+  allowedTypes = '.pdf,.docx,.doc,.jpg,.png'; needsJd = false; needsResume = false; result: any;
   constructor(private http: HttpClient, private route: ActivatedRoute) {
     this.route.url.subscribe(url => {
       const path = url.map(x => x.path).join('/');
-      this.title = path.includes('jd-checker') ? 'JD Checker'
-        : path.includes('cv-jd-matcher') ? 'CV-JD Matcher'
-        : path.includes('competency-ranker') ? 'Competency Ranker'
-        : 'AI Assistant';
-      this.needsJd = this.title === 'JD Checker' || this.title === 'CV-JD Matcher' || this.title === 'Competency Ranker';
-      this.needsResume = this.title === 'CV-JD Matcher';
+      this.title = path.includes('jd-checker') ? 'JD Checker' : path.includes('competency-ranker') ? 'Competency Ranker' : 'AI Assistant';
+      this.needsJd = this.title !== 'AI Assistant'; this.needsResume = false;
     });
   }
   analyze() {
-    this.http.post(`${environment.apiUrl}/api/ai/analyze`, {
-      type: this.title,
-      text: this.input,
-      jdText: this.jdText,
-      resumeText: this.resumeText,
-      jdFile: this.jdFile,
-      resumeFile: this.resumeFile
-    })
-      .subscribe(result => this.result = result);
+    this.http.post(`${environment.apiUrl}/api/ai/analyze`, { type: this.title, text: this.input, jdText: this.jdText, resumeText: this.resumeText }).subscribe(r => this.result = r);
   }
-
   onUpload(event: Event, target: 'jd' | 'resume') {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const payload = { fileName: file.name, fileType: file.type || file.name.split('.').pop(), fileData: String(reader.result || '') };
-      if (target === 'jd') this.jdFile = payload;
-      if (target === 'resume') this.resumeFile = payload;
+      const payload = { fileName: file.name, fileType: file.type, fileData: String(reader.result || '') };
+      if (target === 'jd') this.jdFile = payload; else this.resumeFile = payload;
     };
     reader.readAsDataURL(file);
   }
@@ -643,85 +388,14 @@ export class GenericToolComponent {
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard',             component: DashboardComponent },
-  // Recruitment
-  { path: 'vendors',               component: VendorsComponent },
-  { path: 'recruiters',            component: RecruitersPageComponent },
-  { path: 'cv-database',           component: CvDatabaseComponent },
-  { path: 'pipeline-board',        component: PipelineBoardComponent },
-  { path: 'requisitions',          component: RequisitionsComponent },
-  { path: 'candidate-portal',      component: CandidatePortalComponent },
-  { path: 'interview-scheduler',   component: InterviewSchedulerComponent },
-  { path: 'offer-management',      component: OfferManagementComponent },
-  { path: 'source-tracking',       component: SourceTrackingComponent },
-  { path: 'job-broadcasting',      component: JobBroadcastingComponent },
-  { path: 'video-interviews',      component: VideoInterviewsComponent },
-  // Core HR
-  { path: 'employee-directory',    component: EmployeeDirectoryComponent },
-  { path: 'org-chart',             component: OrgChartComponent },
-  { path: 'document-management',   component: DocumentManagementComponent },
-  { path: 'letters-certificates',  component: LettersCertificatesComponent },
-  { path: 'exit-management',       component: ExitManagementComponent },
-  { path: 'internal-job-postings', component: InternalJobPostingsComponent },
-  // Attendance & Time
-  { path: 'attendance',            component: AttendanceComponent },
-  { path: 'leave-management',      component: LeaveManagementComponent },
-  { path: 'shift-management',      component: ShiftManagementComponent },
-  { path: 'timesheet',             component: TimesheetComponent },
-  { path: 'overtime',              component: OvertimeComponent },
-  // Payroll
-  { path: 'payroll',               component: PayrollComponent },
-  { path: 'salary-structure',      component: SalaryStructureComponent },
-  { path: 'tax-statutory',         component: TaxStatutoryComponent },
-  { path: 'expense-management',    component: ExpenseManagementComponent },
-  { path: 'payslip-portal',        component: PayslipPortalComponent },
-  // Compensation & Benefits
-  { path: 'compensation-planning', component: CompensationPlanningComponent },
-  { path: 'benefits-admin',        component: BenefitsAdminComponent },
-  { path: 'salary-benchmarking',   component: SalaryBenchmarkingComponent },
-  { path: 'bonus-incentives',      component: BonusIncentivesComponent },
-  // Performance Management
-  { path: 'goals-okr',             component: GoalsOkrComponent },
-  { path: 'performance-reviews',   component: PerformanceReviewsComponent },
-  { path: 'feedback-360',          component: Feedback360Component },
-  { path: 'continuous-feedback',   component: ContinuousFeedbackComponent },
-  // Learning & Development
-  { path: 'learning-management',   component: LearningManagementComponent },
-  { path: 'training-calendar',     component: TrainingCalendarComponent },
-  { path: 'skill-gap',             component: SkillGapComponent },
-  { path: 'certification-tracker', component: CertificationTrackerComponent },
-  // Talent & Engagement
-  { path: 'onboarding',            component: OnboardingComponent },
-  { path: 'talent-pool',           component: TalentPoolComponent },
-  { path: 'communications',        component: CommunicationCenterComponent },
-  // Employer Branding
-  { path: 'careers-builder',       component: CareersBuilderComponent },
-  { path: 'talent-community',      component: TalentCommunityComponent },
-  { path: 'social-recruiting',     component: SocialRecruitingComponent },
-  { path: 'campus-connect',        component: CampusConnectComponent },
-  { path: 'employee-advocacy',     component: EmployeeAdvocacyComponent },
-  { path: 'employer-reviews',      component: EmployerReviewsComponent },
-  // AI & Intelligence
-  { path: 'resume-parser',         component: ResumeParserComponent },
-  { path: 'ai-scorecard',          component: AIScorecardComponent },
-  { path: 'dropout-predictor',     component: DropoutPageComponent },
-  { path: 'competency-ranker',     component: GenericToolComponent },
-  { path: 'jd-checker',            component: GenericToolComponent },
-  { path: 'jd-generator',          component: JdGeneratorComponent },
-  { path: 'ai-features',           component: AIFeaturesComponent },
-  // Analytics & Performance
-  { path: 'reports',               component: ReportsComponent },
-  { path: 'sla-dashboard',         component: SlaDashboardComponent },
-  { path: 'budget',                component: BudgetComponent },
-  // Policies & Compliance
-  { path: 'policy-management',     component: PolicyManagementComponent },
-  { path: 'statutory-compliance',  component: StatutoryComplianceComponent },
-  { path: 'compliance',            component: ComplianceComponent },
-  { path: 'audit-trail',           component: AuditTrailComponent },
-  // Administration
-  { path: 'users',                 component: UsersAdminComponent },
-  { path: 'import-center',         component: ImportCenterComponent },
-  { path: 'integrations',          component: IntegrationsHubComponent },
+  { path: 'dashboard',          component: DashboardComponent },
+  { path: 'recruiters',         component: RecruitersPageComponent },
+  { path: 'cv-database',        component: CvDatabaseComponent },
+  { path: 'dropout-predictor',  component: DropoutPageComponent },
+  { path: 'competency-ranker',  component: GenericToolComponent },
+  { path: 'jd-checker',         component: GenericToolComponent },
+  { path: 'users',              component: UsersAdminComponent },
+  { path: '', loadChildren: () => import('./features.module').then(m => m.FeaturesModule) },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -729,81 +403,11 @@ const routes: Routes = [
   declarations: [
     AppComponent,
     DashboardComponent,
-    VendorsComponent,
     RecruitersPageComponent,
     CvDatabaseComponent,
     DropoutPageComponent,
     GenericToolComponent,
     UsersAdminComponent,
-    SafeHtmlPipe,
-    TimeAgoPipe,
-    AIFeaturesComponent,
-    AIScorecardComponent,
-    SlaDashboardComponent,
-    JdGeneratorComponent,
-    // New ATS modules
-    ResumeParserComponent,
-    PipelineBoardComponent,
-    CandidatePortalComponent,
-    InterviewSchedulerComponent,
-    OfferManagementComponent,
-    TalentPoolComponent,
-    RequisitionsComponent,
-    SourceTrackingComponent,
-    ComplianceComponent,
-    BudgetComponent,
-    ImportCenterComponent,
-    InternalJobPostingsComponent,
-    ReportsComponent,
-    JobBroadcastingComponent,
-    CommunicationCenterComponent,
-    OnboardingComponent,
-    VideoInterviewsComponent,
-    IntegrationsHubComponent,
-    // Core HR
-    EmployeeDirectoryComponent,
-    OrgChartComponent,
-    DocumentManagementComponent,
-    LettersCertificatesComponent,
-    ExitManagementComponent,
-    // Attendance & Time
-    AttendanceComponent,
-    LeaveManagementComponent,
-    ShiftManagementComponent,
-    TimesheetComponent,
-    OvertimeComponent,
-    // Payroll
-    PayrollComponent,
-    SalaryStructureComponent,
-    TaxStatutoryComponent,
-    ExpenseManagementComponent,
-    PayslipPortalComponent,
-    // Compensation & Benefits
-    CompensationPlanningComponent,
-    BenefitsAdminComponent,
-    SalaryBenchmarkingComponent,
-    BonusIncentivesComponent,
-    // Performance Management
-    GoalsOkrComponent,
-    PerformanceReviewsComponent,
-    Feedback360Component,
-    ContinuousFeedbackComponent,
-    // Learning & Development
-    LearningManagementComponent,
-    TrainingCalendarComponent,
-    SkillGapComponent,
-    CertificationTrackerComponent,
-    // Policies & Compliance
-    PolicyManagementComponent,
-    StatutoryComplianceComponent,
-    AuditTrailComponent,
-    // Employer Branding
-    CareersBuilderComponent,
-    TalentCommunityComponent,
-    SocialRecruitingComponent,
-    CampusConnectComponent,
-    EmployeeAdvocacyComponent,
-    EmployerReviewsComponent,
   ],
   imports: [
     BrowserModule,
@@ -811,30 +415,8 @@ const routes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatTabsModule,
-    MatCardModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatCheckboxModule,
-    MatProgressBarModule,
-    MatSlideToggleModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSidenavModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    RouterModule.forRoot(routes)
+    SharedModule,
+    RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' }),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true },
