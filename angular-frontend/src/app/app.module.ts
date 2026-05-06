@@ -5,6 +5,8 @@ import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Routes } from '@angular/router';
 import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
@@ -416,6 +418,8 @@ const routes: Routes = [
     ReactiveFormsModule,
     HttpClientModule,
     SharedModule,
+    MatMenuModule,
+    MatDividerModule,
     RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' }),
   ],
   providers: [
