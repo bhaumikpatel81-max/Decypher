@@ -7,6 +7,22 @@ import { ActivatedRoute, RouterModule, Routes } from '@angular/router';
 import { CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
@@ -418,9 +434,12 @@ const routes: Routes = [
     ReactiveFormsModule,
     HttpClientModule,
     SharedModule,
-    MatMenuModule,
-    MatDividerModule,
-    RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' }),
+    MatMenuModule, MatDividerModule, MatTabsModule, MatCardModule,
+    MatTableModule, MatInputModule, MatSelectModule, MatButtonModule,
+    MatIconModule, MatFormFieldModule, MatCheckboxModule, MatProgressBarModule,
+    MatSlideToggleModule, MatTooltipModule, MatDialogModule, MatChipsModule,
+    MatProgressSpinnerModule, MatSnackBarModule,
+    RouterModule.forRoot(routes),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true },
