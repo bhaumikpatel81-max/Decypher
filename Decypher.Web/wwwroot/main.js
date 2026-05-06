@@ -43672,7 +43672,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app_app_module__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./app/app.module */ 635);
 
 
-_angular_platform_browser__WEBPACK_IMPORTED_MODULE_1__.platformBrowser().bootstrapModule(_app_app_module__WEBPACK_IMPORTED_MODULE_0__.AppModule).catch(err => console.error(err));
+_angular_platform_browser__WEBPACK_IMPORTED_MODULE_1__.platformBrowser().bootstrapModule(_app_app_module__WEBPACK_IMPORTED_MODULE_0__.AppModule).catch(err => {
+  const msg = err?.message || err?.toString() || JSON.stringify(err);
+  document.body.innerHTML = `<pre style="color:red;background:#fff;padding:24px;font-size:13px;white-space:pre-wrap;">${msg}</pre>`;
+  console.error(err);
+});
 
 /***/ })
 
