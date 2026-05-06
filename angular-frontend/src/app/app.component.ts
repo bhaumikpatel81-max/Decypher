@@ -534,34 +534,84 @@ export class AppComponent implements OnInit {
   insightText = 'Live pipeline risk is calculated from current candidate records.';
 
   allApps = [
-    { path: '/dashboard',             label: 'Dashboard',            shortLabel: 'Dashboard',            symbol: 'D',  color: '#292966', adminOnly: false },
-    { path: '/vendors',               label: 'Vendor Management',    shortLabel: 'Vendor Management',    symbol: 'V',  color: '#22a3d2', adminOnly: false },
-    { path: '/budget',                label: 'Budget & Forecasting', shortLabel: 'Budget & Forecasting', symbol: '💰', color: '#059669', adminOnly: false },
-    { path: '/recruiters',            label: 'Recruiter Performance',shortLabel: 'Recruiter Performance',symbol: 'R',  color: '#6b4df0', adminOnly: false },
-    { path: '/cv-database',           label: 'Talent Database',      shortLabel: 'Talent Database',      symbol: 'CV', color: '#5C5C99', adminOnly: false },
-    { path: '/pipeline-board',        label: 'Pipeline Board',       shortLabel: 'Pipeline Board',       symbol: 'PB', color: '#a94ee6', adminOnly: false },
-    { path: '/requisitions',          label: 'Requisitions',         shortLabel: 'Requisitions',         symbol: 'RQ', color: '#e8912a', adminOnly: false },
-    { path: '/job-broadcasting',      label: 'Job Broadcasting',     shortLabel: 'Job Broadcasting',     symbol: 'JB', color: '#7c3aed', adminOnly: false },
-    { path: '/interview-scheduler',   label: 'Interview Scheduler',  shortLabel: 'Interview Scheduler',  symbol: 'IS', color: '#2563eb', adminOnly: false },
-    { path: '/video-interviews',      label: 'Video Interviews',     shortLabel: 'Video Interviews',     symbol: 'VI', color: '#db2777', adminOnly: false },
-    { path: '/offer-management',      label: 'Offer Management',     shortLabel: 'Offer Management',     symbol: 'OM', color: '#5C5C99', adminOnly: false },
-    { path: '/onboarding',            label: 'Onboarding',           shortLabel: 'Onboarding',           symbol: 'OB', color: '#10b981', adminOnly: false },
-    { path: '/talent-pool',           label: 'Talent Pool',          shortLabel: 'Talent Pool',          symbol: 'TP', color: '#c56bff', adminOnly: false },
-    { path: '/communications',        label: 'Communications',       shortLabel: 'Communications',       symbol: 'CM', color: '#0891b2', adminOnly: false },
-    { path: '/integrations',           label: 'Integrations Hub',     shortLabel: 'Integrations Hub',     symbol: '🔌', color: '#059669', adminOnly: false },
-    { path: '/source-tracking',       label: 'Source Tracking',      shortLabel: 'Source Tracking',      symbol: 'ST', color: '#3bbdea', adminOnly: false },
-    { path: '/sla-dashboard',         label: 'SLA Dashboard',        shortLabel: 'SLA Dashboard',        symbol: 'SL', color: '#dc2626', adminOnly: false },
-    { path: '/reports',               label: 'Reports & Analytics',  shortLabel: 'Reports & Analytics',  symbol: '📊', color: '#0f766e', adminOnly: false },
-    { path: '/internal-job-postings', label: 'Internal Mobility',    shortLabel: 'Internal Mobility',    symbol: '📌', color: '#b45309', adminOnly: false },
-    { path: '/resume-parser',         label: 'Resume Parser',        shortLabel: 'Resume Parser',        symbol: 'RP', color: '#6b4df0', adminOnly: false },
-    { path: '/ai-scorecard',          label: 'AI Scorecard',         shortLabel: 'AI Scorecard',         symbol: 'AS', color: '#a94ee6', adminOnly: false },
-    { path: '/dropout-predictor',     label: 'Attrition Risk',       shortLabel: 'Attrition Risk',       symbol: 'DR', color: '#dc2626', adminOnly: false },
-    { path: '/competency-ranker',     label: 'Competency Ranker',    shortLabel: 'Competency Ranker',    symbol: 'CR', color: '#16a34a', adminOnly: false },
-    { path: '/jd-checker',            label: 'JD Analyzer',          shortLabel: 'JD Analyzer',          symbol: 'JD', color: '#e8912a', adminOnly: false },
-    { path: '/jd-generator',          label: 'JD Generator',         shortLabel: 'JD Generator',         symbol: 'JG', color: '#22a3d2', adminOnly: false },
-    { path: '/import-center',         label: 'Import Center',        shortLabel: 'Import Center',        symbol: '📥', color: '#0891b2', adminOnly: false },
-    { path: '/users',                 label: 'User Management',      shortLabel: 'User Management',      symbol: 'UA', color: '#343a48', adminOnly: true  },
-    { path: '/compliance',            label: 'Compliance',           shortLabel: 'Compliance',           symbol: 'CO', color: '#5C5C99', adminOnly: true  },
+    // Core
+    { path: '/dashboard',              label: 'Dashboard',              shortLabel: 'Dashboard',         symbol: 'D',  color: '#292966', adminOnly: false },
+    // Recruitment
+    { path: '/requisitions',           label: 'Requisitions',           shortLabel: 'Requisitions',      symbol: 'RQ', color: '#e8912a', adminOnly: false },
+    { path: '/job-broadcasting',       label: 'Job Broadcasting',       shortLabel: 'Job Board',         symbol: 'JB', color: '#7c3aed', adminOnly: false },
+    { path: '/cv-database',            label: 'Talent Database',        shortLabel: 'Talent DB',         symbol: 'CV', color: '#5C5C99', adminOnly: false },
+    { path: '/pipeline-board',         label: 'Pipeline Board',         shortLabel: 'Pipeline',          symbol: 'PB', color: '#a94ee6', adminOnly: false },
+    { path: '/interview-scheduler',    label: 'Interview Scheduler',    shortLabel: 'Interviews',        symbol: 'IS', color: '#2563eb', adminOnly: false },
+    { path: '/video-interviews',       label: 'Video Interviews',       shortLabel: 'Video Int.',        symbol: 'VI', color: '#db2777', adminOnly: false },
+    { path: '/offer-management',       label: 'Offer Management',       shortLabel: 'Offers',            symbol: 'OM', color: '#5C5C99', adminOnly: false },
+    { path: '/source-tracking',        label: 'Source Tracking',        shortLabel: 'Sources',           symbol: 'ST', color: '#3bbdea', adminOnly: false },
+    { path: '/vendors',                label: 'Vendor Management',      shortLabel: 'Vendors',           symbol: 'V',  color: '#22a3d2', adminOnly: false },
+    // Core HR
+    { path: '/employee-directory',     label: 'Employee Directory',     shortLabel: 'Employees',         symbol: 'ED', color: '#6b4df0', adminOnly: false },
+    { path: '/org-chart',              label: 'Org Chart',              shortLabel: 'Org Chart',         symbol: 'OC', color: '#2563eb', adminOnly: false },
+    { path: '/document-management',    label: 'Document Management',    shortLabel: 'Documents',         symbol: 'DM', color: '#0891b2', adminOnly: false },
+    { path: '/letters-certificates',   label: 'Letters & Certificates', shortLabel: 'Letters',           symbol: 'LC', color: '#7c3aed', adminOnly: false },
+    { path: '/exit-management',        label: 'Exit Management',        shortLabel: 'Exits',             symbol: 'EX', color: '#dc2626', adminOnly: false },
+    { path: '/internal-job-postings',  label: 'Internal Mobility',      shortLabel: 'Int. Mobility',     symbol: 'IM', color: '#b45309', adminOnly: false },
+    // Attendance & Time
+    { path: '/attendance',             label: 'Attendance',             shortLabel: 'Attendance',        symbol: 'AT', color: '#2563eb', adminOnly: false },
+    { path: '/leave-management',       label: 'Leave Management',       shortLabel: 'Leaves',            symbol: 'LV', color: '#10b981', adminOnly: false },
+    { path: '/shift-management',       label: 'Shift Management',       shortLabel: 'Shifts',            symbol: 'SH', color: '#f59e0b', adminOnly: false },
+    { path: '/timesheet',              label: 'Timesheet',              shortLabel: 'Timesheet',         symbol: 'TS', color: '#6b4df0', adminOnly: false },
+    { path: '/overtime',               label: 'Overtime Management',    shortLabel: 'Overtime',          symbol: 'OT', color: '#ef4444', adminOnly: false },
+    // Payroll
+    { path: '/payroll',                label: 'Payroll Processing',     shortLabel: 'Payroll',           symbol: 'PR', color: '#059669', adminOnly: false },
+    { path: '/salary-structure',       label: 'Salary Structure',       shortLabel: 'Salary Struct.',    symbol: 'SS', color: '#16a34a', adminOnly: false },
+    { path: '/tax-statutory',          label: 'Tax & Statutory',        shortLabel: 'Tax & Stat.',       symbol: 'TX', color: '#0f766e', adminOnly: false },
+    { path: '/expense-management',     label: 'Expense Management',     shortLabel: 'Expenses',          symbol: 'EP', color: '#0891b2', adminOnly: false },
+    { path: '/payslip-portal',         label: 'Payslip Portal',         shortLabel: 'Payslips',          symbol: 'PS', color: '#22a3d2', adminOnly: false },
+    // Compensation
+    { path: '/compensation-planning',  label: 'Compensation Planning',  shortLabel: 'Compensation',      symbol: 'CP', color: '#6b4df0', adminOnly: false },
+    { path: '/benefits-admin',         label: 'Benefits Administration',shortLabel: 'Benefits',          symbol: 'BA', color: '#db2777', adminOnly: false },
+    { path: '/salary-benchmarking',    label: 'Salary Benchmarking',    shortLabel: 'Benchmarking',      symbol: 'SB', color: '#f59e0b', adminOnly: false },
+    { path: '/bonus-incentives',       label: 'Bonus & Incentives',     shortLabel: 'Bonus',             symbol: 'BI', color: '#e8912a', adminOnly: false },
+    // Performance
+    { path: '/goals-okr',              label: 'Goals & OKRs',           shortLabel: 'Goals / OKRs',      symbol: 'GO', color: '#2563eb', adminOnly: false },
+    { path: '/performance-reviews',    label: 'Performance Reviews',    shortLabel: 'Reviews',           symbol: 'PV', color: '#6b4df0', adminOnly: false },
+    { path: '/feedback-360',           label: '360° Feedback',          shortLabel: '360 Feedback',      symbol: '3F', color: '#7c3aed', adminOnly: false },
+    { path: '/continuous-feedback',    label: 'Continuous Feedback',    shortLabel: 'Feedback',          symbol: 'CF', color: '#10b981', adminOnly: false },
+    // Learning
+    { path: '/learning-management',    label: 'Learning Management',    shortLabel: 'LMS',               symbol: 'LM', color: '#6b4df0', adminOnly: false },
+    { path: '/training-calendar',      label: 'Training Calendar',      shortLabel: 'Training',          symbol: 'TC', color: '#2563eb', adminOnly: false },
+    { path: '/skill-gap',              label: 'Skill Gap Analysis',     shortLabel: 'Skill Gap',         symbol: 'SG', color: '#f59e0b', adminOnly: false },
+    { path: '/certification-tracker',  label: 'Certification Tracker',  shortLabel: 'Certs',             symbol: 'CT', color: '#10b981', adminOnly: false },
+    // Talent & Engagement
+    { path: '/onboarding',             label: 'Onboarding',             shortLabel: 'Onboarding',        symbol: 'OB', color: '#10b981', adminOnly: false },
+    { path: '/talent-pool',            label: 'Talent Pool',            shortLabel: 'Talent Pool',       symbol: 'TP', color: '#c56bff', adminOnly: false },
+    { path: '/communications',         label: 'Communications',         shortLabel: 'Comms',             symbol: 'CM', color: '#0891b2', adminOnly: false },
+    // Employer Branding
+    { path: '/careers-builder',        label: 'Careers Page Builder',   shortLabel: 'Careers Page',      symbol: 'CB', color: '#6b4df0', adminOnly: false },
+    { path: '/talent-community',       label: 'Talent Community',       shortLabel: 'Community',         symbol: 'TY', color: '#2563eb', adminOnly: false },
+    { path: '/social-recruiting',      label: 'Social Recruiting',      shortLabel: 'Social Rec.',       symbol: 'SR', color: '#db2777', adminOnly: false },
+    { path: '/campus-connect',         label: 'Campus Connect',         shortLabel: 'Campus',            symbol: 'CC', color: '#f59e0b', adminOnly: false },
+    { path: '/employee-advocacy',      label: 'Employee Advocacy',      shortLabel: 'Advocacy',          symbol: 'EA', color: '#10b981', adminOnly: false },
+    { path: '/employer-reviews',       label: 'Employer Reviews',       shortLabel: 'Reviews',           symbol: 'ER', color: '#e8912a', adminOnly: false },
+    // AI & Intelligence
+    { path: '/resume-parser',          label: 'Resume Parser',          shortLabel: 'Resume AI',         symbol: 'RP', color: '#6b4df0', adminOnly: false },
+    { path: '/ai-scorecard',           label: 'AI Scorecard',           shortLabel: 'AI Score',          symbol: 'AS', color: '#a94ee6', adminOnly: false },
+    { path: '/dropout-predictor',      label: 'Attrition Risk',         shortLabel: 'Attrition',         symbol: 'DR', color: '#dc2626', adminOnly: false },
+    { path: '/competency-ranker',      label: 'Competency Ranker',      shortLabel: 'Competency',        symbol: 'CR', color: '#16a34a', adminOnly: false },
+    { path: '/jd-checker',             label: 'JD Analyzer',            shortLabel: 'JD Analyzer',       symbol: 'JD', color: '#e8912a', adminOnly: false },
+    { path: '/jd-generator',           label: 'JD Generator',           shortLabel: 'JD Gen',            symbol: 'JG', color: '#22a3d2', adminOnly: false },
+    // Analytics & Performance
+    { path: '/reports',                label: 'Reports & Analytics',    shortLabel: 'Reports',           symbol: '📊', color: '#0f766e', adminOnly: false },
+    { path: '/recruiters',             label: 'Recruiter Performance',  shortLabel: 'Recruiter Perf.',   symbol: 'R',  color: '#6b4df0', adminOnly: false },
+    { path: '/sla-dashboard',          label: 'SLA Dashboard',          shortLabel: 'SLA',               symbol: 'SL', color: '#dc2626', adminOnly: false },
+    { path: '/budget',                 label: 'Budget & Forecasting',   shortLabel: 'Budget',            symbol: '💰', color: '#059669', adminOnly: false },
+    // Policies & Compliance
+    { path: '/policy-management',      label: 'Policy Management',      shortLabel: 'Policies',          symbol: 'PM', color: '#374151', adminOnly: false },
+    { path: '/statutory-compliance',   label: 'Statutory Compliance',   shortLabel: 'Statutory',         symbol: 'SC', color: '#dc2626', adminOnly: false },
+    { path: '/compliance',             label: 'Compliance Tracker',     shortLabel: 'Compliance',        symbol: 'CO', color: '#5C5C99', adminOnly: false },
+    { path: '/audit-trail',            label: 'Audit Trail',            shortLabel: 'Audit',             symbol: 'AU', color: '#6b4df0', adminOnly: false },
+    // Administration
+    { path: '/users',                  label: 'User Management',        shortLabel: 'Users',             symbol: 'UA', color: '#343a48', adminOnly: true  },
+    { path: '/import-center',          label: 'Import Center',          shortLabel: 'Import',            symbol: '📥', color: '#0891b2', adminOnly: false },
+    { path: '/integrations',           label: 'Integrations Hub',       shortLabel: 'Integrations',      symbol: '🔌', color: '#059669', adminOnly: false },
   ];
 
   recentApps: any[] = [];
@@ -574,43 +624,32 @@ export class AppComponent implements OnInit {
   adminNav = this.allApps.filter(a => a.adminOnly);
 
   private readonly groupDefs = [
-    {
-      id: 'recruitment',
-      label: 'Recruitment',
-      symbol: 'RE',
-      color: '#2563eb',
-      paths: ['/requisitions', '/job-broadcasting', '/cv-database', '/pipeline-board',
-              '/interview-scheduler', '/video-interviews', '/offer-management', '/source-tracking']
-    },
-    {
-      id: 'talent',
-      label: 'Talent & Engagement',
-      symbol: 'TE',
-      color: '#10b981',
-      paths: ['/onboarding', '/talent-pool', '/internal-job-postings', '/communications']
-    },
-    {
-      id: 'ai',
-      label: 'AI & Intelligence',
-      symbol: 'AI',
-      color: '#7c3aed',
-      paths: ['/resume-parser', '/ai-scorecard', '/dropout-predictor', '/competency-ranker',
-              '/jd-checker', '/jd-generator']
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics & Performance',
-      symbol: 'AP',
-      color: '#0f766e',
-      paths: ['/reports', '/recruiters', '/sla-dashboard', '/budget']
-    },
-    {
-      id: 'admin',
-      label: 'Administration',
-      symbol: 'AD',
-      color: '#374151',
-      paths: ['/vendors', '/users', '/import-center', '/integrations', '/compliance']
-    }
+    { id:'recruitment',   label:'Recruitment',              symbol:'RE', color:'#2563eb',
+      paths:['/requisitions','/job-broadcasting','/cv-database','/pipeline-board','/interview-scheduler','/video-interviews','/offer-management','/source-tracking','/vendors'] },
+    { id:'corehr',        label:'Core HR',                  symbol:'HR', color:'#6b4df0',
+      paths:['/employee-directory','/org-chart','/document-management','/letters-certificates','/exit-management','/internal-job-postings'] },
+    { id:'attendance',    label:'Attendance & Time',        symbol:'AT', color:'#0891b2',
+      paths:['/attendance','/leave-management','/shift-management','/timesheet','/overtime'] },
+    { id:'payroll',       label:'Payroll',                  symbol:'₹',  color:'#059669',
+      paths:['/payroll','/salary-structure','/tax-statutory','/expense-management','/payslip-portal'] },
+    { id:'compensation',  label:'Compensation & Benefits',  symbol:'CB', color:'#db2777',
+      paths:['/compensation-planning','/benefits-admin','/salary-benchmarking','/bonus-incentives'] },
+    { id:'performance',   label:'Performance Management',   symbol:'PM', color:'#7c3aed',
+      paths:['/goals-okr','/performance-reviews','/feedback-360','/continuous-feedback'] },
+    { id:'learning',      label:'Learning & Development',   symbol:'LD', color:'#f59e0b',
+      paths:['/learning-management','/training-calendar','/skill-gap','/certification-tracker'] },
+    { id:'talent',        label:'Talent & Engagement',      symbol:'TE', color:'#10b981',
+      paths:['/onboarding','/talent-pool','/communications'] },
+    { id:'branding',      label:'Employer Branding',        symbol:'EB', color:'#e8912a',
+      paths:['/careers-builder','/talent-community','/social-recruiting','/campus-connect','/employee-advocacy','/employer-reviews'] },
+    { id:'ai',            label:'AI & Intelligence',        symbol:'AI', color:'#a94ee6',
+      paths:['/resume-parser','/ai-scorecard','/dropout-predictor','/competency-ranker','/jd-checker','/jd-generator'] },
+    { id:'analytics',     label:'Analytics & Performance',  symbol:'AP', color:'#0f766e',
+      paths:['/reports','/recruiters','/sla-dashboard','/budget'] },
+    { id:'policies',      label:'Policies & Compliance',    symbol:'PC', color:'#374151',
+      paths:['/policy-management','/statutory-compliance','/compliance','/audit-trail'] },
+    { id:'admin',         label:'Administration',           symbol:'AD', color:'#343a48',
+      paths:['/users','/import-center','/integrations'] },
   ];
 
   expandedGroups = new Set<string>(['recruitment']);

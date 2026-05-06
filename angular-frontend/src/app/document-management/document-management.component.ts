@@ -39,7 +39,7 @@ import { Component, OnInit } from '@angular/core';
 
       <!-- Category tabs -->
       <div class="cat-tabs mb-6">
-        <button *ngFor="let c of ['All',...categories]" class="cat-tab" [class.active]="activeCategory===c" (click)="activeCategory=c">{{c}}</button>
+        <button *ngFor="let c of allCategories" class="cat-tab" [class.active]="activeCategory===c" (click)="activeCategory=c">{{c}}</button>
       </div>
 
       <!-- Search -->
@@ -98,6 +98,8 @@ export class DocumentManagementComponent implements OnInit {
     { id:6, title:'IT Policy v2.1', category:'Policies', employee:'All', uploadDate:'2023-06-15', size:'156 KB', type:'pdf', access:'All', expiryDate:'2023-12-31' },
     { id:7, title:'Experience Certificate - Divya Reddy', category:'Certificates', employee:'Divya Reddy', uploadDate:'2024-02-10', size:'85 KB', type:'pdf', access:'Employee + HR', expiryDate:'' },
   ];
+
+  get allCategories() { return ['All', ...this.categories]; }
 
   ngOnInit() {}
 

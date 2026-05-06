@@ -46,9 +46,11 @@ import { Component, OnInit } from '@angular/core';
             <div>
               <label style="font-size:12px;font-weight:600;color:var(--text-3);">Select Reviewers</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-                <label *ngFor="let e of employees" *ngIf="e!==newReq.subject" style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
-                  <input type="checkbox" [checked]="newReq.reviewers.includes(e)" (change)="toggleReviewer(e)"> {{e}}
-                </label>
+                <ng-container *ngFor="let e of employees">
+                  <label *ngIf="e!==newReq.subject" style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" [checked]="newReq.reviewers.includes(e)" (change)="toggleReviewer(e)"> {{e}}
+                  </label>
+                </ng-container>
               </div>
             </div>
             <div>

@@ -41,9 +41,9 @@ import { Component, OnInit } from '@angular/core';
       </div>
 
       <mat-tab-group>
-        <mat-tab label="Active Exits ({{exits.filter(e=>e.stage!=='Completed').length}})">
+        <mat-tab label="Active Exits ({{activeExits.length}})">
           <div style="padding:16px 0;">
-            <div class="exit-card" *ngFor="let ex of exits.filter(e=>e.stage!=='Completed')">
+            <div class="exit-card" *ngFor="let ex of activeExits">
               <div class="exit-header">
                 <div>
                   <div style="font-weight:700;font-size:15px;">{{ex.employee}}</div>
@@ -74,9 +74,9 @@ import { Component, OnInit } from '@angular/core';
             </div>
           </div>
         </mat-tab>
-        <mat-tab label="Completed ({{exits.filter(e=>e.stage==='Completed').length}})">
+        <mat-tab label="Completed ({{completedExits.length}})">
           <div style="padding:16px 0;">
-            <div class="exit-card" style="opacity:.75;" *ngFor="let ex of exits.filter(e=>e.stage==='Completed')">
+            <div class="exit-card" style="opacity:.75;" *ngFor="let ex of completedExits">
               <div class="exit-header">
                 <div>
                   <div style="font-weight:700;">{{ex.employee}}</div>
@@ -131,6 +131,9 @@ export class ExitManagementComponent implements OnInit {
       { dept:'IT Assets', done:true },{ dept:'Finance', done:true },{ dept:'Library', done:true },{ dept:'Admin', done:true },{ dept:'HR', done:true },{ dept:'Manager', done:true },
     ]},
   ];
+
+  get activeExits() { return this.exits.filter(e => e.stage !== 'Completed'); }
+  get completedExits() { return this.exits.filter(e => e.stage === 'Completed'); }
 
   ngOnInit() {}
 

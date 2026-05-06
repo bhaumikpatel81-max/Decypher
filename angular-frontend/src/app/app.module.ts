@@ -37,6 +37,50 @@ import { CommunicationCenterComponent } from './communication-center/communicati
 import { OnboardingComponent } from './onboarding/onboarding.component';
 import { VideoInterviewsComponent } from './video-interviews/video-interviews.component';
 import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.component';
+// Core HR
+import { EmployeeDirectoryComponent } from './employee-directory/employee-directory.component';
+import { OrgChartComponent } from './org-chart/org-chart.component';
+import { DocumentManagementComponent } from './document-management/document-management.component';
+import { LettersCertificatesComponent } from './letters-certificates/letters-certificates.component';
+import { ExitManagementComponent } from './exit-management/exit-management.component';
+// Attendance & Time
+import { AttendanceComponent } from './attendance/attendance.component';
+import { LeaveManagementComponent } from './leave-management/leave-management.component';
+import { ShiftManagementComponent } from './shift-management/shift-management.component';
+import { TimesheetComponent } from './timesheet/timesheet.component';
+import { OvertimeComponent } from './overtime/overtime.component';
+// Payroll
+import { PayrollComponent } from './payroll/payroll.component';
+import { SalaryStructureComponent } from './salary-structure/salary-structure.component';
+import { TaxStatutoryComponent } from './tax-statutory/tax-statutory.component';
+import { ExpenseManagementComponent } from './expense-management/expense-management.component';
+import { PayslipPortalComponent } from './payslip-portal/payslip-portal.component';
+// Compensation & Benefits
+import { CompensationPlanningComponent } from './compensation-planning/compensation-planning.component';
+import { BenefitsAdminComponent } from './benefits-admin/benefits-admin.component';
+import { SalaryBenchmarkingComponent } from './salary-benchmarking/salary-benchmarking.component';
+import { BonusIncentivesComponent } from './bonus-incentives/bonus-incentives.component';
+// Performance Management
+import { GoalsOkrComponent } from './goals-okr/goals-okr.component';
+import { PerformanceReviewsComponent } from './performance-reviews/performance-reviews.component';
+import { Feedback360Component } from './feedback-360/feedback360.component';
+import { ContinuousFeedbackComponent } from './continuous-feedback/continuous-feedback.component';
+// Learning & Development
+import { LearningManagementComponent } from './learning-management/learning-management.component';
+import { TrainingCalendarComponent } from './training-calendar/training-calendar.component';
+import { SkillGapComponent } from './skill-gap/skill-gap.component';
+import { CertificationTrackerComponent } from './certification-tracker/certification-tracker.component';
+// Policies & Compliance
+import { PolicyManagementComponent } from './policy-management/policy-management.component';
+import { StatutoryComplianceComponent } from './statutory-compliance/statutory-compliance.component';
+import { AuditTrailComponent } from './audit-trail/audit-trail.component';
+// Employer Branding
+import { CareersBuilderComponent } from './careers-builder/careers-builder.component';
+import { TalentCommunityComponent } from './talent-community/talent-community.component';
+import { SocialRecruitingComponent } from './social-recruiting/social-recruiting.component';
+import { CampusConnectComponent } from './campus-connect/campus-connect.component';
+import { EmployeeAdvocacyComponent } from './employee-advocacy/employee-advocacy.component';
+import { EmployerReviewsComponent } from './employer-reviews/employer-reviews.component';
 
 import { AppComponent } from './app.component';
 import { AIFeaturesComponent } from './ai-features/ai-features.component';
@@ -599,48 +643,85 @@ export class GenericToolComponent {
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  // Core
-  { path: 'dashboard',            component: DashboardComponent },
-  { path: 'vendors',              component: VendorsComponent },
-  { path: 'recruiters',           component: RecruitersPageComponent },
-  { path: 'cv-database',          component: CvDatabaseComponent },
-  { path: 'pipeline-board',       component: PipelineBoardComponent },
-  { path: 'requisitions',         component: RequisitionsComponent },
-  { path: 'candidate-portal',     component: CandidatePortalComponent },
-  { path: 'interview-scheduler',  component: InterviewSchedulerComponent },
-  { path: 'offer-management',     component: OfferManagementComponent },
-  { path: 'talent-pool',          component: TalentPoolComponent },
-  { path: 'source-tracking',      component: SourceTrackingComponent },
-  { path: 'sla-dashboard',        component: SlaDashboardComponent },
-  // AI Tools
-  { path: 'resume-parser',        component: ResumeParserComponent },
-  { path: 'ai-scorecard',         component: AIScorecardComponent },
-  { path: 'dropout-predictor',    component: DropoutPageComponent },
-  { path: 'competency-ranker',    component: GenericToolComponent },
-  { path: 'jd-checker',           component: GenericToolComponent },
-  { path: 'jd-generator',         component: JdGeneratorComponent },
-  { path: 'ai-features',          component: AIFeaturesComponent },
-  // Budget Module
-  { path: 'budget',               component: BudgetComponent },
-  // Import Center
-  { path: 'import-center',        component: ImportCenterComponent },
-  // Job Broadcasting
-  { path: 'job-broadcasting', component: JobBroadcastingComponent },
-  // Communication Center
-  { path: 'communications', component: CommunicationCenterComponent },
-  // Onboarding
-  { path: 'onboarding', component: OnboardingComponent },
-  // Video Interviews
-  { path: 'video-interviews', component: VideoInterviewsComponent },
-  // Integrations Hub
-  { path: 'integrations', component: IntegrationsHubComponent },
-  // Internal Job Postings
+  { path: 'dashboard',             component: DashboardComponent },
+  // Recruitment
+  { path: 'vendors',               component: VendorsComponent },
+  { path: 'recruiters',            component: RecruitersPageComponent },
+  { path: 'cv-database',           component: CvDatabaseComponent },
+  { path: 'pipeline-board',        component: PipelineBoardComponent },
+  { path: 'requisitions',          component: RequisitionsComponent },
+  { path: 'candidate-portal',      component: CandidatePortalComponent },
+  { path: 'interview-scheduler',   component: InterviewSchedulerComponent },
+  { path: 'offer-management',      component: OfferManagementComponent },
+  { path: 'source-tracking',       component: SourceTrackingComponent },
+  { path: 'job-broadcasting',      component: JobBroadcastingComponent },
+  { path: 'video-interviews',      component: VideoInterviewsComponent },
+  // Core HR
+  { path: 'employee-directory',    component: EmployeeDirectoryComponent },
+  { path: 'org-chart',             component: OrgChartComponent },
+  { path: 'document-management',   component: DocumentManagementComponent },
+  { path: 'letters-certificates',  component: LettersCertificatesComponent },
+  { path: 'exit-management',       component: ExitManagementComponent },
   { path: 'internal-job-postings', component: InternalJobPostingsComponent },
-  // Reports
-  { path: 'reports',              component: ReportsComponent },
-  // Admin
-  { path: 'users',                component: UsersAdminComponent },
-  { path: 'compliance',           component: ComplianceComponent },
+  // Attendance & Time
+  { path: 'attendance',            component: AttendanceComponent },
+  { path: 'leave-management',      component: LeaveManagementComponent },
+  { path: 'shift-management',      component: ShiftManagementComponent },
+  { path: 'timesheet',             component: TimesheetComponent },
+  { path: 'overtime',              component: OvertimeComponent },
+  // Payroll
+  { path: 'payroll',               component: PayrollComponent },
+  { path: 'salary-structure',      component: SalaryStructureComponent },
+  { path: 'tax-statutory',         component: TaxStatutoryComponent },
+  { path: 'expense-management',    component: ExpenseManagementComponent },
+  { path: 'payslip-portal',        component: PayslipPortalComponent },
+  // Compensation & Benefits
+  { path: 'compensation-planning', component: CompensationPlanningComponent },
+  { path: 'benefits-admin',        component: BenefitsAdminComponent },
+  { path: 'salary-benchmarking',   component: SalaryBenchmarkingComponent },
+  { path: 'bonus-incentives',      component: BonusIncentivesComponent },
+  // Performance Management
+  { path: 'goals-okr',             component: GoalsOkrComponent },
+  { path: 'performance-reviews',   component: PerformanceReviewsComponent },
+  { path: 'feedback-360',          component: Feedback360Component },
+  { path: 'continuous-feedback',   component: ContinuousFeedbackComponent },
+  // Learning & Development
+  { path: 'learning-management',   component: LearningManagementComponent },
+  { path: 'training-calendar',     component: TrainingCalendarComponent },
+  { path: 'skill-gap',             component: SkillGapComponent },
+  { path: 'certification-tracker', component: CertificationTrackerComponent },
+  // Talent & Engagement
+  { path: 'onboarding',            component: OnboardingComponent },
+  { path: 'talent-pool',           component: TalentPoolComponent },
+  { path: 'communications',        component: CommunicationCenterComponent },
+  // Employer Branding
+  { path: 'careers-builder',       component: CareersBuilderComponent },
+  { path: 'talent-community',      component: TalentCommunityComponent },
+  { path: 'social-recruiting',     component: SocialRecruitingComponent },
+  { path: 'campus-connect',        component: CampusConnectComponent },
+  { path: 'employee-advocacy',     component: EmployeeAdvocacyComponent },
+  { path: 'employer-reviews',      component: EmployerReviewsComponent },
+  // AI & Intelligence
+  { path: 'resume-parser',         component: ResumeParserComponent },
+  { path: 'ai-scorecard',          component: AIScorecardComponent },
+  { path: 'dropout-predictor',     component: DropoutPageComponent },
+  { path: 'competency-ranker',     component: GenericToolComponent },
+  { path: 'jd-checker',            component: GenericToolComponent },
+  { path: 'jd-generator',          component: JdGeneratorComponent },
+  { path: 'ai-features',           component: AIFeaturesComponent },
+  // Analytics & Performance
+  { path: 'reports',               component: ReportsComponent },
+  { path: 'sla-dashboard',         component: SlaDashboardComponent },
+  { path: 'budget',                component: BudgetComponent },
+  // Policies & Compliance
+  { path: 'policy-management',     component: PolicyManagementComponent },
+  { path: 'statutory-compliance',  component: StatutoryComplianceComponent },
+  { path: 'compliance',            component: ComplianceComponent },
+  { path: 'audit-trail',           component: AuditTrailComponent },
+  // Administration
+  { path: 'users',                 component: UsersAdminComponent },
+  { path: 'import-center',         component: ImportCenterComponent },
+  { path: 'integrations',          component: IntegrationsHubComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -678,7 +759,51 @@ const routes: Routes = [
     CommunicationCenterComponent,
     OnboardingComponent,
     VideoInterviewsComponent,
-    IntegrationsHubComponent
+    IntegrationsHubComponent,
+    // Core HR
+    EmployeeDirectoryComponent,
+    OrgChartComponent,
+    DocumentManagementComponent,
+    LettersCertificatesComponent,
+    ExitManagementComponent,
+    // Attendance & Time
+    AttendanceComponent,
+    LeaveManagementComponent,
+    ShiftManagementComponent,
+    TimesheetComponent,
+    OvertimeComponent,
+    // Payroll
+    PayrollComponent,
+    SalaryStructureComponent,
+    TaxStatutoryComponent,
+    ExpenseManagementComponent,
+    PayslipPortalComponent,
+    // Compensation & Benefits
+    CompensationPlanningComponent,
+    BenefitsAdminComponent,
+    SalaryBenchmarkingComponent,
+    BonusIncentivesComponent,
+    // Performance Management
+    GoalsOkrComponent,
+    PerformanceReviewsComponent,
+    Feedback360Component,
+    ContinuousFeedbackComponent,
+    // Learning & Development
+    LearningManagementComponent,
+    TrainingCalendarComponent,
+    SkillGapComponent,
+    CertificationTrackerComponent,
+    // Policies & Compliance
+    PolicyManagementComponent,
+    StatutoryComplianceComponent,
+    AuditTrailComponent,
+    // Employer Branding
+    CareersBuilderComponent,
+    TalentCommunityComponent,
+    SocialRecruitingComponent,
+    CampusConnectComponent,
+    EmployeeAdvocacyComponent,
+    EmployerReviewsComponent,
   ],
   imports: [
     BrowserModule,
