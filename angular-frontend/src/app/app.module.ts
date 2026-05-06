@@ -28,6 +28,7 @@ import { AppComponent } from './app.component';
 import { HttpConfigInterceptor } from './http-config.interceptor';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SharedModule } from './shared.module';
+import { FeaturesModule } from './features.module';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -413,7 +414,6 @@ const routes: Routes = [
   { path: 'competency-ranker',  component: GenericToolComponent },
   { path: 'jd-checker',         component: GenericToolComponent },
   { path: 'users',              component: UsersAdminComponent },
-  { path: '', loadChildren: () => import('./features.module').then(m => m.FeaturesModule) },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -434,6 +434,7 @@ const routes: Routes = [
     ReactiveFormsModule,
     HttpClientModule,
     SharedModule,
+    FeaturesModule,
     MatMenuModule, MatDividerModule, MatTabsModule, MatCardModule,
     MatTableModule, MatInputModule, MatSelectModule, MatButtonModule,
     MatIconModule, MatFormFieldModule, MatCheckboxModule, MatProgressBarModule,
