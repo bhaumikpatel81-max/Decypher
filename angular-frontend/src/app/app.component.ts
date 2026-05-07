@@ -125,7 +125,7 @@ import { AuthService, CurrentUser } from './services/auth.service';
               </a>
 
               <!-- Collapsible groups -->
-              <div *ngFor="let group of visibleModuleGroups" class="module-group">
+              <div *ngFor="let group of visibleModuleGroups; trackBy: trackByGroupId" class="module-group">
                 <div class="module-group-header" (click)="toggleGroup(group.id)">
                   <div class="module-group-icon" [style.background]="group.color">{{ group.symbol }}</div>
                   <span class="module-group-label">{{ group.label }}</span>
@@ -134,7 +134,7 @@ import { AuthService, CurrentUser } from './services/auth.service';
                 </div>
                 <div class="module-group-tiles" [class.open]="group.expanded">
                   <div class="apps-grid">
-                    <a *ngFor="let item of group.modules"
+                    <a *ngFor="let item of group.modules; trackBy: trackByAppPath"
                       [routerLink]="item.path"
                       routerLinkActive="active"
                       class="app-tile"
@@ -654,8 +654,10 @@ export class AppComponent implements OnInit {
 
   expandedGroups = new Set<string>(['recruitment']);
 
-  get visibleModuleGroups() {
-    return this.groupDefs
+  visibleModuleGroups: any[] = [];
+
+  private computeVisibleGroups() {
+    this.visibleModuleGroups = this.groupDefs
       .map(g => ({
         ...g,
         expanded: this.expandedGroups.has(g.id),
@@ -666,12 +668,16 @@ export class AppComponent implements OnInit {
       .filter(g => g.modules.length > 0);
   }
 
+  trackByGroupId(_: number, group: any) { return group.id; }
+  trackByAppPath(_: number, app: any) { return app.path; }
+
   toggleGroup(groupId: string) {
     if (this.expandedGroups.has(groupId)) {
       this.expandedGroups.delete(groupId);
     } else {
       this.expandedGroups.add(groupId);
     }
+    this.computeVisibleGroups();
   }
 
   constructor(private authService: AuthService, private router: Router) {}
@@ -682,6 +688,7 @@ export class AppComponent implements OnInit {
       this.currentUser = user;
       this.canAccessAdmin = user?.role === 'SuperAdmin';
       this.refreshApps();
+      this.computeVisibleGroups();
     });
 
     this.router.events.subscribe(() => {
@@ -690,6 +697,7 @@ export class AppComponent implements OnInit {
     });
 
     this.refreshApps();
+    this.computeVisibleGroups();
   }
 
   refreshApps() {
