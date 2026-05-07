@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 interface KeyResult {
-  text: string; target: number; current: number; unit: string;
+  id?: string; text: string; target: number; current: number; unit: string;
 }
 
 interface OKR {
-  id: number; objective: string; owner: string; dept: string;
+  id: string; objective: string; owner: string; dept: string;
   quarter: string; year: number; status: string;
   keyResults: KeyResult[];
 }
@@ -60,7 +60,7 @@ interface OKR {
             <div style="height:2px;flex:1;background:var(--border);"></div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-left:{{level.indent}}px;">
-            <div *ngFor="let okr of filteredOKRs(level.depts)" class="okr-card">
+            <div *ngFor="let okr of filteredOKRs(level.type)" class="okr-card">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
                 <div style="flex:1;">
                   <div style="font-weight:700;font-size:15px;margin-bottom:4px;">{{okr.objective}}</div>
@@ -146,7 +146,7 @@ interface OKR {
                 <span style="font-size:13px;">{{kr.text}}</span>
                 <span style="font-size:12px;font-weight:700;color:#6b4df0;">{{kr.current}} / {{kr.target}} {{kr.unit}}</span>
               </div>
-              <input type="range" [min]="0" [max]="kr.target" [(ngModel)]="kr.current" style="width:100%;">
+              <input type="range" [min]="0" [max]="kr.target" [(ngModel)]="kr.current" (change)="updateKeyResultProgress(kr)" style="width:100%;">
             </div>
           </div>
         </div>
@@ -217,7 +217,7 @@ export class GoalsOkrComponent implements OnInit {
         id: g.id, objective: g.title, owner: g.ownerName || '', dept: g.type || 'Individual',
         quarter: g.quarter ? `Q${g.quarter}` : 'Q1', year: g.year || new Date().getFullYear(),
         status: g.status, keyResults: (g.keyResults || []).map((kr: any) => ({
-          text: kr.title, target: kr.targetValue || 100, current: kr.currentValue || 0, unit: kr.unit || '%'
+          id: kr.id, text: kr.title, target: kr.targetValue || 100, current: kr.currentValue || 0, unit: kr.unit || '%'
         }))
       }));
       this.owners = [...new Set(this.allOKRs.map(o => o.owner))];
@@ -237,9 +237,13 @@ export class GoalsOkrComponent implements OnInit {
       keyResults: this.newOKR.keyResults.map((kr: any) => ({ title: kr.text, targetValue: kr.target, unit: kr.unit }))
     };
     this.http.post<any>(`${this.api}/goals`, payload).subscribe({
-      next: () => { this.loadGoals(); this.loadSummary(); alert('OKR created'); this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] }; },
-      error: err => alert(err?.error?.message || 'Failed to create OKR')
+      next: () => { this.loadGoals(); this.loadSummary(); this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] }; this.tab = 'view'; },
+      error: () => {}
     });
   }
-}
+
+  updateKeyResultProgress(kr: KeyResult) {
+    if (!kr.id) return;
+    this.http.patch(`${this.api}/goals/key-results/${kr.id}/progress`, { progress: kr.current, notes: null }).subscribe();
+  }
 }

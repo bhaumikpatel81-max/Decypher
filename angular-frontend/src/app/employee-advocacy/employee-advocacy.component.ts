@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-employee-advocacy', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -44,21 +46,41 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.rank-num{width:28px;height:28px;border-radius:50%;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}.rank-num.gold{background:#fef3c7;color:#92400e}.rank-num.silver{background:#f3f4f6;color:#374151}.rank-num.bronze{background:#fde68a;color:#78350f}.emp-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}`] })
 export class EmployeeAdvocacyComponent implements OnInit {
-  shareJob='';shareMsg='';
-  jobs=['Sr. Angular Developer','HR Business Partner','Product Manager','Data Analyst'];
+  private api = `${environment.apiUrl}/api`;
+  constructor(private http: HttpClient) {}
+  shareJob=''; shareMsg='';
+  jobs: string[] = [];
   channels=[{name:'LinkedIn',icon:'💼',checked:true},{name:'Twitter',icon:'🐦',checked:false},{name:'WhatsApp',icon:'💬',checked:false}];
-  kpis=[{val:284,lbl:'Total Shares',color:'#6b4df0'},{val:1842,lbl:'Total Clicks',color:'#2563eb'},{val:12,lbl:'Hires via Advocacy',color:'#10b981'},{val:'₹820',lbl:'Avg Cost per Hire',color:'#f59e0b'}];
-  leaderboard:any[]=[
-    {name:'Arjun Mehta',initials:'AM',color:'#6b4df0',shares:42,clicks:380,hires:4,points:1250},
-    {name:'Priya Sharma',initials:'PS',color:'#2563eb',shares:38,clicks:290,hires:3,points:1080},
-    {name:'Vikram Singh',initials:'VS',color:'#10b981',shares:31,clicks:220,hires:2,points:870},
-    {name:'Anjali Nair',initials:'AN',color:'#db2777',shares:24,clicks:180,hires:2,points:720},
-  ];
-  activity:any[]=[
-    {name:'Arjun Mehta',initials:'AM',color:'#6b4df0',job:'Sr. Angular Developer',channel:'LinkedIn',clicks:42,date:'2h ago',hired:true},
-    {name:'Priya Sharma',initials:'PS',color:'#2563eb',job:'HR Business Partner',channel:'LinkedIn',clicks:28,date:'5h ago',hired:false},
-    {name:'Vikram Singh',initials:'VS',color:'#10b981',job:'Product Manager',channel:'Twitter',clicks:14,date:'1d ago',hired:false},
-  ];
-  ngOnInit(){}
-  share(){const ch=this.channels.filter(c=>c.checked).map(c=>c.name).join(', ');alert(`Shared "${this.shareJob}" on ${ch||'LinkedIn'}. +50 points earned!`);this.leaderboard[0].shares++;this.shareJob='';this.shareMsg='';}
+  kpis:any[]=[{val:0,lbl:'Total Shares',color:'#6b4df0'},{val:0,lbl:'Total Clicks',color:'#2563eb'},{val:0,lbl:'Hires via Advocacy',color:'#10b981'},{val:'₹0',lbl:'Avg Cost per Hire',color:'#f59e0b'}];
+  leaderboard: any[] = [];
+  activity: any[] = [];
+
+  ngOnInit() { this.loadAdvocacy(); this.loadJobs(); }
+
+  loadAdvocacy() {
+    this.http.get<any>(`${this.api}/branding/advocacy`).subscribe(data => {
+      if (!data) return;
+      this.leaderboard = data.leaderboard || [];
+      this.activity = data.activity || [];
+      const avgCph = data.hiresViaAdvocacy ? Math.round((data.totalClicks * 50) / data.hiresViaAdvocacy) : 0;
+      this.kpis = [
+        { val: data.totalShares, lbl: 'Total Shares', color: '#6b4df0' },
+        { val: data.totalClicks, lbl: 'Total Clicks', color: '#2563eb' },
+        { val: data.hiresViaAdvocacy, lbl: 'Hires via Advocacy', color: '#10b981' },
+        { val: `₹${avgCph.toLocaleString()}`, lbl: 'Avg Cost per Hire', color: '#f59e0b' },
+      ];
+    });
+  }
+
+  loadJobs() {
+    this.http.get<any[]>(`${this.api}/jobs`).subscribe(data => { this.jobs = (data || []).map(j => j.title); });
+  }
+
+  share() {
+    if (!this.shareJob) return;
+    const ch = this.channels.filter(c => c.checked).map(c => c.name);
+    this.http.post(`${this.api}/branding/advocacy/share`, { job: this.shareJob, channels: ch, message: this.shareMsg }).subscribe();
+    if (this.leaderboard.length) this.leaderboard[0].shares++;
+    this.shareJob = ''; this.shareMsg = '';
+  }
 }

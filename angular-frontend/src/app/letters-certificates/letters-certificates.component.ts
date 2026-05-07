@@ -46,7 +46,7 @@ import { environment } from '../../environments/environment';
               </div>
               <div style="display:flex;gap:6px;">
                 <button class="btn btn-ghost btn-sm" (click)="previewHistory(h)">Preview</button>
-                <button class="btn btn-primary btn-sm">Download</button>
+                <button class="btn btn-primary btn-sm" (click)="downloadById(h.id)">Download</button>
               </div>
             </div>
             <div *ngIf="!history.length" style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">No letters generated yet.</div>
@@ -138,7 +138,7 @@ export class LettersCertificatesComponent implements OnInit {
     this.preview = { title: t?.label, date: this.gen.date, body, ...this.gen };
     const payload = { letterType: t?.label, employeeName: this.gen.employeeName, employeeCode: this.gen.empId, designation: this.gen.designation, department: this.gen.department, generatedDate: this.gen.date, additionalInfo: this.gen.extra };
     this.http.post<any>(`${this.api}/letters`, payload).subscribe({
-      next: res => { this.history.unshift({ id: res.id, type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date }); },
+      next: res => { this.preview.id = res.id; this.history.unshift({ id: res.id, type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date }); },
       error: () => { this.history.unshift({ type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date }); }
     });
   }
@@ -161,6 +161,17 @@ export class LettersCertificatesComponent implements OnInit {
     this.generate();
   }
 
-  download() { alert('PDF download would trigger here in a production build (e.g. via jsPDF or server-side generation).'); }
+  download() { if (this.preview?.id) this.downloadById(this.preview.id); }
+
+  downloadById(id: any) {
+    if (!id) return;
+    this.http.get(`${this.api}/letters/${id}/download`, { responseType: 'blob' }).subscribe(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `letter-${id}.pdf`;
+      a.click(); URL.revokeObjectURL(url);
+    });
+  }
+
   reset() { this.gen = { type:'', employeeName:'', empId:'', designation:'', department:'', date:new Date().toISOString().slice(0,10), extra:'' }; this.preview = null; }
 }

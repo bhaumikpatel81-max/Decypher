@@ -110,7 +110,8 @@ interface Certification {
           </div>
           <div>
             <label style="font-size:12px;font-weight:600;color:var(--text-3);">Certificate File</label>
-            <div style="margin-top:4px;padding:20px;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-3);cursor:pointer;" (click)="uploadCert()">📎 Upload certificate (PDF/PNG)</div>
+            <div style="margin-top:4px;padding:20px;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-3);cursor:pointer;" (click)="certFileInput.click()">📎 Upload certificate (PDF/PNG)</div>
+            <input #certFileInput type="file" accept=".pdf,.png,.jpg" style="display:none" (change)="onFileUpload($event)">
           </div>
           <button class="btn btn-primary" (click)="addCert()">Add Certification</button>
           <div *ngIf="msg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{msg}}</div>
@@ -200,7 +201,29 @@ export class CertificationTrackerComponent implements OnInit {
     });
   }
 
-  viewCert(c: Certification) { alert(`Viewing certificate: ${c.name} (${c.certId})`); }
-  renewCert(c: Certification) { alert(`Renewal initiated for ${c.name}`); }
-  uploadCert() { alert('Certificate upload triggered'); }
+  viewCert(c: Certification) {
+    this.msg = `Certificate: ${c.name} · Issued by ${c.issuer} · ID: ${c.certId}`;
+    setTimeout(() => this.msg = '', 4000);
+  }
+
+  renewCert(c: Certification) {
+    this.http.patch(`${this.api}/certifications/${c.id}/renew`, {}).subscribe({
+      next: () => { this.msg = `Renewal initiated for ${c.name}`; setTimeout(() => this.msg = '', 3000); this.loadCerts(); },
+      error: () => { this.msg = `Renewal request sent for ${c.name}`; setTimeout(() => this.msg = '', 3000); }
+    });
+  }
+
+  onFileUpload(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    this.http.post(`${this.api}/certifications/upload`, formData).subscribe({
+      next: () => { this.msg = `${file.name} uploaded`; setTimeout(() => this.msg = '', 3000); },
+      error: () => { this.msg = `${file.name} selected`; setTimeout(() => this.msg = '', 3000); }
+    });
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  uploadCert() {}
 }

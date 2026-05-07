@@ -178,6 +178,24 @@ public class PerformanceController(
     [HttpPost("continuous-feedback")]
     public async Task<IActionResult> SendContinuousFeedback([FromBody] ContinuousFeedback feedback)
         => Created(string.Empty, await feedbackService.SendContinuousFeedbackAsync(feedback));
+
+    // ── 1:1 Meetings ─────────────────────────────────────────────────────────
+    [HttpGet("continuous-feedback/{employeeId:guid}/meetings")]
+    public async Task<IActionResult> GetMeetings(Guid employeeId)
+        => Ok(await feedbackService.GetMeetingsAsync(employeeId));
+
+    [HttpPost("continuous-feedback/{employeeId:guid}/meetings")]
+    public async Task<IActionResult> CreateMeeting(Guid employeeId, [FromBody] OneOnOneMeeting meeting)
+        => Created(string.Empty, await feedbackService.CreateMeetingAsync(employeeId, meeting));
+
+    // ── Mood Check-ins ────────────────────────────────────────────────────────
+    [HttpGet("continuous-feedback/{employeeId:guid}/moods")]
+    public async Task<IActionResult> GetMoodCheckins(Guid employeeId, [FromQuery] DateTime? date)
+        => Ok(await feedbackService.GetMoodCheckinsAsync(employeeId, date));
+
+    [HttpPost("continuous-feedback/{employeeId:guid}/moods")]
+    public async Task<IActionResult> CreateMoodCheckin(Guid employeeId, [FromBody] MoodCheckin checkin)
+        => Created(string.Empty, await feedbackService.CreateMoodCheckinAsync(employeeId, checkin));
 }
 
 // ── Request DTOs ──────────────────────────────────────────────────────────────

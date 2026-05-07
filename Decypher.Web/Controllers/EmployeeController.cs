@@ -1,7 +1,9 @@
+using Decypher.Web.Data;
 using Decypher.Web.Models.HRModels;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Decypher.Web.Controllers;
 
@@ -12,9 +14,22 @@ public class EmployeeController(
     IEmployeeService employeeService,
     IDocumentService documentService,
     ILetterService letterService,
-    IExitService exitService) : ControllerBase
+    IExitService exitService,
+    ApplicationDbContext db) : ControllerBase
 {
     // ── Employees ────────────────────────────────────────────────────────────
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe()
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                 ?? User.FindFirst("email")?.Value
+                 ?? User.Identity?.Name;
+        if (string.IsNullOrEmpty(email)) return Unauthorized();
+        var emp = await db.Employees.FirstOrDefaultAsync(e => e.Email == email && !e.IsDeleted);
+        if (emp == null) return NotFound(new { message = "Employee profile not found." });
+        return Ok(emp);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? department, [FromQuery] string? status, [FromQuery] string? search)

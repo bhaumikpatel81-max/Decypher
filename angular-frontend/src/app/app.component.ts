@@ -612,6 +612,10 @@ export class AppComponent implements OnInit {
     { path: '/users',                  label: 'User Management',        shortLabel: 'Users',             symbol: 'UA', color: '#343a48', adminOnly: true  },
     { path: '/import-center',          label: 'Import Center',          shortLabel: 'Import',            symbol: '📥', color: '#0891b2', adminOnly: false },
     { path: '/integrations',           label: 'Integrations Hub',       shortLabel: 'Integrations',      symbol: '🔌', color: '#059669', adminOnly: false },
+    // Helpdesk
+    { path: '/helpdesk',               label: 'IT & HR Helpdesk',       shortLabel: 'Helpdesk',          symbol: '🎫', color: '#ef4444', adminOnly: false },
+    // Travel
+    { path: '/admin-travel',           label: 'Admin & Travel',         shortLabel: 'Travel',            symbol: '✈️', color: '#0891b2', adminOnly: false },
   ];
 
   recentApps: any[] = [];
@@ -648,7 +652,11 @@ export class AppComponent implements OnInit {
       paths:['/reports','/recruiters','/sla-dashboard','/budget'] },
     { id:'policies',      label:'Policies & Compliance',    symbol:'PC', color:'#374151',
       paths:['/policy-management','/statutory-compliance','/compliance','/audit-trail'] },
-    { id:'admin',         label:'Administration',           symbol:'AD', color:'#343a48',
+    { id:'helpdesk',      label:'Helpdesk',                 symbol:'🎫', color:'#ef4444',
+      paths:['/helpdesk'] },
+    { id:'travel',        label:'Admin & Travel',           symbol:'✈️', color:'#0891b2',
+      paths:['/admin-travel'] },
+    { id:'admin',         label:'Settings',                 symbol:'AD', color:'#343a48',
       paths:['/users','/import-center','/integrations'] },
   ];
 
@@ -775,6 +783,8 @@ export class AppComponent implements OnInit {
       '/interview-scheduler':   { title: 'Interview Scheduler',   breadcrumb: 'Core / Interview Scheduler' },
       '/video-interviews':      { title: 'Video Interviews',      breadcrumb: 'Core / Video Interviews' },
       '/integrations':          { title: 'Integrations Hub',      breadcrumb: 'Settings / Integrations Hub' },
+      '/helpdesk':              { title: 'IT & HR Helpdesk',      breadcrumb: 'Helpdesk / Tickets' },
+      '/admin-travel':          { title: 'Admin & Travel',         breadcrumb: 'Admin & Travel / Dashboard' },
       '/offer-management':      { title: 'Offer Management',      breadcrumb: 'Core / Offer Management' },
       '/onboarding':            { title: 'Onboarding',            breadcrumb: 'Core / Onboarding' },
       '/talent-pool':           { title: 'Talent Pool',           breadcrumb: 'Core / Talent Pool' },

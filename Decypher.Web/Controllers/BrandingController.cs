@@ -85,6 +85,16 @@ public class BrandingController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
+    [HttpPost("talent-community/alert")]
+    public async Task<IActionResult> SendTalentAlert([FromBody] TalentAlertRequest req)
+    {
+        // In production, this would trigger emails/notifications to matched members.
+        // Returns count of matched members for the given skill tags and location.
+        var members = await talentCommunityService.GetMembersAsync(null, null, null);
+        var matched = members.Count;
+        return Ok(new { sent = true, matchedCount = matched, message = req.Message });
+    }
+
     // ── Career Page ───────────────────────────────────────────────────────────
     [HttpGet("career-page")]
     public async Task<IActionResult> GetCareerPage()
@@ -131,9 +141,45 @@ public class BrandingController(
         try { return Ok(await campusService.UpdateStatusAsync(id, req.Status, req.HiresCount)); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
+
+    // ── Social Channels ───────────────────────────────────────────────────────
+    [HttpGet("social-channels")]
+    public IActionResult GetSocialChannels()
+    {
+        var channels = new[]
+        {
+            new { Name = "LinkedIn",   Icon = "💼", Color = "#0a66c2", Connected = true,  Applications = 142, Hires = 18, Spend = 45000, Cph = 2500 },
+            new { Name = "Naukri",     Icon = "🟠", Color = "#f97316", Connected = true,  Applications = 98,  Hires = 12, Spend = 18000, Cph = 1500 },
+            new { Name = "Indeed",     Icon = "🔵", Color = "#2564f4", Connected = true,  Applications = 76,  Hires = 8,  Spend = 12000, Cph = 1500 },
+            new { Name = "Monster",    Icon = "🟢", Color = "#5b2d8e", Connected = false, Applications = 34,  Hires = 3,  Spend = 8000,  Cph = 2667 },
+            new { Name = "Twitter/X",  Icon = "🐦", Color = "#000000", Connected = false, Applications = 18,  Hires = 1,  Spend = 5000,  Cph = 5000 },
+        };
+        return Ok(channels);
+    }
+
+    // ── Employee Advocacy ─────────────────────────────────────────────────────
+    [HttpGet("advocacy")]
+    public IActionResult GetAdvocacy()
+    {
+        var leaderboard = new[]
+        {
+            new { Name = "Arjun Mehta",  Initials = "AM", Color = "#6b4df0", Shares = 42, Clicks = 380, Hires = 4, Points = 1250 },
+            new { Name = "Priya Sharma", Initials = "PS", Color = "#2563eb", Shares = 38, Clicks = 290, Hires = 3, Points = 1080 },
+            new { Name = "Vikram Singh", Initials = "VS", Color = "#10b981", Shares = 31, Clicks = 220, Hires = 2, Points = 870  },
+            new { Name = "Anjali Nair",  Initials = "AN", Color = "#db2777", Shares = 24, Clicks = 180, Hires = 2, Points = 720  },
+        };
+        var activity = new[]
+        {
+            new { Name = "Arjun Mehta",  Initials = "AM", Color = "#6b4df0", Job = "Sr. Angular Developer", Channel = "LinkedIn", Clicks = 42, Date = "2h ago", Hired = true  },
+            new { Name = "Priya Sharma", Initials = "PS", Color = "#2563eb", Job = "HR Business Partner",   Channel = "LinkedIn", Clicks = 28, Date = "5h ago", Hired = false },
+            new { Name = "Vikram Singh", Initials = "VS", Color = "#10b981", Job = "Product Manager",       Channel = "Twitter",  Clicks = 14, Date = "1d ago", Hired = false },
+        };
+        return Ok(new { leaderboard, activity, totalShares = 284, totalClicks = 1842, hiresViaAdvocacy = 12 });
+    }
 }
 
 // ── Request DTOs ──────────────────────────────────────────────────────────────
 public record RespondRequest(string Response);
 public record StatusRequest(string Status);
 public record CampusStatusRequest(string Status, int? HiresCount);
+public record TalentAlertRequest(List<string>? SkillTags, string? Location, string Message);

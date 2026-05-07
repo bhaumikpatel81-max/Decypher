@@ -98,6 +98,14 @@ import { AuditTrailComponent } from './audit-trail/audit-trail.component';
 // Administration
 import { ImportCenterComponent } from './import-center/import-center.component';
 import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.component';
+// Helpdesk
+import { HelpdeskComponent } from './helpdesk/helpdesk.component';
+// Travel
+import { AdminTravelComponent } from './admin-travel/admin-travel.component';
+// Employee Self-Service Portal
+import { EmployeePortalComponent } from './employee-portal/employee-portal.component';
+// Workflow Engine
+import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.component';
 
 @NgModule({
   declarations: [
@@ -125,6 +133,10 @@ import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.co
     PolicyManagementComponent, StatutoryComplianceComponent,
     ComplianceComponent, AuditTrailComponent,
     ImportCenterComponent, IntegrationsHubComponent,
+    HelpdeskComponent,
+    AdminTravelComponent,
+    EmployeePortalComponent,
+    WorkflowBuilderComponent,
   ],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, SharedModule,
@@ -195,6 +207,10 @@ import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.co
       { path: 'audit-trail',           component: AuditTrailComponent },
       { path: 'import-center',         component: ImportCenterComponent },
       { path: 'integrations',          component: IntegrationsHubComponent },
+      { path: 'helpdesk',              component: HelpdeskComponent },
+      { path: 'admin-travel',          component: AdminTravelComponent },
+      { path: 'portal',                component: EmployeePortalComponent },
+      { path: 'workflow-builder',      component: WorkflowBuilderComponent },
     ])
   ]
 })

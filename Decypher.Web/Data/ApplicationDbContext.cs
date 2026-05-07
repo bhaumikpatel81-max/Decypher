@@ -120,6 +120,8 @@ namespace Decypher.Web.Data
         public DbSet<FeedbackRequest> FeedbackRequests { get; set; }
         public DbSet<FeedbackResponse> FeedbackResponses { get; set; }
         public DbSet<ContinuousFeedback> ContinuousFeedbacks { get; set; }
+        public DbSet<OneOnOneMeeting> OneOnOneMeetings { get; set; }
+        public DbSet<MoodCheckin> MoodCheckins { get; set; }
 
         // Learning & Development
         public DbSet<Course> Courses { get; set; }
@@ -141,6 +143,25 @@ namespace Decypher.Web.Data
 
         // Integrations
         public DbSet<Integration> Integrations { get; set; }
+
+        // Helpdesk
+        public DbSet<HelpdeskTicket> HelpdeskTickets { get; set; }
+        public DbSet<HelpdeskTicketComment> HelpdeskTicketComments { get; set; }
+        public DbSet<HelpdeskWorkflowStep> HelpdeskWorkflowSteps { get; set; }
+
+        // Travel & Expense
+        public DbSet<TravelRequest> TravelRequests { get; set; }
+        public DbSet<AdvanceRequest> AdvanceRequests { get; set; }
+        public DbSet<TravelExpenseClaim> TravelExpenseClaims { get; set; }
+        public DbSet<TravelExpenseLineItem> TravelExpenseLineItems { get; set; }
+
+        // Portal
+        public DbSet<HRAnnouncement> HRAnnouncements { get; set; }
+
+        // Workflow Engine
+        public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
+        public DbSet<WorkflowInstance> WorkflowInstances { get; set; }
+        public DbSet<WorkflowStepHistory> WorkflowStepHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

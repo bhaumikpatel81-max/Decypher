@@ -60,6 +60,7 @@ import { environment } from '../../environments/environment';
               <input class="input" type="date" [(ngModel)]="newReq.due" style="margin-top:4px;">
             </div>
             <button class="btn btn-primary" (click)="createRequest()">Send 360 Request</button>
+            <div *ngIf="reqError" style="padding:8px 12px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;">{{reqError}}</div>
           </div>
         </div>
 
@@ -125,7 +126,7 @@ import { environment } from '../../environments/environment';
       <!-- RESULTS -->
       <div *ngIf="tab==='results'">
         <div style="display:flex;gap:12px;margin-bottom:16px;">
-          <select class="select" style="max-width:220px;" [(ngModel)]="selectedSubject">
+          <select class="select" style="max-width:220px;" [(ngModel)]="selectedSubject" (ngModelChange)="loadResultScores($event)">
             <option *ngFor="let r of requests">{{r.subject}}</option>
           </select>
         </div>
@@ -186,23 +187,22 @@ export class Feedback360Component implements OnInit {
   tab = 'requests';
   blindMode = true;
   feedMsg = '';
-  selectedSubject = 'Arjun Mehta';
+  reqError = '';
+  selectedSubject = '';
   Math = Math;
 
-  employees = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer'];
+  employees: string[] = [];
+  employeeMap: { [name: string]: string } = {};
   feedCategories = ['Communication', 'Collaboration', 'Technical Skills', 'Leadership', 'Problem Solving'];
 
   requests: any[] = [];
-
   newReq = { subject: '', reviewers: [] as string[], due: '' };
-
   feedForm: any = { subject: '', ratings: {}, strengths: '', improvements: '' };
-
-  resultScores: { [k: string]: number } = { Communication: 4.2, Collaboration: 4.5, 'Technical Skills': 4.8, Leadership: 3.9, 'Problem Solving': 4.4 };
+  resultScores: { [k: string]: number } = {};
 
   get completedResponses() { return this.requests.reduce((s, r) => s + r.completed, 0); }
   get pendingResponses() { return this.requests.reduce((s, r) => s + (r.reviewers.length - r.completed), 0); }
-  get avgResultScore() { const vals = Object.values(this.resultScores); return vals.reduce((a, b) => a + b, 0) / vals.length; }
+  get avgResultScore() { const vals = Object.values(this.resultScores); return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0; }
 
   get radarPoints(): string {
     return this.feedCategories.map((cat, i) => {
@@ -213,22 +213,42 @@ export class Feedback360Component implements OnInit {
     }).join(' ');
   }
 
-  ngOnInit() { this.loadRequests(); this.loadEmployees(); }
+  ngOnInit() { this.loadEmployees(); this.loadRequests(); }
 
   loadRequests() {
     this.http.get<any[]>(`${this.api}/feedback/requests`).subscribe(data => {
       this.requests = (data || []).map(r => ({
-        id: r.id, subject: r.requesteeName || r.subject,
+        id: r.id, requesteeId: r.requesteeId,
+        subject: r.requesteeName || r.subject,
         due: r.dueDate?.slice(0,10) || '',
         completed: r.responses?.length || 0,
-        reviewers: [{ name: r.reviewerName || '', done: r.status === 'Completed' }]
+        reviewers: (r.reviewers || [{ name: r.reviewerName || '', done: r.status === 'Completed' }])
       }));
+      if (this.requests.length && !this.selectedSubject) {
+        this.selectedSubject = this.requests[0].subject;
+        this.loadResultScores(this.selectedSubject);
+      }
     });
   }
 
   loadEmployees() {
     this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
       this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+      (data || []).forEach((e: any) => { this.employeeMap[`${e.firstName} ${e.lastName}`.trim()] = e.id; });
+    });
+  }
+
+  loadResultScores(subjectName: string) {
+    const req = this.requests.find(r => r.subject === subjectName);
+    const id = req?.requesteeId || this.employeeMap[subjectName];
+    if (!id) return;
+    this.http.get<any>(`${this.api}/feedback/summary/${id}`).subscribe(data => {
+      if (data?.categoryScores) {
+        this.resultScores = data.categoryScores;
+      } else if (Array.isArray(data?.scores)) {
+        this.resultScores = {};
+        (data.scores as any[]).forEach((s: any) => { this.resultScores[s.category] = s.avgScore || s.score || 0; });
+      }
     });
   }
 
@@ -239,14 +259,25 @@ export class Feedback360Component implements OnInit {
   }
 
   createRequest() {
-    if (!this.newReq.subject || this.newReq.reviewers.length === 0) { alert('Select subject and reviewers'); return; }
-    this.requests.push({ subject: this.newReq.subject, due: this.newReq.due, completed: 0, reviewers: this.newReq.reviewers.map(n => ({ name: n, done: false })) });
-    alert('360 review request sent');
+    this.reqError = '';
+    if (!this.newReq.subject || this.newReq.reviewers.length === 0) { this.reqError = 'Select subject and at least one reviewer'; return; }
+    const localReq = { subject: this.newReq.subject, due: this.newReq.due, completed: 0, reviewers: this.newReq.reviewers.map(n => ({ name: n, done: false })) };
+    const reviewerIds = this.newReq.reviewers.map(n => this.employeeMap[n]).filter(Boolean);
+    const payload = { requesteeId: this.employeeMap[this.newReq.subject], reviewerIds, dueDate: this.newReq.due };
+    this.http.post<any>(`${this.api}/feedback/requests`, payload).subscribe({
+      next: res => { this.requests.push({ ...localReq, id: res.id, requesteeId: res.requesteeId }); },
+      error: () => { this.requests.push(localReq); }
+    });
     this.newReq = { subject: '', reviewers: [], due: '' };
   }
 
   submitFeedback() {
-    if (!this.feedForm.subject) { alert('Select employee to review'); return; }
+    if (!this.feedForm.subject) { this.feedMsg = 'Select employee to review'; return; }
+    const req = this.requests.find(r => r.subject === this.feedForm.subject);
+    if (req?.id) {
+      const payload = { strengths: this.feedForm.strengths, improvements: this.feedForm.improvements, categoryRatings: this.feedForm.ratings };
+      this.http.post(`${this.api}/feedback/requests/${req.id}/respond`, payload).subscribe();
+    }
     this.feedMsg = 'Feedback submitted successfully';
     this.feedForm = { subject: '', ratings: {}, strengths: '', improvements: '' };
     setTimeout(() => this.feedMsg = '', 3000);

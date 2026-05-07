@@ -99,9 +99,10 @@ import { environment } from '../../environments/environment';
           </div>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:20px;">
+        <div style="display:flex;gap:12px;margin-top:20px;align-items:center;">
           <button class="btn btn-primary" (click)="runScorecard()">Run AI Scorecard</button>
           <button class="btn btn-secondary" (click)="saveToDatabase()">Save to CV Database</button>
+          <span *ngIf="saveMsg" style="font-size:13px;color:#10b981;font-weight:600;">{{saveMsg}}</span>
         </div>
       </div>
     </section>
@@ -237,6 +238,8 @@ export class ResumeParserComponent {
     this.router.navigate(['/ai-scorecard'], { state: { resumeText: this.cvText } });
   }
 
+  saveMsg = '';
+
   saveToDatabase() {
     if (!this.result) return;
     const payload = {
@@ -245,7 +248,9 @@ export class ResumeParserComponent {
       skillsText: (this.result.skills ?? []).join(', '),
       cvText: this.cvText
     };
-    this.http.post(`${environment.apiUrl}/api/cv-database`, payload)
-      .subscribe({ next: () => alert('Saved to CV Database'), error: () => alert('Save failed') });
+    this.http.post(`${environment.apiUrl}/api/cv-database`, payload).subscribe({
+      next: () => { this.saveMsg = 'Saved to CV Database'; setTimeout(() => this.saveMsg = '', 3000); },
+      error: () => { this.saveMsg = 'Save failed'; setTimeout(() => this.saveMsg = '', 3000); }
+    });
   }
 }

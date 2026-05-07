@@ -375,6 +375,10 @@ public interface IFeedbackService
     Task<object> GetFeedbackSummaryAsync(Guid employeeId);
     Task<List<ContinuousFeedback>> GetContinuousFeedbackAsync(Guid employeeId);
     Task<ContinuousFeedback> SendContinuousFeedbackAsync(ContinuousFeedback feedback);
+    Task<List<OneOnOneMeeting>> GetMeetingsAsync(Guid employeeId);
+    Task<OneOnOneMeeting> CreateMeetingAsync(Guid employeeId, OneOnOneMeeting meeting);
+    Task<List<MoodCheckin>> GetMoodCheckinsAsync(Guid employeeId, DateTime? date);
+    Task<MoodCheckin> CreateMoodCheckinAsync(Guid employeeId, MoodCheckin checkin);
 }
 
 public class FeedbackService(ApplicationDbContext db, IHttpContextAccessor http) : IFeedbackService
@@ -474,8 +478,54 @@ public class FeedbackService(ApplicationDbContext db, IHttpContextAccessor http)
         feedback.GiverEmployeeId = UserId;
         feedback.CreatedBy = UserId;
         feedback.CreatedAt = DateTime.UtcNow;
+        feedback.SubmittedAt = DateTime.UtcNow;
         db.ContinuousFeedbacks.Add(feedback);
         await db.SaveChangesAsync();
         return feedback;
+    }
+
+    public async Task<List<OneOnOneMeeting>> GetMeetingsAsync(Guid employeeId)
+    {
+        return await db.OneOnOneMeetings.AsNoTracking()
+            .Where(m => m.TenantId == TenantId && !m.IsDeleted && m.InitiatorEmployeeId == employeeId)
+            .OrderByDescending(m => m.MeetingDate)
+            .ToListAsync();
+    }
+
+    public async Task<OneOnOneMeeting> CreateMeetingAsync(Guid employeeId, OneOnOneMeeting meeting)
+    {
+        meeting.Id = Guid.NewGuid();
+        meeting.TenantId = TenantId;
+        meeting.InitiatorEmployeeId = employeeId;
+        meeting.CreatedBy = UserId;
+        meeting.CreatedAt = DateTime.UtcNow;
+        db.OneOnOneMeetings.Add(meeting);
+        await db.SaveChangesAsync();
+        return meeting;
+    }
+
+    public async Task<List<MoodCheckin>> GetMoodCheckinsAsync(Guid employeeId, DateTime? date)
+    {
+        var q = db.MoodCheckins.AsNoTracking()
+            .Where(c => c.TenantId == TenantId && !c.IsDeleted);
+        if (date.HasValue)
+            q = q.Where(c => c.CheckinDate.Date == date.Value.Date);
+        return await q.OrderByDescending(c => c.CreatedAt).ToListAsync();
+    }
+
+    public async Task<MoodCheckin> CreateMoodCheckinAsync(Guid employeeId, MoodCheckin checkin)
+    {
+        var emp = await db.Employees.AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == employeeId && e.TenantId == TenantId);
+        checkin.Id = Guid.NewGuid();
+        checkin.TenantId = TenantId;
+        checkin.EmployeeId = employeeId;
+        checkin.EmployeeName = emp != null ? $"{emp.FirstName} {emp.LastName}" : "Employee";
+        checkin.CheckinDate = DateTime.UtcNow;
+        checkin.CreatedBy = UserId;
+        checkin.CreatedAt = DateTime.UtcNow;
+        db.MoodCheckins.Add(checkin);
+        await db.SaveChangesAsync();
+        return checkin;
     }
 }

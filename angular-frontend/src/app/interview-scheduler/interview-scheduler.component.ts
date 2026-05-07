@@ -181,12 +181,39 @@ export class InterviewSchedulerComponent implements OnInit {
   saveErr = '';
   form = { candidateId: '', jobId: '', type: 'Video', scheduledAt: '', meetingLink: '', notes: '', recruiterIds: [] as any[] };
 
-  readonly ivMonths = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
-  readonly ivTrend  = [5, 8, 12, 15, 11, 18];
+  ivMonths: string[] = [];
+  ivTrend: number[] = [0, 0, 0, 0, 0, 0];
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() { /* interviews loaded on schedule */ }
+  ngOnInit() { this.loadInterviews(); }
+
+  loadInterviews() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/interviews`).subscribe(data => {
+      this.interviews = (data || []).map(i => ({
+        id: i.id, type: i.interviewType || i.type || 'Video',
+        scheduledAt: i.scheduledAt || i.scheduledDate || '',
+        candidateId: i.candidateId || '',
+        status: i.status || 'Scheduled',
+        meetingLink: i.meetingLink || ''
+      }));
+      this.buildTrend();
+    });
+  }
+
+  private buildTrend() {
+    const now = new Date();
+    const months: string[] = [];
+    const counts: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toLocaleString('default', { month: 'short' }));
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts.push(this.interviews.filter(iv => (iv.scheduledAt || '').slice(0, 7) === ym).length);
+    }
+    this.ivMonths = months;
+    this.ivTrend = counts;
+  }
 
   schedule() {
     this.saving = true; this.saveOk = false; this.saveErr = '';

@@ -850,13 +850,19 @@ namespace Decypher.Web.Models
     public class ContinuousFeedback : BaseEntity
     {
         [Required]
-        public Guid FromEmployeeId { get; set; }
+        public Guid GiverEmployeeId { get; set; }
 
         [Required]
-        public Guid ToEmployeeId { get; set; }
+        public Guid RecipientEmployeeId { get; set; }
+
+        [MaxLength(200)]
+        public string? GiverName { get; set; }
+
+        [MaxLength(200)]
+        public string? RecipientName { get; set; }
 
         [MaxLength(50)]
-        public string FeedbackType { get; set; } = "Praise"; // Praise, Suggestion, Concern, Recognition
+        public string FeedbackType { get; set; } = "Praise"; // Praise, Kudos, Suggestion, Concern, Recognition
 
         [Required, MaxLength(3000)]
         public string Content { get; set; } = string.Empty;
@@ -866,8 +872,58 @@ namespace Decypher.Web.Models
         [MaxLength(100)]
         public string? Tag { get; set; } // Teamwork, Innovation, Customer Focus, etc.
 
-        public virtual Employee FromEmployee { get; set; } = null!;
-        public virtual Employee ToEmployee { get; set; } = null!;
+        [MaxLength(200)]
+        public string? Category { get; set; }
+
+        [MaxLength(3000)]
+        public string? Message { get; set; }
+
+        public DateTime? SubmittedAt { get; set; }
+
+        public virtual Employee? GiverEmployee { get; set; }
+        public virtual Employee? RecipientEmployee { get; set; }
+    }
+
+    public class OneOnOneMeeting : BaseEntity
+    {
+        [Required]
+        public Guid InitiatorEmployeeId { get; set; }
+
+        [Required, MaxLength(200)]
+        public string ParticipantName { get; set; } = string.Empty;
+
+        public Guid? ParticipantEmployeeId { get; set; }
+
+        public DateTime MeetingDate { get; set; } = DateTime.UtcNow;
+
+        [MaxLength(1000)]
+        public string? Agenda { get; set; }
+
+        [MaxLength(3000)]
+        public string? Notes { get; set; }
+
+        [MaxLength(3000)]
+        public string? ActionItems { get; set; }
+
+        public virtual Employee? InitiatorEmployee { get; set; }
+    }
+
+    public class MoodCheckin : BaseEntity
+    {
+        [Required]
+        public Guid EmployeeId { get; set; }
+
+        [MaxLength(200)]
+        public string EmployeeName { get; set; } = string.Empty;
+
+        public int MoodScore { get; set; } = 3; // 1–5
+
+        [MaxLength(1000)]
+        public string? Note { get; set; }
+
+        public DateTime CheckinDate { get; set; } = DateTime.UtcNow;
+
+        public virtual Employee? Employee { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1385,5 +1441,325 @@ namespace Decypher.Web.Models
         public string? LastSyncStatus { get; set; }
 
         public bool IsOAuth { get; set; } = false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // HELPDESK
+    // ═══════════════════════════════════════════════════════════════
+
+    public class HelpdeskTicket : BaseEntity
+    {
+        [Required, MaxLength(20)]
+        public string TicketNumber { get; set; } = string.Empty;
+
+        [Required, MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(4000)]
+        public string? Description { get; set; }
+
+        [MaxLength(50)]
+        public string Category { get; set; } = "IT"; // IT, HR, Finance, Admin, Facility
+
+        [MaxLength(50)]
+        public string SubCategory { get; set; } = string.Empty; // Hardware, Software, Access, Payroll, Leave, etc.
+
+        [MaxLength(50)]
+        public string Priority { get; set; } = "Medium"; // Low, Medium, High, Critical
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Open"; // Open, InProgress, Pending, Resolved, Closed
+
+        public Guid RequesterId { get; set; }
+
+        [MaxLength(200)]
+        public string RequesterName { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? RequesterEmail { get; set; }
+
+        public Guid? AssigneeId { get; set; }
+
+        [MaxLength(200)]
+        public string? AssigneeName { get; set; }
+
+        [MaxLength(100)]
+        public string? AssignedTeam { get; set; } // IT-Support, HR-Team, Finance
+
+        public DateTime? DueDate { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+
+        [MaxLength(2000)]
+        public string? Resolution { get; set; }
+
+        public int? SatisfactionRating { get; set; } // 1-5
+
+        public virtual ICollection<HelpdeskTicketComment> Comments { get; set; } = new List<HelpdeskTicketComment>();
+        public virtual ICollection<HelpdeskWorkflowStep> WorkflowSteps { get; set; } = new List<HelpdeskWorkflowStep>();
+    }
+
+    public class HelpdeskTicketComment : BaseEntity
+    {
+        [Required]
+        public Guid TicketId { get; set; }
+
+        [MaxLength(200)]
+        public string AuthorId { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string AuthorName { get; set; } = string.Empty;
+
+        [Required, MaxLength(4000)]
+        public string Content { get; set; } = string.Empty;
+
+        public bool IsInternal { get; set; } = false; // Internal notes not visible to requester
+
+        public virtual HelpdeskTicket Ticket { get; set; } = null!;
+    }
+
+    public class HelpdeskWorkflowStep : BaseEntity
+    {
+        [Required]
+        public Guid TicketId { get; set; }
+
+        [MaxLength(100)]
+        public string Action { get; set; } = string.Empty; // Created, Assigned, StatusChanged, Commented, Resolved
+
+        [MaxLength(200)]
+        public string ActorName { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? Notes { get; set; }
+
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+        public virtual HelpdeskTicket Ticket { get; set; } = null!;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TRAVEL & EXPENSE
+    // ═══════════════════════════════════════════════════════════════
+
+    public class TravelRequest : BaseEntity
+    {
+        [Required, MaxLength(20)]
+        public string RequestNumber { get; set; } = string.Empty;
+
+        public Guid EmployeeId { get; set; }
+
+        [MaxLength(200)]
+        public string EmployeeName { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? Department { get; set; }
+
+        [MaxLength(50)]
+        public string TravelType { get; set; } = "Domestic"; // Domestic, International
+
+        [MaxLength(200)]
+        public string Destination { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string Purpose { get; set; } = string.Empty;
+
+        public DateTime TravelFromDate { get; set; }
+        public DateTime TravelToDate { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected, Cancelled, Completed
+
+        public decimal EstimatedCost { get; set; }
+        public decimal? ActualCost { get; set; }
+
+        public string? ApproverId { get; set; }
+
+        [MaxLength(200)]
+        public string? ApproverName { get; set; }
+
+        public DateTime? ApprovedAt { get; set; }
+
+        [MaxLength(1000)]
+        public string? RejectionReason { get; set; }
+
+        [MaxLength(50)]
+        public string TransportMode { get; set; } = "Flight"; // Flight, Train, Bus, Car, Cab
+
+        [MaxLength(100)]
+        public string? Accommodation { get; set; }
+
+        public virtual ICollection<TravelExpenseClaim> ExpenseClaims { get; set; } = new List<TravelExpenseClaim>();
+    }
+
+    public class AdvanceRequest : BaseEntity
+    {
+        [Required, MaxLength(20)]
+        public string RequestNumber { get; set; } = string.Empty;
+
+        public Guid EmployeeId { get; set; }
+
+        [MaxLength(200)]
+        public string EmployeeName { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string Purpose { get; set; } = string.Empty;
+
+        public decimal Amount { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Disbursed, Settled, Rejected
+
+        public string? ApproverId { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+        public DateTime? DisbursedAt { get; set; }
+        public DateTime? SettledAt { get; set; }
+
+        public Guid? TravelRequestId { get; set; }
+    }
+
+    public class TravelExpenseClaim : BaseEntity
+    {
+        [Required, MaxLength(20)]
+        public string ClaimNumber { get; set; } = string.Empty;
+
+        public Guid EmployeeId { get; set; }
+
+        [MaxLength(200)]
+        public string EmployeeName { get; set; } = string.Empty;
+
+        public Guid? TravelRequestId { get; set; }
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Draft"; // Draft, Submitted, Approved, Rejected, Paid
+
+        public decimal TotalAmount { get; set; }
+        public decimal? AdvanceAmount { get; set; }
+        public decimal? ReimbursableAmount { get; set; }
+
+        public string? ApproverId { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+        public DateTime? PaidAt { get; set; }
+
+        [MaxLength(1000)]
+        public string? Remarks { get; set; }
+
+        public virtual ICollection<TravelExpenseLineItem> LineItems { get; set; } = new List<TravelExpenseLineItem>();
+    }
+
+    public class TravelExpenseLineItem : BaseEntity
+    {
+        [Required]
+        public Guid ClaimId { get; set; }
+
+        [MaxLength(100)]
+        public string Category { get; set; } = string.Empty; // Flight, Hotel, Meals, Transport, Misc
+
+        [MaxLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+
+        [MaxLength(500)]
+        public string? ReceiptUrl { get; set; }
+
+        public bool IsApproved { get; set; } = false;
+
+        public virtual TravelExpenseClaim Claim { get; set; } = null!;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // WORKFLOW ENGINE
+    // ═══════════════════════════════════════════════════════════════
+
+    public class WorkflowDefinition : BaseEntity
+    {
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string EntityType { get; set; } = string.Empty; // Helpdesk, TravelRequest, LeaveRequest, etc.
+
+        // JSON array of step objects: [{ "name": "...", "role": "...", "slaDays": N }]
+        public string StepsJson { get; set; } = "[]";
+
+        public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<WorkflowInstance> Instances { get; set; } = new List<WorkflowInstance>();
+    }
+
+    public class WorkflowInstance : BaseEntity
+    {
+        [Required]
+        public Guid DefinitionId { get; set; }
+
+        public Guid EntityId { get; set; } // ID of the linked entity (ticket, travel req, etc.)
+
+        [MaxLength(100)]
+        public string EntityType { get; set; } = string.Empty;
+
+        public int CurrentStep { get; set; } = 0;
+        public int TotalSteps { get; set; } = 0;
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "InProgress"; // InProgress, Approved, Rejected, Cancelled
+
+        public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CompletedAt { get; set; }
+        public DateTime? SLADeadline { get; set; }
+        public bool SLABreached { get; set; } = false;
+
+        public virtual WorkflowDefinition Definition { get; set; } = null!;
+        public virtual ICollection<WorkflowStepHistory> StepHistory { get; set; } = new List<WorkflowStepHistory>();
+    }
+
+    public class WorkflowStepHistory : BaseEntity
+    {
+        [Required]
+        public Guid InstanceId { get; set; }
+
+        public int StepIndex { get; set; }
+
+        [MaxLength(200)]
+        public string StepName { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Action { get; set; } = string.Empty; // Approved, Rejected, Escalated, Commented
+
+        [MaxLength(200)]
+        public string ActorName { get; set; } = string.Empty;
+
+        public string? ActorId { get; set; }
+
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+
+        public DateTime ActedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual WorkflowInstance Instance { get; set; } = null!;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PORTAL ANNOUNCEMENTS
+    // ═══════════════════════════════════════════════════════════════
+
+    public class HRAnnouncement : BaseEntity
+    {
+        [Required, MaxLength(300)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        public string Body { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Category { get; set; } = "General"; // General, Policy, Event, Holiday, Urgent
+
+        public bool IsPinned { get; set; } = false;
+        public DateTime PublishedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ExpiresAt { get; set; }
+
+        public string? AuthorId { get; set; }
+
+        [MaxLength(200)]
+        public string? AuthorName { get; set; }
     }
 }

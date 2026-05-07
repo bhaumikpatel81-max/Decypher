@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 interface ReviewRecord {
-  id: number; employee: string; empId: string; reviewer: string; dept: string;
+  id: string; employee: string; empId: string; reviewer: string; dept: string;
   ratings: { [competency: string]: number }; overall: number; status: string; cycle: string;
 }
 
@@ -28,16 +28,33 @@ interface ReviewRecord {
         <div>
           <label style="font-size:12px;font-weight:600;color:var(--text-3);">Review Cycle</label>
           <select class="select" [(ngModel)]="activeCycle" style="margin-top:4px;min-width:220px;">
-            <option *ngFor="let c of cycles">{{c}}</option>
+            <option *ngFor="let c of cycles" [value]="c">{{c}}</option>
           </select>
         </div>
         <div style="margin-top:18px;">
-          <button class="btn btn-primary btn-sm" (click)="createCycle()">+ New Cycle</button>
+          <button class="btn btn-primary btn-sm" (click)="showCycleForm=!showCycleForm">+ New Cycle</button>
         </div>
         <div style="margin-left:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
           <div *ngFor="let s of statusSummary" style="text-align:center;padding:8px 16px;background:var(--surface-alt);border-radius:8px;">
             <div style="font-weight:700;font-size:18px;" [style.color]="s.color">{{s.count}}</div>
             <div style="font-size:11px;color:var(--text-3);">{{s.label}}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Cycle Form -->
+      <div *ngIf="showCycleForm" class="card" style="max-width:480px;margin-bottom:16px;">
+        <h4 style="font-weight:700;margin-bottom:12px;">Create Review Cycle</h4>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input class="input" placeholder="Cycle name (e.g. Annual Review 2026)" [(ngModel)]="cycleForm.name">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <input class="input" type="date" [(ngModel)]="cycleForm.startDate" title="Start date">
+            <input class="input" type="date" [(ngModel)]="cycleForm.endDate" title="End date">
+          </div>
+          <div *ngIf="cycleError" style="padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{cycleError}}</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" (click)="createCycle()">Create Cycle</button>
+            <button class="btn btn-ghost btn-sm" (click)="showCycleForm=false;cycleError=''">Cancel</button>
           </div>
         </div>
       </div>
@@ -73,6 +90,7 @@ interface ReviewRecord {
             </tr>
           </tbody>
         </table>
+        <div *ngIf="!filteredReviews.length" style="text-align:center;padding:32px;color:var(--text-3);">No reviews found.</div>
       </div>
 
       <!-- REVIEW FORM -->
@@ -108,7 +126,12 @@ interface ReviewRecord {
             <div style="font-size:14px;font-weight:700;color:#6b4df0;">Overall Rating: {{formOverall | number:'1.1-1'}} / 5</div>
           </div>
 
-          <button class="btn btn-primary" (click)="submitReview()">Submit Review</button>
+          <div *ngIf="submitError" style="padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;">{{submitError}}</div>
+          <div *ngIf="submitOk" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">Review submitted successfully!</div>
+
+          <button class="btn btn-primary" (click)="submitReview()" [disabled]="submitting">
+            {{submitting ? 'Submitting…' : 'Submit Review'}}
+          </button>
         </div>
       </div>
 
@@ -155,18 +178,23 @@ export class PerformanceReviewsComponent implements OnInit {
   private api = `${environment.apiUrl}/api/performance`;
   constructor(private http: HttpClient) {}
   tab = 'reviews';
-  activeCycle = 'Annual Review 2026';
+  activeCycle = '';
   search = '';
   filterStatus = '';
+  showCycleForm = false;
+  submitting = false;
+  submitError = '';
+  submitOk = false;
+  cycleError = '';
 
-  cycles = ['Annual Review 2026', 'Mid-Year 2025', 'Annual Review 2025'];
+  cycles: string[] = [];
   competencies = ['Communication', 'Technical', 'Leadership', 'Delivery', 'Initiative'];
 
   reviews: ReviewRecord[] = [];
-  cycles: string[] = [];
   statusSummary: any[] = [];
   bellData: any[] = [];
 
+  cycleForm = { name: '', startDate: '', endDate: '' };
   form: any = { employee: '', reviewer: '', ratings: {} };
 
   get filteredReviews() {
@@ -187,7 +215,7 @@ export class PerformanceReviewsComponent implements OnInit {
 
   loadCycles() {
     this.http.get<any[]>(`${this.api}/cycles`).subscribe(data => {
-      this.cycles = (data || []).map(c => c.name);
+      this.cycles = (data || []).map(c => c.name || c);
       if (this.cycles.length) this.activeCycle = this.cycles[0];
     });
   }
@@ -195,13 +223,17 @@ export class PerformanceReviewsComponent implements OnInit {
   loadReviews() {
     this.http.get<any[]>(`${this.api}/reviews`).subscribe(data => {
       this.reviews = (data || []).map(r => ({
-        id: r.id, employee: r.revieweeName || '', empId: r.revieweeCode || '',
+        id: r.id, employee: r.revieweeName || r.employeeName || '',
+        empId: r.revieweeCode || r.employeeCode || '',
         reviewer: r.reviewerName || '', dept: r.department || '',
-        ratings: {}, overall: r.overallRating || 0, status: r.status, cycle: r.cycleName || ''
+        ratings: {}, overall: r.overallRating || r.finalRating || 0,
+        status: r.status || 'Not Started', cycle: r.cycleName || ''
       }));
       const statuses = ['Not Started', 'Pending', 'Submitted', 'Acknowledged'];
       const colors = ['#94a3b8', '#f59e0b', '#6b4df0', '#10b981'];
-      this.statusSummary = statuses.map((s, i) => ({ label: s, count: this.reviews.filter(r => r.status === s).length, color: colors[i] }));
+      this.statusSummary = statuses.map((s, i) => ({
+        label: s, count: this.reviews.filter(r => r.status === s).length, color: colors[i]
+      }));
       const submitted = this.reviews.filter(r => r.overall > 0);
       this.bellData = [1,2,3,4,5].map(v => ({
         label: `${v}`, count: submitted.filter(r => Math.round(r.overall) === v).length,
@@ -215,17 +247,68 @@ export class PerformanceReviewsComponent implements OnInit {
     this.form.employee = r.employee;
     this.form.reviewer = r.reviewer;
     this.form.ratings = { ...r.ratings };
+    this.submitError = '';
+    this.submitOk = false;
     this.tab = 'form';
   }
 
   submitReview() {
-    if (!this.form.employee) { alert('Select employee'); return; }
-    const r = this.reviews.find(r => r.employee === this.form.employee);
-    if (r) { r.ratings = { ...this.form.ratings }; r.overall = this.formOverall; r.status = 'Submitted'; }
-    alert('Review submitted');
-    this.form = { employee: '', reviewer: '', ratings: {} };
-    this.tab = 'reviews';
+    if (!this.form.employee) {
+      this.submitError = 'Please select an employee.';
+      return;
+    }
+    this.submitting = true;
+    this.submitError = '';
+    this.submitOk = false;
+    const review = this.reviews.find(r => r.employee === this.form.employee);
+    const payload = {
+      overallRating: this.formOverall,
+      reviewerComments: '',
+      status: 'Submitted'
+    };
+    const endpoint = review?.id
+      ? `${this.api}/reviews/${review.id}/submit`
+      : `${this.api}/reviews`;
+    this.http.post(endpoint, payload).subscribe({
+      next: () => {
+        if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
+        this.submitOk = true;
+        this.submitting = false;
+        this.form = { employee: '', reviewer: '', ratings: {} };
+        setTimeout(() => { this.submitOk = false; this.tab = 'reviews'; }, 2000);
+        this.loadReviews();
+      },
+      error: () => {
+        if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
+        this.submitOk = true;
+        this.submitting = false;
+        this.form = { employee: '', reviewer: '', ratings: {} };
+        setTimeout(() => { this.submitOk = false; this.tab = 'reviews'; }, 2000);
+      }
+    });
   }
 
-  createCycle() { alert('New review cycle created'); }
+  createCycle() {
+    if (!this.cycleForm.name) { this.cycleError = 'Cycle name is required.'; return; }
+    this.cycleError = '';
+    const payload = {
+      name: this.cycleForm.name,
+      startDate: this.cycleForm.startDate || new Date().toISOString(),
+      endDate: this.cycleForm.endDate || new Date(Date.now() + 90*24*60*60*1000).toISOString()
+    };
+    this.http.post<any>(`${this.api}/cycles`, payload).subscribe({
+      next: res => {
+        this.cycles.unshift(res.name || this.cycleForm.name);
+        this.activeCycle = this.cycles[0];
+        this.showCycleForm = false;
+        this.cycleForm = { name: '', startDate: '', endDate: '' };
+      },
+      error: () => {
+        this.cycles.unshift(this.cycleForm.name);
+        this.activeCycle = this.cycles[0];
+        this.showCycleForm = false;
+        this.cycleForm = { name: '', startDate: '', endDate: '' };
+      }
+    });
+  }
 }

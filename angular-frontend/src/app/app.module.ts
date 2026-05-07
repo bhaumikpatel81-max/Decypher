@@ -30,6 +30,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { SharedModule } from './shared.module';
 import { FeaturesModule } from './features.module';
 import { environment } from '../environments/environment';
+import { PlatformLoginComponent } from './platform-login/platform-login.component';
+import { PlatformAdminComponent } from './platform-admin/platform-admin.component';
 
 @Component({
   selector: 'app-users-admin',
@@ -414,6 +416,8 @@ const routes: Routes = [
   { path: 'competency-ranker',  component: GenericToolComponent },
   { path: 'jd-checker',         component: GenericToolComponent },
   { path: 'users',              component: UsersAdminComponent },
+  { path: 'platform-login',     component: PlatformLoginComponent },
+  { path: 'platform',           component: PlatformAdminComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
@@ -426,6 +430,8 @@ const routes: Routes = [
     DropoutPageComponent,
     GenericToolComponent,
     UsersAdminComponent,
+    PlatformLoginComponent,
+    PlatformAdminComponent,
   ],
   imports: [
     BrowserModule,

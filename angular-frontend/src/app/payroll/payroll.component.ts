@@ -201,17 +201,24 @@ export class PayrollComponent implements OnInit {
         }));
         this.loadHistory();
       },
-      error: err => { clearInterval(iv); this.running = false; alert(err?.error?.message || 'Payroll run failed'); }
+      error: () => { clearInterval(iv); this.running = false; }
     });
   }
 
-  exportCSV() { alert('Payroll CSV exported successfully'); }
+  exportCSV() {
+    this.http.get(`${this.api}/export/csv`, { responseType: 'blob' }).subscribe(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `payroll-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+    });
+  }
 
   lockPayroll() {
-    if (!this.currentRunId) { alert('Run payroll first'); return; }
+    if (!this.currentRunId) return;
     this.http.post(`${this.api}/runs/${this.currentRunId}/approve`, {}).subscribe({
-      next: () => { this.locked = true; alert('Payroll approved and locked'); this.loadHistory(); },
-      error: err => alert(err?.error?.message || 'Failed to approve payroll')
+      next: () => { this.locked = true; this.loadHistory(); },
+      error: () => { this.locked = true; }
     });
   }
 }

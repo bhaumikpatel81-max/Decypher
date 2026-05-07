@@ -13,7 +13,7 @@ import { environment } from '../../environments/environment';
     </div>
   </div>
   <div *ngIf="published" style="padding:10px 16px;background:#d1fae5;border-radius:8px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;">
-    🌐 Live at: <a style="color:#059669;">https://careers.amnex.com/{{page.slug}}</a> · Copied to clipboard on publish
+    🌐 Career page published · Slug: <strong>{{page.slug}}</strong> · Share your branded careers URL with candidates
   </div>
 
   <!-- BUILD TAB -->

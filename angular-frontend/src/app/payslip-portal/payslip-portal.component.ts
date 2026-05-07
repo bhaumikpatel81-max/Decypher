@@ -185,6 +185,7 @@ export class PayslipPortalComponent implements OnInit {
   buildSlipFromData(s: any) {
     const parts = (s.periodLabel || '').split(' ');
     this.slip = {
+      id: s.id,
       monthLabel: parts[0] || '', year: parts[1] || '',
       daysWorked: s.daysWorked || 26,
       earnings: s.earnings || [
@@ -213,6 +214,20 @@ export class PayslipPortalComponent implements OnInit {
     if (this.months[idx]?.data) this.buildSlipFromData(this.months[idx].data);
   }
 
-  downloadPayslip() { alert('Payslip PDF downloaded'); }
-  emailPayslip() { alert('Payslip emailed to employee'); }
+  downloadPayslip() {
+    const id = this.slip?.id;
+    if (!id) return;
+    this.http.get(`${this.api}/payslips/${id}/download`, { responseType: 'blob' }).subscribe(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `payslip-${id}.pdf`;
+      a.click(); URL.revokeObjectURL(url);
+    });
+  }
+
+  emailPayslip() {
+    const id = this.slip?.id;
+    if (!id) return;
+    this.http.post(`${this.api}/payslips/${id}/email`, {}).subscribe();
+  }
 }

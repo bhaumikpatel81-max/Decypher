@@ -190,5 +190,11 @@ export class SalaryBenchmarkingComponent implements OnInit {
     });
   }
 
-  importData() { alert(`Market data from "${this.importSource}" imported successfully`); }
+  importData() {
+    if (!this.importSource) return;
+    this.http.post(`${this.api}/benchmarking/import`, { source: this.importSource }).subscribe({
+      next: () => { this.importSource = ''; this.loadBenchmarks(); },
+      error: () => {}
+    });
+  }
 }

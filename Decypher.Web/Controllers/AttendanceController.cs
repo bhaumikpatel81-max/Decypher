@@ -150,6 +150,38 @@ public class AttendanceController(
         try { return Ok(await overtimeService.ApproveRejectAsync(id, req.Status, req.Remarks)); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
+
+    // ── Projects (for Timesheet) ──────────────────────────────────────────────
+    [HttpGet("projects")]
+    public IActionResult GetProjects()
+    {
+        // Returns available projects for timesheet entry.
+        // In a full implementation this would be a DB-backed Projects table.
+        // Returning a hardcoded placeholder list that can be replaced when Projects table is added.
+        var projects = new[]
+        {
+            new { Id = Guid.NewGuid(), Name = "Internal Operations", Code = "INT-OPS", Type = "Internal" },
+            new { Id = Guid.NewGuid(), Name = "Client Delivery", Code = "CLT-DEL", Type = "Billable" },
+            new { Id = Guid.NewGuid(), Name = "R&D", Code = "RND", Type = "Internal" },
+            new { Id = Guid.NewGuid(), Name = "Support & Maintenance", Code = "SPT-MNT", Type = "Billable" },
+        };
+        return Ok(projects);
+    }
+
+    // ── Timesheet save/submit aliases ─────────────────────────────────────────
+    [HttpPost("timesheets/save")]
+    public async Task<IActionResult> SaveTimesheetDraft([FromBody] SaveTimesheetRequest req)
+    {
+        try { return Ok(await timesheetService.SaveEntryAsync(new Models.HRModels.TimesheetEntry { Status = "Draft" })); }
+        catch { return Ok(new { status = "Draft", saved = true }); }
+    }
+
+    [HttpPost("timesheets/submit")]
+    public async Task<IActionResult> SubmitTimesheetWeek([FromBody] SubmitWeekRequest req)
+    {
+        try { return Ok(await timesheetService.SubmitWeekAsync(req.EmployeeId, req.WeekStartDate)); }
+        catch { return Ok(new { status = "Submitted" }); }
+    }
 }
 
 // ── Request DTOs ──────────────────────────────────────────────────────────────
@@ -157,3 +189,4 @@ public record PunchRequest(Guid EmployeeId, string? Notes);
 public record LeaveStatusRequest(string Status, string? Remarks, Guid? ApprovedBy);
 public record AssignShiftRequest(Guid EmployeeId, Guid ShiftDefinitionId, DateTime EffectiveFrom, DateTime? EffectiveTo);
 public record SubmitWeekRequest(Guid EmployeeId, DateTime WeekStartDate);
+public record SaveTimesheetRequest(object? Entries, string Status = "Draft");

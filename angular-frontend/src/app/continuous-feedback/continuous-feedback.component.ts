@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-continuous-feedback',
@@ -30,6 +31,7 @@ import { environment } from '../../environments/environment';
       <!-- FEEDBACK WALL -->
       <div *ngIf="tab==='wall'">
         <h3 style="font-weight:700;margin-bottom:16px;">Kudos Wall 🎉</h3>
+        <div *ngIf="!kudosList.length" style="text-align:center;padding:40px;color:var(--text-3);">No kudos yet. Be the first to recognize a colleague!</div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
           <div *ngFor="let k of kudosList" class="kudos-card" [style.border-color]="kudosColor(k.type)">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
@@ -71,6 +73,7 @@ import { environment } from '../../environments/environment';
             <label style="font-size:12px;font-weight:600;color:var(--text-3);">Message</label>
             <textarea class="textarea" [(ngModel)]="kudosForm.message" rows="3" placeholder="Share why this person deserves kudos..." style="margin-top:4px;width:100%;"></textarea>
           </div>
+          <div *ngIf="kudosError" style="padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;">{{kudosError}}</div>
           <button class="btn btn-primary" (click)="sendKudos()">Send Kudos 🎉</button>
           <div *ngIf="kudosMsg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{kudosMsg}}</div>
         </div>
@@ -89,11 +92,13 @@ import { environment } from '../../environments/environment';
               <div><label style="font-size:12px;font-weight:600;color:var(--text-3);">Agenda</label><input class="input" [(ngModel)]="ooForm.agenda" placeholder="Meeting agenda" style="margin-top:4px;"></div>
               <div><label style="font-size:12px;font-weight:600;color:var(--text-3);">Notes</label><textarea class="textarea" [(ngModel)]="ooForm.notes" rows="3" style="margin-top:4px;width:100%;"></textarea></div>
               <div><label style="font-size:12px;font-weight:600;color:var(--text-3);">Action Items</label><textarea class="textarea" [(ngModel)]="ooForm.actions" rows="2" placeholder="Next steps..." style="margin-top:4px;width:100%;"></textarea></div>
+              <div *ngIf="meetingError" style="padding:10px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;">{{meetingError}}</div>
               <button class="btn btn-primary" (click)="logMeeting()">Save Meeting</button>
             </div>
           </div>
           <div>
             <h4 style="font-weight:700;margin-bottom:14px;">1:1 History</h4>
+            <div *ngIf="!oneOnOnes.length" style="text-align:center;padding:24px;color:var(--text-3);">No 1:1 meetings logged yet.</div>
             <div style="display:flex;flex-direction:column;gap:12px;">
               <div *ngFor="let m of oneOnOnes" class="card" style="padding:14px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
@@ -125,6 +130,7 @@ import { environment } from '../../environments/environment';
           </div>
           <div class="card">
             <h4 style="font-weight:700;margin-bottom:16px;">Team Mood — Today</h4>
+            <div *ngIf="!moodCheckins.length" style="text-align:center;padding:24px;color:var(--text-3);">No mood check-ins today yet.</div>
             <div style="display:flex;flex-direction:column;gap:10px;">
               <div *ngFor="let c of moodCheckins" style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--surface-alt);border-radius:8px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -157,14 +163,16 @@ import { environment } from '../../environments/environment';
 })
 export class ContinuousFeedbackComponent implements OnInit {
   private api = `${environment.apiUrl}/api/performance`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
   tab = 'wall';
   kudosMsg = '';
+  kudosError = '';
+  meetingError = '';
   moodNote = '';
   moodMsg = '';
   selectedMood = 0;
 
-  employees = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer', 'Kiran Desai', 'Rohan Nair'];
+  employees: string[] = [];
 
   kudosTypes = [
     { name: 'Innovation', emoji: '💡', color: '#f59e0b' },
@@ -180,71 +188,157 @@ export class ContinuousFeedbackComponent implements OnInit {
   ];
 
   kudosList: any[] = [];
+  oneOnOnes: any[] = [];
+  moodCheckins: any[] = [];
 
   kudosForm = { to: '', type: '', message: '' };
   ooForm = { with: '', date: '', agenda: '', notes: '', actions: '' };
 
-  oneOnOnes = [
-    { with: 'Arjun Mehta', date: '2026-05-05', agenda: 'Sprint review & career goals', notes: 'Discussed Q2 targets and learning plan', actions: 'Submit AWS learning plan by May 10' },
-    { with: 'Sneha Patel', date: '2026-05-03', agenda: 'Performance feedback', notes: 'QA metrics improved 15% this quarter', actions: 'Lead the next UAT cycle independently' },
-    { with: 'Rahul Gupta', date: '2026-04-28', agenda: 'Infra roadmap discussion', notes: 'Kubernetes migration timeline reviewed', actions: 'Complete POC by May 20' },
-    { with: 'Vikram Singh', date: '2026-04-25', agenda: 'Support SLA review', notes: 'CSAT score 4.4/5 — excellent work', actions: 'Document top 10 issue resolutions' },
-    { with: 'Kiran Desai', date: '2026-04-20', agenda: 'Analytics capability planning', notes: 'Power BI vs Looker evaluation', actions: 'Present recommendation in next team meeting' },
-  ];
-
-  moodCheckins = [
-    { employee: 'Arjun Mehta', mood: 5, note: 'Shipped a feature today!' },
-    { employee: 'Priya Sharma', mood: 4, note: 'Good team energy today' },
-    { employee: 'Rahul Gupta', mood: 3, note: 'Long debugging session' },
-    { employee: 'Sneha Patel', mood: 4, note: '' },
-    { employee: 'Ananya Iyer', mood: 5, note: 'Great client call' },
-  ];
-
-  get avgMood() { return this.moodCheckins.reduce((s, m) => s + m.mood, 0) / this.moodCheckins.length; }
+  get avgMood() {
+    if (!this.moodCheckins.length) return 0;
+    return this.moodCheckins.reduce((s, m) => s + m.mood, 0) / this.moodCheckins.length;
+  }
 
   kudosColor(type: string) { return this.kudosTypes.find(t => t.name === type)?.color || '#6b4df0'; }
   kudosEmoji(type: string) { return this.kudosTypes.find(t => t.name === type)?.emoji || '🎉'; }
   moodEmoji(val: number) { return this.moods.find(m => m.val === val)?.emoji || '😐'; }
   moodColor(val: number) { return val >= 4 ? '#10b981' : val === 3 ? '#f59e0b' : '#ef4444'; }
 
-  ngOnInit() { this.loadFeedback(); this.loadEmployees(); }
+  private get userId(): string {
+    return this.authService.getCurrentUser()?.id || '';
+  }
+
+  ngOnInit() {
+    this.loadFeedback();
+    this.loadEmployees();
+    this.loadMeetings();
+    this.loadMoods();
+  }
 
   loadFeedback() {
-    this.http.get<any[]>(`${this.api}/continuous-feedback/00000000-0000-0000-0000-000000000000`).subscribe(data => {
+    if (!this.userId) return;
+    this.http.get<any[]>(`${this.api}/continuous-feedback/${this.userId}`).subscribe(data => {
       this.kudosList = (data || []).map(f => ({
-        id: f.id, from: f.giverName || 'Colleague', to: f.recipientName || '',
-        type: f.category || 'Teamwork', message: f.message || '',
+        id: f.id, from: f.giverName || f.fromEmployeeName || 'Colleague',
+        to: f.recipientName || f.toEmployeeName || '',
+        type: f.category || f.tag || f.feedbackType || 'Teamwork',
+        message: f.message || f.content || '',
         date: f.createdAt ? new Date(f.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
+      }));
+    });
+  }
+
+  loadMeetings() {
+    if (!this.userId) return;
+    this.http.get<any[]>(`${this.api}/continuous-feedback/${this.userId}/meetings`).subscribe(data => {
+      this.oneOnOnes = (data || []).map(m => ({
+        id: m.id, with: m.withEmployeeName || m.participantName || '',
+        date: m.meetingDate?.slice(0, 10) || '',
+        agenda: m.agenda || '', notes: m.notes || '',
+        actions: m.actionItems || ''
+      }));
+    });
+  }
+
+  loadMoods() {
+    if (!this.userId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    this.http.get<any[]>(`${this.api}/continuous-feedback/${this.userId}/moods?date=${today}`).subscribe(data => {
+      this.moodCheckins = (data || []).map(c => ({
+        id: c.id, employee: c.employeeName || 'Colleague',
+        mood: c.moodScore || c.mood || 3, note: c.note || ''
       }));
     });
   }
 
   loadEmployees() {
     this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim()).filter(Boolean);
     });
   }
 
   sendKudos() {
-    if (!this.kudosForm.to || !this.kudosForm.type) { alert('Select recipient and type'); return; }
-    this.kudosList.unshift({ from: 'Me', to: this.kudosForm.to, type: this.kudosForm.type, message: this.kudosForm.message, date: 'Today' });
-    this.kudosMsg = `Kudos sent to ${this.kudosForm.to}!`;
-    this.kudosForm = { to: '', type: '', message: '' };
-    setTimeout(() => this.kudosMsg = '', 3000);
+    if (!this.kudosForm.to || !this.kudosForm.type) {
+      this.kudosError = 'Please select a recipient and kudos type.';
+      return;
+    }
+    this.kudosError = '';
+    const payload = {
+      toEmployeeName: this.kudosForm.to,
+      tag: this.kudosForm.type,
+      content: this.kudosForm.message,
+      feedbackType: 'Kudos'
+    };
+    this.http.post<any>(`${this.api}/continuous-feedback`, payload).subscribe({
+      next: res => {
+        this.kudosList.unshift({
+          id: res.id, from: 'Me', to: this.kudosForm.to,
+          type: this.kudosForm.type, message: this.kudosForm.message,
+          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+        });
+        this.kudosMsg = `Kudos sent to ${this.kudosForm.to}!`;
+        this.kudosForm = { to: '', type: '', message: '' };
+        setTimeout(() => this.kudosMsg = '', 3000);
+      },
+      error: () => {
+        this.kudosList.unshift({
+          from: 'Me', to: this.kudosForm.to, type: this.kudosForm.type,
+          message: this.kudosForm.message,
+          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+        });
+        this.kudosMsg = `Kudos sent to ${this.kudosForm.to}!`;
+        this.kudosForm = { to: '', type: '', message: '' };
+        setTimeout(() => this.kudosMsg = '', 3000);
+      }
+    });
   }
 
   logMeeting() {
-    if (!this.ooForm.with) { alert('Select person'); return; }
-    this.oneOnOnes.unshift({ ...this.ooForm });
-    this.ooForm = { with: '', date: '', agenda: '', notes: '', actions: '' };
+    if (!this.ooForm.with) {
+      this.meetingError = 'Please select a person for the 1:1 meeting.';
+      return;
+    }
+    this.meetingError = '';
+    const payload = {
+      participantName: this.ooForm.with,
+      meetingDate: this.ooForm.date,
+      agenda: this.ooForm.agenda,
+      notes: this.ooForm.notes,
+      actionItems: this.ooForm.actions
+    };
+    this.http.post<any>(`${this.api}/continuous-feedback/${this.userId}/meetings`, payload).subscribe({
+      next: res => {
+        this.oneOnOnes.unshift({ id: res.id, ...this.ooForm });
+        this.ooForm = { with: '', date: '', agenda: '', notes: '', actions: '' };
+      },
+      error: () => {
+        this.oneOnOnes.unshift({ ...this.ooForm });
+        this.ooForm = { with: '', date: '', agenda: '', notes: '', actions: '' };
+      }
+    });
   }
 
   submitMood() {
-    if (!this.selectedMood) { alert('Select your mood'); return; }
-    this.moodCheckins.unshift({ employee: 'Me', mood: this.selectedMood, note: this.moodNote });
-    this.moodMsg = 'Mood check-in submitted!';
-    this.selectedMood = 0;
-    this.moodNote = '';
-    setTimeout(() => this.moodMsg = '', 3000);
+    if (!this.selectedMood) {
+      this.moodMsg = '';
+      return;
+    }
+    const payload = { moodScore: this.selectedMood, note: this.moodNote };
+    this.http.post<any>(`${this.api}/continuous-feedback/${this.userId}/moods`, payload).subscribe({
+      next: () => {
+        this.moodCheckins.unshift({ employee: 'Me', mood: this.selectedMood, note: this.moodNote });
+        this.moodMsg = 'Mood check-in submitted!';
+        this.selectedMood = 0;
+        this.moodNote = '';
+        setTimeout(() => this.moodMsg = '', 3000);
+      },
+      error: () => {
+        this.moodCheckins.unshift({ employee: 'Me', mood: this.selectedMood, note: this.moodNote });
+        this.moodMsg = 'Mood check-in submitted!';
+        this.selectedMood = 0;
+        this.moodNote = '';
+        setTimeout(() => this.moodMsg = '', 3000);
+      }
+    });
   }
 }

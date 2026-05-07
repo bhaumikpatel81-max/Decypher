@@ -142,7 +142,16 @@ export class ExitManagementComponent implements OnInit {
       }));
       const active = this.exits.filter(e => e.stage !== 'Completed').length;
       this.kpis[0].val = active;
+      this.kpis[1].val = this.exits.filter(e => e.stage === 'Initiated' || e.stage === 'Pending').length;
       this.kpis[2].val = this.exits.filter(e => e.stage === 'Completed').length;
+      const completed = this.exits.filter(e => e.stage === 'Completed' && e.initiatedDate && e.lastDay);
+      if (completed.length) {
+        const totalDays = completed.reduce((sum: number, e: any) => {
+          const days = Math.abs((new Date(e.lastDay).getTime() - new Date(e.initiatedDate).getTime()) / 86400000);
+          return sum + (isNaN(days) ? 0 : days);
+        }, 0);
+        this.kpis[3].val = Math.round(totalDays / completed.length) || 0;
+      }
     });
   }
 

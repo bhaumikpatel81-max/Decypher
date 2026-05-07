@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-social-recruiting', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -55,17 +57,42 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.channel-list{display:flex;flex-direction:column;gap:8px}.channel-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:10px}.channel-row.connected{border-color:rgba(16,185,129,.4)}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}`] })
 export class SocialRecruitingComponent implements OnInit {
+  private api = `${environment.apiUrl}/api`;
+  constructor(private http: HttpClient) {}
   post:any={job:''};
-  jobs=['Sr. Angular Developer','HR Business Partner','Product Manager','Data Analyst','Sales Manager'];
-  channels:any[]=[
-    {name:'LinkedIn',icon:'💼',color:'#0a66c2',connected:true,selected:true,applications:142,hires:18,spend:45000,cph:2500},
-    {name:'Naukri',icon:'🟠',color:'#f97316',connected:true,selected:true,applications:98,hires:12,spend:18000,cph:1500},
-    {name:'Indeed',icon:'🔵',color:'#2564f4',connected:true,selected:false,applications:76,hires:8,spend:12000,cph:1500},
-    {name:'Monster',icon:'🟢',color:'#5b2d8e',connected:false,selected:false,applications:34,hires:3,spend:8000,cph:2667},
-    {name:'Twitter/X',icon:'🐦',color:'#000',connected:false,selected:false,applications:18,hires:1,spend:5000,cph:5000},
-  ];
-  kpis=[{val:368,lbl:'Total Applications',color:'#6b4df0'},{val:42,lbl:'Total Hires',color:'#10b981'},{val:'₹2,095',lbl:'Avg Cost Per Hire',color:'#f59e0b'},{val:5,lbl:'Active Channels',color:'#2563eb'}];
-  ngOnInit(){}
-  get maxApps(){return Math.max(...this.channels.map(c=>c.applications));}
-  postJob(){const sel=this.channels.filter(c=>c.selected&&c.connected);alert(`"${this.post.job}" posted to: ${sel.map(c=>c.name).join(', ')||'no channels selected'}`);}
+  jobs:string[]=[];
+  channels:any[]=[];
+  kpis:any[]=[{val:0,lbl:'Total Applications',color:'#6b4df0'},{val:0,lbl:'Total Hires',color:'#10b981'},{val:'₹0',lbl:'Avg Cost Per Hire',color:'#f59e0b'},{val:0,lbl:'Active Channels',color:'#2563eb'}];
+
+  ngOnInit(){ this.loadChannels(); this.loadJobs(); }
+
+  loadChannels() {
+    this.http.get<any[]>(`${this.api}/branding/social-channels`).subscribe(data => {
+      this.channels = (data || []).map(c => ({ ...c, name: c.name, icon: c.icon, color: c.color, connected: c.connected, selected: c.connected, applications: c.applications, hires: c.hires, spend: c.spend, cph: c.cph }));
+      const totalApps = this.channels.reduce((s, c) => s + c.applications, 0);
+      const totalHires = this.channels.reduce((s, c) => s + c.hires, 0);
+      const totalSpend = this.channels.reduce((s, c) => s + c.spend, 0);
+      this.kpis = [
+        { val: totalApps, lbl: 'Total Applications', color: '#6b4df0' },
+        { val: totalHires, lbl: 'Total Hires', color: '#10b981' },
+        { val: `₹${totalHires ? Math.round(totalSpend / totalHires).toLocaleString() : 0}`, lbl: 'Avg Cost Per Hire', color: '#f59e0b' },
+        { val: this.channels.filter(c => c.connected).length, lbl: 'Active Channels', color: '#2563eb' },
+      ];
+    });
+  }
+
+  loadJobs() {
+    this.http.get<any[]>(`${this.api}/jobs`).subscribe(data => {
+      this.jobs = (data || []).map(j => j.title);
+    });
+  }
+
+  get maxApps(){ return this.channels.length ? Math.max(...this.channels.map(c=>c.applications)) : 1; }
+
+  postJob() {
+    const sel = this.channels.filter(c => c.selected && c.connected);
+    if (!sel.length || !this.post.job) return;
+    this.http.post(`${this.api}/branding/social-channels/post`, { job: this.post.job, channels: sel.map(c => c.name) }).subscribe();
+    this.post = { job: '' };
+  }
 }

@@ -205,5 +205,8 @@ export class SkillGapComponent implements OnInit {
     });
   }
 
-  enrollInCourse(skill: string, emp: string) { alert(`${emp} enrolled in "${this.courseFor(skill)}"`); }
+  enrollInCourse(skill: string, emp: string) {
+    const courseName = this.courseFor(skill);
+    this.http.post(`${this.api}/enrollments`, { employeeName: emp, skillName: skill, courseName }).subscribe();
+  }
 }
