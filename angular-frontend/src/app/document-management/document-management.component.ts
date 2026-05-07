@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-document-management',
@@ -85,6 +87,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class DocumentManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/employees`;
+  constructor(private http: HttpClient) {}
   showUpload = false; search = ''; activeCategory = 'All';
   categories = ['Contracts','Offer Letters','Policies','Certificates','Identity Proofs','Appraisal Documents','Exit Documents'];
   draft: any = { title:'', category:'', employee:'', expiryDate:'', access:'HR Only', fileName:'', fileSize:'' };

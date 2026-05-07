@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface PayrollRecord {
   id: number; name: string; empId: string; dept: string;
@@ -139,13 +141,15 @@ interface PayrollRecord {
   `]
 })
 export class PayrollComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
   tab = 'run';
-  selectedMonth = 5;
-  selectedYear = '2026';
+  selectedMonth = new Date().getMonth() + 1;
+  selectedYear = String(new Date().getFullYear());
   running = false;
   runProgress = 0;
   payrollRan = false;
   locked = false;
+  currentRunId: string | null = null;
 
   months = [
     { val: 1, label: 'January' }, { val: 2, label: 'February' }, { val: 3, label: 'March' },
@@ -154,42 +158,60 @@ export class PayrollComponent implements OnInit {
     { val: 10, label: 'October' }, { val: 11, label: 'November' }, { val: 12, label: 'December' },
   ];
 
-  payrollData: PayrollRecord[] = [
-    { id: 1, name: 'Arjun Mehta', empId: 'EMP001', dept: 'Engineering', ctc: 1500000, basic: 62500, hra: 31250, da: 7500, special: 24000, pf: 7500, pt: 200, tds: 12500, netPay: 105050 },
-    { id: 2, name: 'Priya Sharma', empId: 'EMP002', dept: 'HR', ctc: 1350000, basic: 56250, hra: 28125, da: 6750, special: 21000, pf: 6750, pt: 200, tds: 10500, netPay: 94675 },
-    { id: 3, name: 'Rahul Gupta', empId: 'EMP003', dept: 'DevOps', ctc: 1200000, basic: 50000, hra: 25000, da: 6000, special: 19000, pf: 6000, pt: 200, tds: 8500, netPay: 85300 },
-    { id: 4, name: 'Sneha Patel', empId: 'EMP004', dept: 'QA', ctc: 1125000, basic: 46875, hra: 23437, da: 5625, special: 17500, pf: 5625, pt: 200, tds: 7200, netPay: 80412 },
-    { id: 5, name: 'Vikram Singh', empId: 'EMP005', dept: 'Support', ctc: 1050000, basic: 43750, hra: 21875, da: 5250, special: 16000, pf: 5250, pt: 200, tds: 6000, netPay: 75425 },
-    { id: 6, name: 'Ananya Iyer', empId: 'EMP006', dept: 'Business', ctc: 1425000, basic: 59375, hra: 29687, da: 7125, special: 22500, pf: 7125, pt: 200, tds: 11000, netPay: 100362 },
-    { id: 7, name: 'Kiran Desai', empId: 'EMP007', dept: 'Analytics', ctc: 1275000, basic: 53125, hra: 26562, da: 6375, special: 20000, pf: 6375, pt: 200, tds: 9500, netPay: 89987 },
-    { id: 8, name: 'Rohan Nair', empId: 'EMP008', dept: 'Infrastructure', ctc: 975000, basic: 40625, hra: 20312, da: 4875, special: 14500, pf: 4875, pt: 200, tds: 4500, netPay: 70737 },
-  ];
+  payrollData: PayrollRecord[] = [];
+  history: any[] = [];
 
-  history = [
-    { month: 4, year: 2026, count: 8, total: 701948, status: 'Processed' },
-    { month: 3, year: 2026, count: 8, total: 698500, status: 'Processed' },
-    { month: 2, year: 2026, count: 7, total: 651000, status: 'Processed' },
-    { month: 1, year: 2026, count: 7, total: 648500, status: 'Processed' },
-  ];
+  constructor(private http: HttpClient) {}
 
   get totalPayroll() { return this.payrollData.reduce((s, p) => s + p.netPay, 0); }
   get totalCTC() { return this.payrollData.reduce((s, p) => s + p.ctc / 12, 0); }
   get totalDeductions() { return this.payrollData.reduce((s, p) => s + p.pf + p.pt + p.tds, 0); }
-  get avgNetPay() { return this.totalPayroll / this.payrollData.length; }
-
+  get avgNetPay() { return this.payrollData.length ? this.totalPayroll / this.payrollData.length : 0; }
   sum(field: keyof PayrollRecord): number { return this.payrollData.reduce((s, p) => s + (p[field] as number), 0); }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadHistory(); }
+
+  loadHistory() {
+    this.http.get<any[]>(`${this.api}/runs`).subscribe(data => {
+      this.history = (data || []).map(r => ({
+        id: r.id, month: r.month, year: r.year,
+        count: r.totalEmployees || 0, total: r.totalNetPay || 0, status: r.status
+      }));
+    });
+  }
 
   runPayroll() {
     this.running = true;
     this.runProgress = 0;
-    const iv = setInterval(() => {
-      this.runProgress += 10;
-      if (this.runProgress >= 100) { clearInterval(iv); this.running = false; this.payrollRan = true; }
-    }, 200);
+    const iv = setInterval(() => { this.runProgress += 15; if (this.runProgress >= 75) clearInterval(iv); }, 200);
+
+    this.http.post<any>(`${this.api}/runs/process`, { month: this.selectedMonth, year: parseInt(this.selectedYear) }).subscribe({
+      next: run => {
+        clearInterval(iv);
+        this.runProgress = 100;
+        this.running = false;
+        this.payrollRan = true;
+        this.currentRunId = run.id;
+        this.payrollData = (run.payslips || []).map((p: any) => ({
+          id: p.id, name: p.employeeName || '', empId: p.employeeCode || '', dept: p.department || '',
+          ctc: p.annualCTC || 0, basic: p.basicSalary || 0, hra: p.hra || 0,
+          da: p.da || 0, special: p.specialAllowance || 0,
+          pf: p.pfDeduction || 0, pt: p.professionalTax || 0,
+          tds: p.tdsDeduction || 0, netPay: p.netPay || 0
+        }));
+        this.loadHistory();
+      },
+      error: err => { clearInterval(iv); this.running = false; alert(err?.error?.message || 'Payroll run failed'); }
+    });
   }
 
   exportCSV() { alert('Payroll CSV exported successfully'); }
-  lockPayroll() { this.locked = true; alert('Payroll locked for this month'); }
+
+  lockPayroll() {
+    if (!this.currentRunId) { alert('Run payroll first'); return; }
+    this.http.post(`${this.api}/runs/${this.currentRunId}/approve`, {}).subscribe({
+      next: () => { this.locked = true; alert('Payroll approved and locked'); this.loadHistory(); },
+      error: err => alert(err?.error?.message || 'Failed to approve payroll')
+    });
+  }
 }

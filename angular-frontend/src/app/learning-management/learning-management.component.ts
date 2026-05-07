@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Course {
   id: number; title: string; category: string; duration: number;
@@ -134,42 +136,18 @@ interface Course {
   `]
 })
 export class LearningManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/learning`;
   tab = 'catalogue';
   search = '';
   filterCat = '';
   filterType = '';
+  stats: any = {};
+  categories = ['Technical', 'Leadership', 'Compliance', 'Product', 'Sales'];
+  courses: Course[] = [];
+  myCourses: any[] = [];
+  teamProgress: any[] = [];
 
-  categories = ['Technical', 'Leadership', 'Compliance'];
-  totalHours = 142;
-  completedCourses = 18;
-  passRate = 92;
-
-  courses: Course[] = [
-    { id: 1, title: 'Angular Advanced Patterns', category: 'Technical', duration: 12, type: 'Video', enrolled: 6, completions: 5 },
-    { id: 2, title: 'AWS Solutions Architect', category: 'Technical', duration: 40, type: 'Video', enrolled: 4, completions: 2 },
-    { id: 3, title: 'Leadership Essentials', category: 'Leadership', duration: 8, type: 'Reading', enrolled: 8, completions: 7 },
-    { id: 4, title: 'POSH Compliance Training', category: 'Compliance', duration: 2, type: 'Quiz', enrolled: 8, completions: 8 },
-    { id: 5, title: 'Python for Data Analysis', category: 'Technical', duration: 20, type: 'Video', enrolled: 5, completions: 3 },
-    { id: 6, title: 'Agile & Scrum Master', category: 'Technical', duration: 16, type: 'Workshop', enrolled: 7, completions: 6 },
-    { id: 7, title: 'Effective Communication', category: 'Leadership', duration: 6, type: 'Reading', enrolled: 8, completions: 6 },
-    { id: 8, title: 'Cybersecurity Fundamentals', category: 'Compliance', duration: 4, type: 'Quiz', enrolled: 8, completions: 7 },
-  ];
-
-  myCourses = [
-    { id: 1, title: 'Angular Advanced Patterns', category: 'Technical', duration: 12, type: 'Video', progress: 75 },
-    { id: 3, title: 'Leadership Essentials', category: 'Leadership', duration: 8, type: 'Reading', progress: 100 },
-    { id: 4, title: 'POSH Compliance Training', category: 'Compliance', duration: 2, type: 'Quiz', progress: 100 },
-    { id: 6, title: 'Agile & Scrum Master', category: 'Technical', duration: 16, type: 'Workshop', progress: 40 },
-  ];
-
-  teamProgress = [
-    { name: 'Arjun Mehta', statuses: ['done', 'progress', 'done', 'done', 'progress', 'done'], hours: 38 },
-    { name: 'Priya Sharma', statuses: ['done', 'not', 'done', 'done', 'not', 'done'], hours: 22 },
-    { name: 'Rahul Gupta', statuses: ['done', 'done', 'done', 'done', 'done', 'progress'], hours: 45 },
-    { name: 'Sneha Patel', statuses: ['done', 'not', 'done', 'done', 'done', 'done'], hours: 28 },
-    { name: 'Vikram Singh', statuses: ['progress', 'not', 'progress', 'done', 'not', 'done'], hours: 18 },
-    { name: 'Ananya Iyer', statuses: ['done', 'progress', 'done', 'done', 'done', 'done'], hours: 32 },
-  ];
+  constructor(private http: HttpClient) {}
 
   get filteredCourses() {
     return this.courses.filter(c =>
@@ -182,8 +160,46 @@ export class LearningManagementComponent implements OnInit {
   typeClass(type: string) { return type.toLowerCase(); }
   typeIcon(type: string) { const m: { [k: string]: string } = { Video: '🎥', Quiz: '📝', Reading: '📖', Workshop: '🏫' }; return m[type] || '📚'; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadCourses(); this.loadStats(); this.loadMyEnrollments(); }
 
-  enrollCourse(c: Course) { c.enrolled++; alert(`Enrolled in ${c.title}`); }
-  continueCourse(c: any) { c.progress = Math.min(c.progress + 20, 100); }
+  loadCourses() {
+    this.http.get<any[]>(`${this.api}/courses`).subscribe(data => {
+      this.courses = (data || []).map(c => ({
+        id: c.id, title: c.title, category: c.category, duration: c.durationHours || 0,
+        type: c.mode || 'Video', enrolled: c.enrolledCount || 0, completions: c.completedCount || 0
+      }));
+    });
+  }
+
+  loadStats() {
+    this.http.get<any>(`${this.api}/courses/stats`).subscribe(s => { this.stats = s || {}; });
+  }
+
+  loadMyEnrollments() {
+    this.http.get<any[]>(`${this.api}/enrollments`).subscribe(data => {
+      this.myCourses = (data || []).map(e => ({
+        id: e.id, courseId: e.courseId, title: e.course?.title || '', category: e.course?.category || '',
+        duration: e.course?.durationHours || 0, type: e.course?.mode || 'Video',
+        progress: e.progressPercent || 0, status: e.status
+      }));
+    });
+  }
+
+  enrollCourse(c: Course) {
+    this.http.post<any>(`${this.api}/courses/${c.id}/enroll`, { employeeId: null }).subscribe({
+      next: () => { alert(`Enrolled in ${c.title}`); this.loadMyEnrollments(); this.loadCourses(); },
+      error: err => alert(err?.error?.message || 'Enrollment failed')
+    });
+  }
+
+  continueCourse(c: any) {
+    const newProgress = Math.min((c.progress || 0) + 20, 100);
+    this.http.patch<any>(`${this.api}/enrollments/${c.id}/progress`, { progressPercent: newProgress }).subscribe({
+      next: () => { c.progress = newProgress; if (newProgress >= 100) this.completeCourse(c); }
+    });
+  }
+
+  completeCourse(c: any) {
+    this.http.post(`${this.api}/enrollments/${c.id}/complete`, {}).subscribe(() => { this.loadStats(); });
+  }
 }

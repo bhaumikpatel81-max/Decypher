@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-salary-structure',
@@ -153,6 +155,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class SalaryStructureComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'grades';
   previewCTC = 1200000;
   previewRows: any[] = [];

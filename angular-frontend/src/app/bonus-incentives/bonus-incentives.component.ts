@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface BonusRecord {
   id: number; employee: string; empId: string; type: string;
@@ -157,6 +159,8 @@ interface BonusRecord {
   `]
 })
 export class BonusIncentivesComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'add';
   msg = '';
 

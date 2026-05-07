@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Expense {
   id: number; employee: string; empId: string; category: string;
@@ -161,6 +163,8 @@ interface Expense {
   `]
 })
 export class ExpenseManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'claim';
   search = '';
   filterCat = '';

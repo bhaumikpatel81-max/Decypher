@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-statutory-compliance', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -51,6 +53,8 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.comp-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}.comp-card.filed{border-color:#10b981;background:rgba(16,185,129,.03)}.comp-card.overdue{border-color:#ef4444;background:rgba(239,68,68,.03)}.status-dot{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}.status-dot.filed{background:#d1fae5;color:#065f46}.status-dot.overdue{background:#fee2e2;color:#991b1b}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}`] })
 export class StatutoryComplianceComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/hr-compliance`;
+  constructor(private http: HttpClient) {}
   showUpload=false;
   compTypes=['PF','ESI','PT','TDS','LWF'];
   draft:any={type:'PF',month:'',amount:'',ref:''};

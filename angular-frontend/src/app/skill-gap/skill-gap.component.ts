@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-skill-gap',
@@ -131,6 +133,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class SkillGapComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/learning`;
+  constructor(private http: HttpClient) {}
   tab = 'matrix';
   filterRole = '';
   filterDept = '';

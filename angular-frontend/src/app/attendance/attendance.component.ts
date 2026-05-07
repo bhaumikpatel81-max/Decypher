@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface AttendanceRecord {
   id: number; employee: string; empId: string;
@@ -384,6 +386,7 @@ interface AttendanceRecord {
   `]
 })
 export class AttendanceComponent implements OnInit, OnDestroy {
+  private api = `${environment.apiUrl}/api/attendance`;
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
 
@@ -397,13 +400,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     { id: 'card', icon: '💳', label: 'ID Card' },
   ];
 
-  employees = [
-    { empId: 'EMP001', name: 'Arjun Mehta', cardId: 'CARD001' },
-    { empId: 'EMP002', name: 'Priya Sharma', cardId: 'CARD002' },
-    { empId: 'EMP003', name: 'Rahul Gupta', cardId: 'CARD003' },
-    { empId: 'EMP004', name: 'Sneha Patel', cardId: 'CARD004' },
-    { empId: 'EMP005', name: 'Vikram Singh', cardId: 'CARD005' },
-  ];
+  employees: { empId: string; name: string; cardId: string; id?: string }[] = [];
 
   // Face
   cameraActive = false;
@@ -446,25 +443,63 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   recSearch = ''; recDate = ''; recStatus = '';
 
   kpis = [
-    { val: '127', lbl: 'Present Today', color: '#10b981' },
-    { val: '8', lbl: 'Absent', color: '#ef4444' },
-    { val: '12', lbl: 'Late Arrivals', color: '#f59e0b' },
-    { val: '96.2%', lbl: 'Attendance Rate', color: '#6b4df0' },
+    { val: '—', lbl: 'Present Today', color: '#10b981' },
+    { val: '—', lbl: 'Absent', color: '#ef4444' },
+    { val: '—', lbl: 'Late Arrivals', color: '#f59e0b' },
+    { val: '—', lbl: 'Attendance Rate', color: '#6b4df0' },
   ];
 
   fence = { name: 'Amnex HQ — Ahmedabad', lat: 23.0225, lng: 72.5714, radius: 200, strict: true };
   bio = { faceEnabled: true, fingerEnabled: true, cardEnabled: true, geoRequired: true, doorAuto: true, lateThreshold: 15, startTime: '09:00' };
 
-  records: AttendanceRecord[] = [
-    { id:1, employee:'Arjun Mehta', empId:'EMP001', date:this.today(), punchIn:'08:58', punchOut:'18:02', method:'Face', status:'Present', inLat:23.0225, inLng:72.5714, outLat:23.0225, outLng:72.5714, inAddress:'Amnex HQ, Ahmedabad', outAddress:'Amnex HQ, Ahmedabad', withinFence:true, doorGranted:true },
-    { id:2, employee:'Priya Sharma', empId:'EMP002', date:this.today(), punchIn:'09:22', punchOut:'', method:'Fingerprint', status:'Late', inLat:23.023, inLng:72.572, outLat:0, outLng:0, inAddress:'Amnex HQ, Ahmedabad', outAddress:'', withinFence:true, doorGranted:true },
-    { id:3, employee:'Rahul Gupta', empId:'EMP003', date:this.today(), punchIn:'09:01', punchOut:'17:45', method:'ID Card', status:'Present', inLat:23.022, inLng:72.571, outLat:23.022, outLng:72.571, inAddress:'Amnex HQ, Ahmedabad', outAddress:'Amnex HQ, Ahmedabad', withinFence:true, doorGranted:true },
-    { id:4, employee:'Sneha Patel', empId:'EMP004', date:this.today(), punchIn:'', punchOut:'', method:'', status:'Absent', inLat:0, inLng:0, outLat:0, outLng:0, inAddress:'', outAddress:'', withinFence:false, doorGranted:false },
-  ];
+  records: AttendanceRecord[] = [];
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.clockTimer = setInterval(() => this.now = new Date(), 1000);
     this.getLocation();
+    this.loadDailySummary();
+    this.loadRecords();
+    this.loadEmployees();
+  }
+
+  loadDailySummary() {
+    this.http.get<any>(`${this.api}/daily-summary`).subscribe(s => {
+      if (!s) return;
+      this.kpis = [
+        { val: String(s.present ?? '—'), lbl: 'Present Today', color: '#10b981' },
+        { val: String(s.absent ?? '—'), lbl: 'Absent', color: '#ef4444' },
+        { val: String(s.late ?? '—'), lbl: 'Late Arrivals', color: '#f59e0b' },
+        { val: s.attendanceRate != null ? s.attendanceRate.toFixed(1) + '%' : '—', lbl: 'Attendance Rate', color: '#6b4df0' },
+      ];
+    });
+  }
+
+  loadRecords() {
+    const today = this.today();
+    this.http.get<any[]>(`${this.api}/records`, { params: { from: today, to: today } }).subscribe(data => {
+      this.records = (data || []).map(r => ({
+        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+        date: r.date?.slice(0, 10) || today,
+        punchIn: r.punchInTime?.slice(11, 16) || '',
+        punchOut: r.punchOutTime?.slice(11, 16) || '',
+        method: r.punchMethod || 'Manual', status: r.status || 'Present',
+        inLat: r.inLatitude || 0, inLng: r.inLongitude || 0,
+        outLat: r.outLatitude || 0, outLng: r.outLongitude || 0,
+        inAddress: r.inAddress || '', outAddress: r.outAddress || '',
+        withinFence: r.isWithinFence ?? true, doorGranted: r.isDoorGranted ?? false
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        id: e.id, empId: e.employeeCode || '', cardId: '',
+        name: `${e.firstName || ''} ${e.lastName || ''}`.trim()
+      }));
+    });
   }
 
   ngOnDestroy() {
@@ -631,16 +666,18 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   punch(type: 'in' | 'out') {
     if (!this.authPassed || !this.punchEmpId) return;
     const emp = this.employees.find(e => e.empId === this.punchEmpId);
-    const timeStr = new Date().toTimeString().slice(0,5);
-    const existing = this.records.find(r => r.empId === this.punchEmpId && r.date === this.today());
-    if (existing) {
-      if (type === 'out') existing.punchOut = timeStr;
-    } else if (type === 'in') {
-      const isLate = timeStr > this.bio.startTime;
-      this.records.unshift({ id:Date.now(), employee:emp!.name, empId:this.punchEmpId, date:this.today(), punchIn:timeStr, punchOut:'', method:this.methodLabel(this.selectedMethod), status:isLate?'Late':'Present', inLat:this.currentLat, inLng:this.currentLng, outLat:0, outLng:0, inAddress:this.currentAddress, outAddress:'', withinFence:this.withinFence??false, doorGranted:this.doorStatus==='open' });
-    }
-    this.lastPunch = { type, time: timeStr, method: this.methodLabel(this.selectedMethod), geo: this.withinFence ? '📍 Inside fence' : '⚠️ Outside fence' };
-    if (this.bio.doorAuto && type === 'in') this.requestDoorAccess();
+    if (!emp?.id) { alert('Employee not found in system'); return; }
+    const timeStr = new Date().toTimeString().slice(0, 5);
+    const endpoint = type === 'in' ? 'punch-in' : 'punch-out';
+    this.http.post<any>(`${this.api}/${endpoint}`, { employeeId: emp.id, notes: `Via ${this.methodLabel(this.selectedMethod)}` }).subscribe({
+      next: () => {
+        this.lastPunch = { type, time: timeStr, method: this.methodLabel(this.selectedMethod), geo: this.withinFence ? '📍 Inside fence' : '⚠️ Outside fence' };
+        if (this.bio.doorAuto && type === 'in') this.requestDoorAccess();
+        this.loadRecords();
+        this.loadDailySummary();
+      },
+      error: err => alert(err?.error?.message || `Punch ${type} failed`)
+    });
     this.authPassed = false;
     this.faceResult = 'idle';
     this.fpResult = 'idle';

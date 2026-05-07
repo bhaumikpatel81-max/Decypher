@@ -109,15 +109,15 @@ namespace Decypher.Web.Services
                 .Where(c => c.Stage == "Joined")
                 .ToListAsync();
 
-            var avgTimeToHire = hiredCandidates.Count > 0 
+            var avgTimeToHire = hiredCandidates.Count > 0
                 ? hiredCandidates.Average(c => (DateTime.UtcNow - c.SubmittedDate).Days)
                 : 0;
 
-            var minTimeToHire = hiredCandidates.Count > 0 
+            var minTimeToHire = hiredCandidates.Count > 0
                 ? hiredCandidates.Min(c => (DateTime.UtcNow - c.SubmittedDate).Days)
                 : 0;
 
-            var maxTimeToHire = hiredCandidates.Count > 0 
+            var maxTimeToHire = hiredCandidates.Count > 0
                 ? hiredCandidates.Max(c => (DateTime.UtcNow - c.SubmittedDate).Days)
                 : 0;
 
@@ -128,6 +128,84 @@ namespace Decypher.Web.Services
                 maxTimeToHire,
                 totalHired = hiredCandidates.Count
             };
+        }
+
+        public async Task<dynamic> GetMonthlyTrendAsync(string tenantId, int months = 6)
+        {
+            _context.SetTenantId(tenantId);
+            var since = DateTime.UtcNow.AddMonths(-months);
+
+            var candidates = await _context.Candidates
+                .AsNoTracking()
+                .Where(c => c.SubmittedDate >= since)
+                .Select(c => new { c.SubmittedDate, c.Stage })
+                .ToListAsync();
+
+            var trend = Enumerable.Range(0, months)
+                .Select(i => DateTime.UtcNow.AddMonths(-months + 1 + i))
+                .Select(d => new
+                {
+                    month = d.ToString("MMM"),
+                    year = d.Year,
+                    submitted = candidates.Count(c => c.SubmittedDate.Month == d.Month && c.SubmittedDate.Year == d.Year),
+                    joined = candidates.Count(c => c.Stage == "Joined" && c.SubmittedDate.Month == d.Month && c.SubmittedDate.Year == d.Year)
+                })
+                .ToList();
+
+            return trend;
+        }
+
+        public async Task<dynamic> GetTopSkillsAsync(string tenantId, int topN = 6)
+        {
+            _context.SetTenantId(tenantId);
+
+            var allSkills = await _context.Candidates
+                .AsNoTracking()
+                .Where(c => !string.IsNullOrEmpty(c.Skills))
+                .Select(c => c.Skills)
+                .ToListAsync();
+
+            var skillCounts = allSkills
+                .SelectMany(s => s!.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .GroupBy(s => s, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new { skill = g.Key, count = g.Count() })
+                .OrderByDescending(x => x.count)
+                .Take(topN)
+                .ToList();
+
+            var maxCount = skillCounts.Any() ? skillCounts.Max(x => x.count) : 1;
+            return skillCounts.Select(x => new
+            {
+                x.skill,
+                x.count,
+                pct = maxCount > 0 ? (int)Math.Round((double)x.count / maxCount * 100) : 0
+            }).ToList();
+        }
+
+        public async Task<dynamic> GetTimeToFillByRoleAsync(string tenantId)
+        {
+            _context.SetTenantId(tenantId);
+
+            var hired = await _context.Candidates
+                .AsNoTracking()
+                .Where(c => c.Stage == "Joined" && !string.IsNullOrEmpty(c.JobTitle))
+                .Select(c => new { c.JobTitle, Days = (int)(DateTime.UtcNow - c.SubmittedDate).TotalDays })
+                .ToListAsync();
+
+            const int target = 30;
+            return hired
+                .GroupBy(c => c.JobTitle)
+                .Select(g => new
+                {
+                    role = g.Key,
+                    days = (int)Math.Round(g.Average(x => x.Days)),
+                    target
+                })
+                .OrderBy(x => x.role)
+                .Take(8)
+                .ToList();
         }
     }
 }

@@ -404,31 +404,9 @@ export class DashboardComponent implements OnInit {
 
   funnelColors = ['#6b4df0', '#a94ee6', '#3bbdea', '#16a34a', '#e8912a'];
 
-  monthlyTrend = [
-    { month: 'Nov', submitted: 18, joined: 4 },
-    { month: 'Dec', submitted: 22, joined: 6 },
-    { month: 'Jan', submitted: 28, joined: 8 },
-    { month: 'Feb', submitted: 35, joined: 10 },
-    { month: 'Mar', submitted: 30, joined: 9 },
-    { month: 'Apr', submitted: 42, joined: 12 },
-  ];
-
-  topSkills = [
-    { skill: 'React',      count: 24, pct: 80 },
-    { skill: '.NET Core',  count: 21, pct: 70 },
-    { skill: 'Angular',    count: 18, pct: 60 },
-    { skill: 'AWS',        count: 15, pct: 50 },
-    { skill: 'PostgreSQL', count: 12, pct: 40 },
-    { skill: 'Docker',     count: 9,  pct: 30 },
-  ];
-
-  timeToFill = [
-    { role: 'Frontend',    days: 18, target: 30 },
-    { role: 'Backend',     days: 24, target: 30 },
-    { role: 'DevOps',      days: 35, target: 30 },
-    { role: 'Data Analyst',days: 12, target: 30 },
-    { role: 'QA Engineer', days: 20, target: 30 },
-  ];
+  monthlyTrend: { month: string; submitted: number; joined: number }[] = [];
+  topSkills: { skill: string; count: number; pct: number }[] = [];
+  timeToFill: { role: string; days: number; target: number }[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -469,6 +447,21 @@ export class DashboardComponent implements OnInit {
       this.activity = [...skillActivity, ...(metrics.recentActivity || [])];
     });
 
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/monthly-trend`).subscribe(trend => {
+      this.monthlyTrend = (trend || []).map((t: any) => ({
+        month: t.month, submitted: t.submitted || 0, joined: t.joined || 0
+      }));
+      this.buildSvgChart();
+    });
+
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/top-skills`).subscribe(skills => {
+      this.topSkills = skills || [];
+    });
+
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/time-to-fill`).subscribe(ttf => {
+      this.timeToFill = ttf || [];
+    });
+
     this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => {
       const colors = ['#6b4df0', '#a94ee6', '#3bbdea', '#16a34a', '#e8912a'];
       this.enrichedRecruiters = (data || []).map((r: any, i: number) => ({
@@ -481,10 +474,11 @@ export class DashboardComponent implements OnInit {
   }
 
   buildSvgChart() {
+    if (this.monthlyTrend.length < 2) return;
     const W = this.svgW, H = this.svgH, PAD = 18;
     const sub = this.monthlyTrend.map(m => m.submitted);
     const joi = this.monthlyTrend.map(m => m.joined);
-    const maxV = Math.max(...sub);
+    const maxV = Math.max(...sub, 1);
     const n = sub.length;
 
     const pt = (v: number, i: number) => ({

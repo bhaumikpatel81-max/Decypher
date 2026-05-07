@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-talent-community', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -44,6 +46,8 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}.skill-chip{display:inline-block;padding:1px 6px;background:rgba(107,77,240,.08);color:#6b4df0;border-radius:4px;font-size:10px;margin:1px}.seg-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#e0e7ff;color:#3730a3}`] })
 export class TalentCommunityComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/branding`;
+  constructor(private http: HttpClient) {}
   search='';filterSeg='';showAlert=false;
   segments=['Technology','Product','Sales','HR','Finance','Leadership'];
   alert:any={segment:'',role:'',location:'',message:''};

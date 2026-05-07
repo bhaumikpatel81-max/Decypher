@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-tax-statutory',
@@ -184,6 +186,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class TaxStatutoryComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'overview';
 
   statusCards = [

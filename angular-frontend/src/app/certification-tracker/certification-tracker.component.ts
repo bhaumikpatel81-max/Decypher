@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Certification {
   id: number; employee: string; empId: string; name: string;
@@ -131,6 +133,8 @@ interface Certification {
   `]
 })
 export class CertificationTrackerComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/learning`;
+  constructor(private http: HttpClient) {}
   tab = 'list';
   search = '';
   expiryFilter = 0;

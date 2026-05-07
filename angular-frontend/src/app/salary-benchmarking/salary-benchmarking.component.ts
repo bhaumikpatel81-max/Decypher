@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface BenchmarkRole {
   role: string; dept: string; yourMedian: number;
@@ -142,6 +144,8 @@ interface BenchmarkRole {
   `]
 })
 export class SalaryBenchmarkingComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'comparison';
   filterDept = '';
   search = '';

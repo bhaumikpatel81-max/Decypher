@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface RevisionRecord {
   id: number; employee: string; empId: string; dept: string;
@@ -161,6 +163,8 @@ interface RevisionRecord {
   `]
 })
 export class CompensationPlanningComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'cycles';
 
   employees = [

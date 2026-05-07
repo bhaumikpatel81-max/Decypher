@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-feedback-360',
@@ -179,6 +181,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class Feedback360Component implements OnInit {
+  private api = `${environment.apiUrl}/api/performance`;
+  constructor(private http: HttpClient) {}
   tab = 'requests';
   blindMode = true;
   feedMsg = '';

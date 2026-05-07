@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Employee {
   id: string; name: string; role: string;
@@ -131,6 +133,8 @@ interface Employee {
   `]
 })
 export class ShiftManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/attendance`;
+  constructor(private http: HttpClient) {}
   tab = 'roster';
   assignMsg = '';
 

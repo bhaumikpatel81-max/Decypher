@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-campus-connect', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -51,6 +53,8 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.drives-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}.drive-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}.status-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}.status-badge.active{background:#dbeafe;color:#1e40af}.status-badge.done{background:#d1fae5;color:#065f46}`] })
 export class CampusConnectComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/branding`;
+  constructor(private http: HttpClient) {}
   showForm=false;draft:any={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'};
   kpis=[{val:8,lbl:'Drives This Year',color:'#6b4df0'},{val:142,lbl:'Offers Made',color:'#2563eb'},{val:118,lbl:'Offers Accepted',color:'#10b981'},{val:'83%',lbl:'Acceptance Rate',color:'#f59e0b'}];
   drives:any[]=[

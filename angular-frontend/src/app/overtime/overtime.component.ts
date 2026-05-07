@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface OTRecord {
   id: number; employee: string; empId: string; date: string;
@@ -147,6 +149,8 @@ interface OTRecord {
   `]
 })
 export class OvertimeComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/attendance`;
+  constructor(private http: HttpClient) {}
   tab = 'request';
   autoCalc = true;
   search = '';

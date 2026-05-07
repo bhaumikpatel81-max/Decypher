@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Policy {
   id: number; title: string; category: string; version: string;
@@ -145,6 +147,8 @@ interface Policy {
   `]
 })
 export class PolicyManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/hr-compliance`;
+  constructor(private http: HttpClient) {}
   tab = 'library';
   search = '';
   filterCat = '';

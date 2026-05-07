@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-careers-builder', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -91,6 +93,8 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.careers-preview{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}.cp-hero{padding:48px 32px;text-align:center;color:#fff}.cp-hero h1{font-size:32px;font-weight:900;margin:0}.cp-hero p{margin:8px 0 0;font-size:16px;opacity:.9}.cp-section{padding:32px;border-bottom:1px solid var(--border)}.cp-section h2{font-size:20px;font-weight:700;margin:0 0 16px}`] })
 export class CareersBuilderComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/branding`;
+  constructor(private http: HttpClient) {}
   tab:'build'|'preview'|'analytics'='build';published=false;newPerk='';
   page={company:'Amnex Infotechnologies',tagline:'Build the Future of HR Technology',about:'Amnex Infotechnologies is a leading HR-Tech company helping enterprises modernise their people operations.',brandColor:'#292966',slug:'amnex',values:[{title:'Innovation',desc:'We build tomorrow\'s solutions today'},{title:'Integrity',desc:'Transparent in everything we do'},{title:'Impact',desc:'Every action drives real outcomes'}],perks:['Remote-friendly','Health Insurance','Learning Budget','Flexible Hours','Team Offsites','Parental Leave']};
   jobs=[{title:'Senior Angular Developer',dept:'Engineering',location:'Ahmedabad',type:'Full-Time',visible:true},{title:'HR Business Partner',dept:'HR',location:'Mumbai',type:'Full-Time',visible:true},{title:'Product Manager',dept:'Product',location:'Bangalore',type:'Full-Time',visible:true},{title:'Data Analyst',dept:'Analytics',location:'Remote',type:'Full-Time',visible:false}];

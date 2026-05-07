@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface KeyResult {
   text: string; target: number; current: number; unit: string;
@@ -166,58 +168,78 @@ interface OKR {
   `]
 })
 export class GoalsOkrComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/performance`;
   tab = 'view';
   filterOwner = '';
   filterQuarter = '';
   filterStatus = '';
   Math = Math;
-
-  owners = ['Satish Menon (CEO)', 'Priya Sharma (HR)', 'Arjun Mehta (Engg)', 'Ananya Iyer (Ops)', 'Kiran Desai (Analyst)'];
+  summary: any = {};
+  owners: string[] = [];
 
   levels = [
-    { label: 'Company OKRs', depts: ['Company'], color: '#6b4df0', indent: 0 },
-    { label: 'Department OKRs', depts: ['Engineering', 'HR', 'Sales'], color: '#10b981', indent: 24 },
-    { label: 'Individual OKRs', depts: ['Individual'], color: '#f59e0b', indent: 48 },
+    { label: 'Company OKRs', type: 'Company', color: '#6b4df0', indent: 0 },
+    { label: 'Department OKRs', type: 'Team', color: '#10b981', indent: 24 },
+    { label: 'Individual OKRs', type: 'Individual', color: '#f59e0b', indent: 48 },
   ];
 
-  allOKRs: OKR[] = [
-    { id: 1, objective: 'Achieve 40% revenue growth', owner: 'Satish Menon (CEO)', dept: 'Company', quarter: 'Q2', year: 2026, status: 'On Track', keyResults: [{ text: 'Annual recurring revenue', target: 50, current: 32, unit: '₹Cr' }, { text: 'New enterprise clients', target: 15, current: 10, unit: 'clients' }, { text: 'Customer NPS score', target: 65, current: 58, unit: 'points' }] },
-    { id: 2, objective: 'Launch 5 new product modules', owner: 'Arjun Mehta (Engg)', dept: 'Engineering', quarter: 'Q2', year: 2026, status: 'On Track', keyResults: [{ text: 'Modules shipped', target: 5, current: 3, unit: 'modules' }, { text: 'Test coverage', target: 80, current: 72, unit: '%' }] },
-    { id: 3, objective: 'Reduce employee attrition to below 10%', owner: 'Priya Sharma (HR)', dept: 'HR', quarter: 'Q2', year: 2026, status: 'At Risk', keyResults: [{ text: 'Attrition rate', target: 10, current: 13, unit: '%' }, { text: 'Engagement score', target: 80, current: 68, unit: '%' }, { text: 'New hire 90-day retention', target: 95, current: 88, unit: '%' }] },
-    { id: 4, objective: 'Improve sales pipeline 3x', owner: 'Ananya Iyer (Ops)', dept: 'Sales', quarter: 'Q2', year: 2026, status: 'On Track', keyResults: [{ text: 'Qualified leads', target: 120, current: 95, unit: 'leads' }, { text: 'Conversion rate', target: 25, current: 18, unit: '%' }] },
-    { id: 5, objective: 'Complete AWS certification', owner: 'Kiran Desai (Analyst)', dept: 'Individual', quarter: 'Q2', year: 2026, status: 'Achieved', keyResults: [{ text: 'Modules completed', target: 12, current: 12, unit: 'modules' }, { text: 'Practice tests passed', target: 5, current: 5, unit: 'tests' }] },
-  ];
+  allOKRs: OKR[] = [];
+  newOKR: any = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] };
 
-  newOKR: any = { objective: '', owner: '', dept: '', quarter: 'Q2', year: 2026, keyResults: [{ text: '', target: 100, unit: '%' }] };
+  constructor(private http: HttpClient) {}
 
   get achievedCount() { return this.allOKRs.filter(o => o.status === 'Achieved').length; }
   get atRiskCount() { return this.allOKRs.filter(o => o.status === 'At Risk').length; }
   get avgProgress() {
     let total = 0, count = 0;
     this.allOKRs.forEach(o => o.keyResults.forEach(kr => { total += (kr.current / kr.target) * 100; count++; }));
-    return count ? total / count : 0;
+    return count ? Math.round(total / count) : 0;
   }
 
-  filteredOKRs(depts: string[]): OKR[] {
+  filteredOKRs(type: string): OKR[] {
     return this.allOKRs.filter(o => {
-      const matchDept = depts.includes(o.dept);
+      const matchType = !type || o.dept === type;
       const matchOwner = !this.filterOwner || o.owner === this.filterOwner;
       const matchQ = !this.filterQuarter || o.quarter === this.filterQuarter;
       const matchStatus = !this.filterStatus || o.status === this.filterStatus;
-      return matchDept && matchOwner && matchQ && matchStatus;
+      return matchType && matchOwner && matchQ && matchStatus;
     });
   }
 
   chipClass(status: string) { return { 'On Track': 'ontrack', 'At Risk': 'atrisk', 'Achieved': 'achieved', 'Not Started': 'notstarted' }[status] || ''; }
-
   addKR() { this.newOKR.keyResults.push({ text: '', target: 100, unit: '%' }); }
 
-  createOKR() {
-    if (!this.newOKR.objective || !this.newOKR.owner) { alert('Fill objective and owner'); return; }
-    this.allOKRs.push({ id: Date.now(), ...this.newOKR, status: 'Not Started', keyResults: this.newOKR.keyResults.map((kr: any) => ({ ...kr, current: 0 })) });
-    alert('OKR created');
-    this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: 2026, keyResults: [{ text: '', target: 100, unit: '%' }] };
+  ngOnInit() { this.loadGoals(); this.loadSummary(); }
+
+  loadGoals() {
+    this.http.get<any[]>(`${this.api}/goals`).subscribe(data => {
+      this.allOKRs = (data || []).map(g => ({
+        id: g.id, objective: g.title, owner: g.ownerName || '', dept: g.type || 'Individual',
+        quarter: g.quarter ? `Q${g.quarter}` : 'Q1', year: g.year || new Date().getFullYear(),
+        status: g.status, keyResults: (g.keyResults || []).map((kr: any) => ({
+          text: kr.title, target: kr.targetValue || 100, current: kr.currentValue || 0, unit: kr.unit || '%'
+        }))
+      }));
+      this.owners = [...new Set(this.allOKRs.map(o => o.owner))];
+    });
   }
 
-  ngOnInit() {}
+  loadSummary() {
+    this.http.get<any>(`${this.api}/goals/summary`).subscribe(s => { this.summary = s || {}; });
+  }
+
+  createOKR() {
+    if (!this.newOKR.objective) { alert('Fill objective'); return; }
+    const quarterNum = parseInt((this.newOKR.quarter || 'Q2').replace('Q', ''));
+    const payload = {
+      title: this.newOKR.objective, type: this.newOKR.dept || 'Individual',
+      year: this.newOKR.year, quarter: quarterNum,
+      keyResults: this.newOKR.keyResults.map((kr: any) => ({ title: kr.text, targetValue: kr.target, unit: kr.unit }))
+    };
+    this.http.post<any>(`${this.api}/goals`, payload).subscribe({
+      next: () => { this.loadGoals(); this.loadSummary(); alert('OKR created'); this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] }; },
+      error: err => alert(err?.error?.message || 'Failed to create OKR')
+    });
+  }
+}
 }

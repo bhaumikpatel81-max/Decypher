@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-continuous-feedback',
@@ -154,6 +156,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class ContinuousFeedbackComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/performance`;
+  constructor(private http: HttpClient) {}
   tab = 'wall';
   kudosMsg = '';
   moodNote = '';

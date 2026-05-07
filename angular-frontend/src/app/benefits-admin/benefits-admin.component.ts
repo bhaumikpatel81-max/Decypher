@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-benefits-admin',
@@ -147,6 +149,8 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class BenefitsAdminComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
   tab = 'catalogue';
   selectedEmpId = '';
 

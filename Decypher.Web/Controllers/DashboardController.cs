@@ -53,5 +53,26 @@ namespace Decypher.Web.Controllers
             var metrics = await _dashboardService.GetTimeToHireMetricsAsync(GetTenantId());
             return Ok(metrics);
         }
+
+        [HttpGet("monthly-trend")]
+        public async Task<IActionResult> GetMonthlyTrend([FromQuery] int months = 6)
+        {
+            var trend = await _dashboardService.GetMonthlyTrendAsync(GetTenantId(), months);
+            return Ok(trend);
+        }
+
+        [HttpGet("top-skills")]
+        public async Task<IActionResult> GetTopSkills([FromQuery] int topN = 6)
+        {
+            var skills = await _dashboardService.GetTopSkillsAsync(GetTenantId(), topN);
+            return Ok(skills);
+        }
+
+        [HttpGet("time-to-fill")]
+        public async Task<IActionResult> GetTimeToFill()
+        {
+            var data = await _dashboardService.GetTimeToFillByRoleAsync(GetTenantId());
+            return Ok(data);
+        }
     }
 }

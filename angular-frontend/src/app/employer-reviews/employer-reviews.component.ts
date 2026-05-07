@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-employer-reviews', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -67,6 +69,8 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles:[`.overall-card{text-align:center}.review-card{padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}.review-card.negative{border-color:#fca5a5;background:rgba(239,68,68,.02)}.our-row{background:rgba(107,77,240,.04)}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;font-size:13px}`] })
 export class EmployerReviewsComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/branding`;
+  constructor(private http: HttpClient) {}
   filterPlatform='';selectedReview:any=null;response='';
   overall={rating:4.1,breakdown:[{label:'Work-Life Balance',score:4.0},{label:'Culture & Values',score:4.2},{label:'Career Growth',score:3.8},{label:'Management',score:4.3},{label:'Compensation',score:3.9}]};
   competitors=[

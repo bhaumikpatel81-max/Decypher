@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-employee-directory',
@@ -162,55 +164,87 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class EmployeeDirectoryComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/employees`;
   view: 'grid' | 'list' = 'grid';
   showForm = false;
+  loading = false;
   search = ''; filterDept = ''; filterStatus = ''; filterLocation = '';
   selected: any = null;
   departments = ['Engineering','HR','Finance','Sales','Marketing','Operations','Legal','Product'];
   colors = ['#6b4df0','#2563eb','#10b981','#f59e0b','#db2777','#0891b2','#7c3aed','#059669','#dc2626','#8b5cf6'];
 
-  employees: any[] = [
-    { empId:'EMP001', firstName:'Arjun', lastName:'Mehta', email:'arjun.m@amnex.com', phone:'9876543210', designation:'Sr. Engineer', department:'Engineering', location:'Ahmedabad HQ', manager:'Rohan Shah', doj:'2021-03-15', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP002', firstName:'Priya', lastName:'Sharma', email:'priya.s@amnex.com', phone:'9876543211', designation:'HR Manager', department:'HR', location:'Ahmedabad HQ', manager:'Kavita Patel', doj:'2020-07-01', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP003', firstName:'Rahul', lastName:'Gupta', email:'rahul.g@amnex.com', phone:'9876543212', designation:'Finance Analyst', department:'Finance', location:'Mumbai', manager:'Deepak Joshi', doj:'2022-01-10', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP004', firstName:'Sneha', lastName:'Patel', email:'sneha.p@amnex.com', phone:'9876543213', designation:'Sales Executive', department:'Sales', location:'Delhi', manager:'Arjun Mehta', doj:'2023-04-05', employmentType:'Full-Time', status:'On Leave' },
-    { empId:'EMP005', firstName:'Vikram', lastName:'Singh', email:'vikram.s@amnex.com', phone:'9876543214', designation:'Product Manager', department:'Product', location:'Bangalore', manager:'Priya Sharma', doj:'2019-11-20', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP006', firstName:'Anjali', lastName:'Nair', email:'anjali.n@amnex.com', phone:'9876543215', designation:'UX Designer', department:'Product', location:'Remote', manager:'Vikram Singh', doj:'2022-09-12', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP007', firstName:'Karan', lastName:'Malhotra', email:'karan.m@amnex.com', phone:'9876543216', designation:'Legal Counsel', department:'Legal', location:'Mumbai', manager:'Sneha Patel', doj:'2021-06-01', employmentType:'Full-Time', status:'Active' },
-    { empId:'EMP008', firstName:'Divya', lastName:'Reddy', email:'divya.r@amnex.com', phone:'9876543217', designation:'Marketing Lead', department:'Marketing', location:'Bangalore', manager:'Rahul Gupta', doj:'2020-02-14', employmentType:'Full-Time', status:'Inactive' },
-  ];
+  employees: any[] = [];
   filtered: any[] = [];
 
-  draft: any = { firstName:'', lastName:'', email:'', phone:'', empId:'', designation:'', department:'', location:'', manager:'', doj:'', employmentType:'Full-Time', status:'Active' };
+  draft: any = { firstName:'', lastName:'', email:'', phone:'', employeeCode:'', designation:'', department:'', location:'', doj:'', employmentType:'Full-Time', status:'Active' };
 
-  ngOnInit() { this.employees.forEach(e => this.decorate(e)); this.applyFilter(); }
+  constructor(private http: HttpClient) {}
 
-  decorate(e: any) {
-    e.initials = (e.firstName[0] + e.lastName[0]).toUpperCase();
-    e.avatarColor = this.colors[e.empId.charCodeAt(e.empId.length-1) % this.colors.length];
-  }
+  ngOnInit() { this.loadEmployees(); }
 
-  applyFilter() {
-    this.filtered = this.employees.filter(e => {
-      const q = this.search.toLowerCase();
-      const matchSearch = !q || (e.firstName+' '+e.lastName+e.empId+e.designation).toLowerCase().includes(q);
-      const matchDept = !this.filterDept || e.department === this.filterDept;
-      const matchStatus = !this.filterStatus || e.status === this.filterStatus;
-      const matchLoc = !this.filterLocation || e.location === this.filterLocation;
-      return matchSearch && matchDept && matchStatus && matchLoc;
+  loadEmployees() {
+    this.loading = true;
+    const params: any = {};
+    if (this.filterDept) params['department'] = this.filterDept;
+    if (this.filterStatus) params['status'] = this.filterStatus;
+    if (this.search) params['search'] = this.search;
+    this.http.get<any[]>(this.api, { params }).subscribe({
+      next: data => {
+        this.employees = (data || []).map(e => this.decorate(e));
+        this.filtered = this.employees;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
     });
   }
 
-  addEmployee() {
-    if (!this.draft.firstName || !this.draft.empId) return;
-    const e = { ...this.draft };
-    this.decorate(e);
-    this.employees.unshift(e);
-    this.applyFilter();
-    this.draft = { firstName:'', lastName:'', email:'', phone:'', empId:'', designation:'', department:'', location:'', manager:'', doj:'', employmentType:'Full-Time', status:'Active' };
-    this.showForm = false;
+  decorate(e: any) {
+    const first = e.firstName || e.fullName?.split(' ')[0] || '?';
+    const last = e.lastName || e.fullName?.split(' ')[1] || '';
+    e.initials = (first[0] + (last[0] || '')).toUpperCase();
+    e.empId = e.employeeCode || e.id;
+    e.avatarColor = this.colors[(e.employeeCode || '').charCodeAt((e.employeeCode || 'A').length - 1) % this.colors.length];
+    e.doj = e.dateOfJoining ? new Date(e.dateOfJoining).toISOString().slice(0, 10) : '';
+    return e;
   }
 
-  select(e: any) { this.selected = this.selected?.empId === e.empId ? null : e; }
-  remove(e: any) { this.employees = this.employees.filter(x => x.empId !== e.empId); this.applyFilter(); if (this.selected?.empId === e.empId) this.selected = null; }
+  applyFilter() { this.loadEmployees(); }
+
+  addEmployee() {
+    if (!this.draft.firstName) return;
+    const payload = {
+      firstName: this.draft.firstName,
+      lastName: this.draft.lastName,
+      email: this.draft.email,
+      phone: this.draft.phone,
+      designation: this.draft.designation,
+      department: this.draft.department,
+      location: this.draft.location,
+      dateOfJoining: this.draft.doj || new Date().toISOString(),
+      employmentType: this.draft.employmentType,
+      status: this.draft.status
+    };
+    this.http.post<any>(this.api, payload).subscribe({
+      next: emp => {
+        this.employees.unshift(this.decorate(emp));
+        this.filtered = this.employees;
+        this.draft = { firstName:'', lastName:'', email:'', phone:'', employeeCode:'', designation:'', department:'', location:'', doj:'', employmentType:'Full-Time', status:'Active' };
+        this.showForm = false;
+      },
+      error: err => alert(err?.error?.message || 'Failed to save employee')
+    });
+  }
+
+  select(e: any) { this.selected = this.selected?.id === e.id ? null : e; }
+
+  remove(e: any) {
+    if (!confirm(`Remove ${e.firstName} ${e.lastName}?`)) return;
+    this.http.delete(`${this.api}/${e.id}`).subscribe({
+      next: () => {
+        this.employees = this.employees.filter(x => x.id !== e.id);
+        this.filtered = this.employees;
+        if (this.selected?.id === e.id) this.selected = null;
+      }
+    });
+  }
 }

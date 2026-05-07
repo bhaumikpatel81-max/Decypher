@@ -73,6 +73,75 @@ namespace Decypher.Web.Data
         // ─── Import Center ──────────────────────────────────────────────────
         public DbSet<ImportJob> ImportJobs { get; set; }
 
+        // ═══════════════════════════════════════════════════════════════════
+        // HR MODULE DBSETS
+        // ═══════════════════════════════════════════════════════════════════
+
+        // Core HR
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Document> Documents { get; set; }
+        public DbSet<LetterTemplate> LetterTemplates { get; set; }
+        public DbSet<IssuedLetter> IssuedLetters { get; set; }
+        public DbSet<ExitRequest> ExitRequests { get; set; }
+        public DbSet<ExitChecklistItem> ExitChecklistItems { get; set; }
+
+        // Leave Management
+        public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<LeaveBalance> LeaveBalances { get; set; }
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
+
+        // Attendance & Time
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
+        public DbSet<AttendancePolicy> AttendancePolicies { get; set; }
+        public DbSet<ShiftDefinition> ShiftDefinitions { get; set; }
+        public DbSet<EmployeeShift> EmployeeShifts { get; set; }
+        public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
+        public DbSet<OvertimeRequest> OvertimeRequests { get; set; }
+
+        // Payroll & Compensation
+        public DbSet<SalaryComponent> SalaryComponents { get; set; }
+        public DbSet<EmployeeSalary> EmployeeSalaries { get; set; }
+        public DbSet<PayrollRun> PayrollRuns { get; set; }
+        public DbSet<Payslip> Payslips { get; set; }
+        public DbSet<TaxDeclaration> TaxDeclarations { get; set; }
+        public DbSet<StatutoryFiling> StatutoryFilings { get; set; }
+        public DbSet<ExpenseClaim> ExpenseClaims { get; set; }
+        public DbSet<CompensationReview> CompensationReviews { get; set; }
+        public DbSet<BenefitPlan> BenefitPlans { get; set; }
+        public DbSet<EmployeeBenefit> EmployeeBenefits { get; set; }
+        public DbSet<BonusRecord> BonusRecords { get; set; }
+        public DbSet<SalaryBenchmark> SalaryBenchmarks { get; set; }
+
+        // Performance Management
+        public DbSet<Goal> Goals { get; set; }
+        public DbSet<KeyResult> KeyResults { get; set; }
+        public DbSet<ReviewCycle> ReviewCycles { get; set; }
+        public DbSet<PerformanceReview> PerformanceReviews { get; set; }
+        public DbSet<FeedbackRequest> FeedbackRequests { get; set; }
+        public DbSet<FeedbackResponse> FeedbackResponses { get; set; }
+        public DbSet<ContinuousFeedback> ContinuousFeedbacks { get; set; }
+
+        // Learning & Development
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<TrainingEvent> TrainingEvents { get; set; }
+        public DbSet<TrainingRegistration> TrainingRegistrations { get; set; }
+        public DbSet<SkillAssessment> SkillAssessments { get; set; }
+        public DbSet<CertificationRecord> CertificationRecords { get; set; }
+
+        // Employer Branding
+        public DbSet<EmployerReview> EmployerReviews { get; set; }
+        public DbSet<TalentCommunityMember> TalentCommunityMembers { get; set; }
+        public DbSet<CareerPage> CareerPages { get; set; }
+        public DbSet<CampusEvent> CampusEvents { get; set; }
+
+        // Policies & Compliance
+        public DbSet<Policy> Policies { get; set; }
+        public DbSet<PolicyAcknowledgment> PolicyAcknowledgments { get; set; }
+
+        // Integrations
+        public DbSet<Integration> Integrations { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -368,6 +437,357 @@ namespace Decypher.Web.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.VideoInterviewId);
                 entity.HasIndex(e => e.TenantId);
+            });
+
+            // ─── Employee ─────────────────────────────────────────────────────
+            builder.Entity<Employee>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeCode }).IsUnique();
+                entity.HasIndex(e => new { e.TenantId, e.Email });
+                entity.HasIndex(e => new { e.TenantId, e.Department });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId && !e.IsDeleted);
+                entity.HasOne(e => e.Manager)
+                    .WithMany(e => e.DirectReports)
+                    .HasForeignKey(e => e.ManagerId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
+            });
+
+            // ─── Leave ────────────────────────────────────────────────────────
+            builder.Entity<LeaveType>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<LeaveBalance>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.LeaveTypeId, e.Year });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.LeaveType).WithMany(t => t.Balances).HasForeignKey(e => e.LeaveTypeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<LeaveRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasIndex(e => new { e.TenantId, e.Status });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany(emp => emp.LeaveRequests).HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.LeaveType).WithMany(t => t.Requests).HasForeignKey(e => e.LeaveTypeId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ─── Attendance ───────────────────────────────────────────────────
+            builder.Entity<AttendanceRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.Date });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany(emp => emp.AttendanceRecords).HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<AttendancePolicy>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<ShiftDefinition>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<EmployeeShift>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.ShiftDefinition).WithMany(s => s.EmployeeShifts).HasForeignKey(e => e.ShiftDefinitionId).OnDelete(DeleteBehavior.Restrict);
+            });
+            builder.Entity<TimesheetEntry>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.Date });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<OvertimeRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ─── Salary & Payroll ─────────────────────────────────────────────
+            builder.Entity<SalaryComponent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<EmployeeSalary>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<PayrollRun>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.Month, e.Year });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<Payslip>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.Month, e.Year });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.PayrollRun).WithMany(r => r.Payslips).HasForeignKey(e => e.PayrollRunId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<TaxDeclaration>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.FinancialYear });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<StatutoryFiling>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.FilingType, e.Period });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<ExpenseClaim>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasIndex(e => new { e.TenantId, e.Status });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<CompensationReview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<BenefitPlan>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<EmployeeBenefit>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.BenefitPlan).WithMany(p => p.Enrollments).HasForeignKey(e => e.BenefitPlanId).OnDelete(DeleteBehavior.Restrict);
+            });
+            builder.Entity<BonusRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<SalaryBenchmark>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.RoleTitle });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            // ─── Performance ──────────────────────────────────────────────────
+            builder.Entity<Goal>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasIndex(e => new { e.TenantId, e.Status });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.KeyResults).WithOne(kr => kr.Goal).HasForeignKey(kr => kr.GoalId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<KeyResult>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<ReviewCycle>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<PerformanceReview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasIndex(e => new { e.TenantId, e.ReviewCycleId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.ReviewCycle).WithMany(rc => rc.Reviews).HasForeignKey(e => e.ReviewCycleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<FeedbackRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.ToEmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.FromEmployee).WithMany().HasForeignKey(e => e.FromEmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.ToEmployee).WithMany().HasForeignKey(e => e.ToEmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Response).WithOne(r => r.FeedbackRequest).HasForeignKey<FeedbackResponse>(r => r.FeedbackRequestId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<FeedbackResponse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<ContinuousFeedback>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.ToEmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.FromEmployee).WithMany().HasForeignKey(e => e.FromEmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.ToEmployee).WithMany().HasForeignKey(e => e.ToEmployeeId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ─── Learning ─────────────────────────────────────────────────────
+            builder.Entity<Course>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<CourseEnrollment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Course).WithMany(c => c.Enrollments).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<TrainingEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Course).WithMany().HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.SetNull).IsRequired(false);
+            });
+            builder.Entity<TrainingRegistration>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.TrainingEventId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.TrainingEvent).WithMany(t => t.Registrations).HasForeignKey(e => e.TrainingEventId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+            });
+            builder.Entity<SkillAssessment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<CertificationRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ─── Core HR (Docs / Letters / Exit) ─────────────────────────────
+            builder.Entity<Document>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EntityType, e.EntityId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<LetterTemplate>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<IssuedLetter>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Template).WithMany(t => t.IssuedLetters).HasForeignKey(e => e.TemplateId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<ExitRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.ChecklistItems).WithOne(ci => ci.ExitRequest).HasForeignKey(ci => ci.ExitRequestId).OnDelete(DeleteBehavior.Cascade);
+            });
+            builder.Entity<ExitChecklistItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            // ─── Employer Branding ────────────────────────────────────────────
+            builder.Entity<EmployerReview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<TalentCommunityMember>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.Email });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<CareerPage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<CampusEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+
+            // ─── Policies & Compliance ────────────────────────────────────────
+            builder.Entity<Policy>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TenantId);
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+            });
+            builder.Entity<PolicyAcknowledgment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.EmployeeId, e.PolicyId });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
+                entity.HasOne(e => e.Policy).WithMany(p => p.Acknowledgments).HasForeignKey(e => e.PolicyId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ─── Integrations ─────────────────────────────────────────────────
+            builder.Entity<Integration>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.Name });
+                entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
             });
 
             // Seed data

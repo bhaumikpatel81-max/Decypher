@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface ReviewRecord {
   id: number; employee: string; empId: string; reviewer: string; dept: string;
@@ -150,6 +152,8 @@ interface ReviewRecord {
   `]
 })
 export class PerformanceReviewsComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/performance`;
+  constructor(private http: HttpClient) {}
   tab = 'reviews';
   activeCycle = 'Annual Review 2026';
   search = '';

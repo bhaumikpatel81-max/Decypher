@@ -197,6 +197,43 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IJdGenerationService, JdGenerationService>();
 // ─────────────────────────────────────────────────────────────
 
+// ── HR Module Services ────────────────────────────────────────
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ILetterService, LetterService>();
+builder.Services.AddScoped<IExitService, ExitService>();
+// Attendance
+builder.Services.AddScoped<ILeaveService, LeaveService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IShiftService, ShiftService>();
+builder.Services.AddScoped<ITimesheetService, TimesheetService>();
+builder.Services.AddScoped<IOvertimeService, OvertimeService>();
+// Payroll
+builder.Services.AddScoped<ISalaryService, SalaryService>();
+builder.Services.AddScoped<IPayrollRunService, PayrollRunService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<ICompensationService, CompensationService>();
+builder.Services.AddScoped<ITaxService, TaxService>();
+// Performance
+builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<IReviewCycleService, ReviewCycleService>();
+builder.Services.AddScoped<IPerformanceReviewService, PerformanceReviewService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+// Learning
+builder.Services.AddScoped<ILearningService, LearningService>();
+builder.Services.AddScoped<ITrainingService, TrainingService>();
+builder.Services.AddScoped<ISkillService, SkillService>();
+// Branding
+builder.Services.AddScoped<IEmployerReviewService, EmployerReviewService>();
+builder.Services.AddScoped<ITalentCommunityService, TalentCommunityService>();
+builder.Services.AddScoped<ICareerPageService, CareerPageService>();
+builder.Services.AddScoped<ICampusService, CampusService>();
+// Compliance
+builder.Services.AddScoped<IPolicyService, PolicyService>();
+builder.Services.AddScoped<IStatutoryService, StatutoryService>();
+builder.Services.AddScoped<IIntegrationService, IntegrationService>();
+// ─────────────────────────────────────────────────────────────
+
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -321,9 +358,872 @@ using (var scope = app.Services.CreateScope())
                 CONSTRAINT ""PK_InternalJobPostings"" PRIMARY KEY (""Id"")
             );");
 
+        // ─── HR MODULE TABLES ─────────────────────────────────────────────
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""Employees"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeCode"" text NOT NULL DEFAULT '',
+                ""FirstName"" text NOT NULL DEFAULT '',
+                ""LastName"" text NOT NULL DEFAULT '',
+                ""Email"" text NOT NULL DEFAULT '',
+                ""Phone"" text,
+                ""Department"" text,
+                ""Designation"" text,
+                ""Location"" text,
+                ""Gender"" text NOT NULL DEFAULT 'Other',
+                ""DateOfBirth"" timestamp with time zone,
+                ""DateOfJoining"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""DateOfLeaving"" timestamp with time zone,
+                ""EmploymentType"" text NOT NULL DEFAULT 'FullTime',
+                ""Status"" text NOT NULL DEFAULT 'Active',
+                ""ManagerId"" uuid,
+                ""Address"" text,
+                ""ProfilePictureUrl"" text,
+                ""PAN"" text,
+                ""UAN"" text,
+                ""ESIC"" text,
+                ""BankName"" text,
+                ""BankAccountNumber"" text,
+                ""IFSC"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text,
+                ""UpdatedBy"" text,
+                ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Employees"" PRIMARY KEY (""Id"")
+            );
+            CREATE INDEX IF NOT EXISTS ""IX_Employees_TenantId"" ON ""Employees""(""TenantId"");
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Employees_TenantId_Code"" ON ""Employees""(""TenantId"", ""EmployeeCode"");");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""LeaveTypes"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""Description"" text,
+                ""MaxDaysPerYear"" integer NOT NULL DEFAULT 12,
+                ""CarryForwardAllowed"" boolean NOT NULL DEFAULT false,
+                ""MaxCarryForwardDays"" integer NOT NULL DEFAULT 0,
+                ""IsHalfDayAllowed"" boolean NOT NULL DEFAULT true,
+                ""RequiresDocuments"" boolean NOT NULL DEFAULT false,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""Color"" text NOT NULL DEFAULT '#6b4df0',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_LeaveTypes"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""LeaveBalances"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""LeaveTypeId"" uuid NOT NULL,
+                ""Year"" integer NOT NULL DEFAULT 2025,
+                ""Allocated"" numeric NOT NULL DEFAULT 0,
+                ""Used"" numeric NOT NULL DEFAULT 0,
+                ""Pending"" numeric NOT NULL DEFAULT 0,
+                ""CarriedForward"" numeric NOT NULL DEFAULT 0,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_LeaveBalances"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""LeaveRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""LeaveTypeId"" uuid NOT NULL,
+                ""StartDate"" timestamp with time zone NOT NULL,
+                ""EndDate"" timestamp with time zone NOT NULL,
+                ""Days"" numeric NOT NULL DEFAULT 0,
+                ""IsHalfDay"" boolean NOT NULL DEFAULT false,
+                ""HalfDayPeriod"" text NOT NULL DEFAULT '',
+                ""Reason"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""ApproverComments"" text,
+                ""DocumentUrl"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_LeaveRequests"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""AttendancePolicies"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT 'Default Policy',
+                ""ShiftStartTime"" interval NOT NULL DEFAULT '09:00:00',
+                ""ShiftEndTime"" interval NOT NULL DEFAULT '18:00:00',
+                ""GraceMinutes"" integer NOT NULL DEFAULT 15,
+                ""RequiredHoursPerDay"" double precision NOT NULL DEFAULT 8,
+                ""GeoFenceRadiusMeters"" double precision NOT NULL DEFAULT 200,
+                ""GeoFenceEnabled"" boolean NOT NULL DEFAULT false,
+                ""BiometricEnabled"" boolean NOT NULL DEFAULT false,
+                ""IsDefault"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_AttendancePolicies"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""AttendanceRecords"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Date"" timestamp with time zone NOT NULL,
+                ""PunchIn"" timestamp with time zone,
+                ""PunchOut"" timestamp with time zone,
+                ""Status"" text NOT NULL DEFAULT 'Absent',
+                ""PunchInMethod"" text NOT NULL DEFAULT 'Manual',
+                ""InLatitude"" double precision,
+                ""InLongitude"" double precision,
+                ""OutLatitude"" double precision,
+                ""OutLongitude"" double precision,
+                ""WithinGeoFence"" boolean NOT NULL DEFAULT true,
+                ""InAddress"" text,
+                ""OutAddress"" text,
+                ""DoorAccessGranted"" boolean NOT NULL DEFAULT false,
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_AttendanceRecords"" PRIMARY KEY (""Id"")
+            );
+            CREATE INDEX IF NOT EXISTS ""IX_AttendanceRecords_TenantId_EmpDate"" ON ""AttendanceRecords""(""TenantId"", ""EmployeeId"", ""Date"");
+            CREATE TABLE IF NOT EXISTS ""ShiftDefinitions"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""StartTime"" interval NOT NULL,
+                ""EndTime"" interval NOT NULL,
+                ""WorkingHours"" double precision NOT NULL DEFAULT 8,
+                ""IsNightShift"" boolean NOT NULL DEFAULT false,
+                ""Color"" text NOT NULL DEFAULT '#6b4df0',
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ShiftDefinitions"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""EmployeeShifts"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""ShiftDefinitionId"" uuid NOT NULL,
+                ""EffectiveFrom"" timestamp with time zone NOT NULL,
+                ""EffectiveTo"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_EmployeeShifts"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TimesheetEntries"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Date"" timestamp with time zone NOT NULL,
+                ""ProjectCode"" text,
+                ""TaskDescription"" text,
+                ""HoursWorked"" double precision NOT NULL DEFAULT 0,
+                ""IsBillable"" boolean NOT NULL DEFAULT true,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""SubmittedById"" text,
+                ""SubmittedAt"" timestamp with time zone,
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TimesheetEntries"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""OvertimeRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Date"" timestamp with time zone NOT NULL,
+                ""StartTime"" interval NOT NULL,
+                ""EndTime"" interval NOT NULL,
+                ""Hours"" double precision NOT NULL DEFAULT 0,
+                ""Reason"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""CompensationType"" text NOT NULL DEFAULT 'Pay',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_OvertimeRequests"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""SalaryComponents"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""ComponentCode"" text NOT NULL DEFAULT '',
+                ""Type"" text NOT NULL DEFAULT 'Earning',
+                ""IsFixed"" boolean NOT NULL DEFAULT true,
+                ""FixedAmount"" numeric,
+                ""PercentageOfBasic"" numeric,
+                ""IsTaxable"" boolean NOT NULL DEFAULT true,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""DisplayOrder"" integer NOT NULL DEFAULT 0,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_SalaryComponents"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""EmployeeSalaries"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""BasicSalary"" numeric NOT NULL DEFAULT 0,
+                ""HRA"" numeric NOT NULL DEFAULT 0,
+                ""SpecialAllowance"" numeric NOT NULL DEFAULT 0,
+                ""ConveyanceAllowance"" numeric NOT NULL DEFAULT 0,
+                ""MedicalAllowance"" numeric NOT NULL DEFAULT 0,
+                ""OtherAllowances"" numeric NOT NULL DEFAULT 0,
+                ""EmployeePF"" numeric NOT NULL DEFAULT 0,
+                ""EmployerPF"" numeric NOT NULL DEFAULT 0,
+                ""EmployeeESIC"" numeric NOT NULL DEFAULT 0,
+                ""EmployerESIC"" numeric NOT NULL DEFAULT 0,
+                ""ProfessionalTax"" numeric NOT NULL DEFAULT 0,
+                ""IncomeTax"" numeric NOT NULL DEFAULT 0,
+                ""TotalCTC"" numeric NOT NULL DEFAULT 0,
+                ""EffectiveFrom"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EffectiveTo"" timestamp with time zone,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_EmployeeSalaries"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""PayrollRuns"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Month"" integer NOT NULL,
+                ""Year"" integer NOT NULL,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""RunDate"" timestamp with time zone,
+                ""DisbursementDate"" timestamp with time zone,
+                ""TotalGross"" numeric NOT NULL DEFAULT 0,
+                ""TotalDeductions"" numeric NOT NULL DEFAULT 0,
+                ""TotalNet"" numeric NOT NULL DEFAULT 0,
+                ""EmployeeCount"" integer NOT NULL DEFAULT 0,
+                ""RunById"" text,
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_PayrollRuns"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""Payslips"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""PayrollRunId"" uuid NOT NULL,
+                ""Month"" integer NOT NULL,
+                ""Year"" integer NOT NULL,
+                ""BasicSalary"" numeric NOT NULL DEFAULT 0,
+                ""HRA"" numeric NOT NULL DEFAULT 0,
+                ""SpecialAllowance"" numeric NOT NULL DEFAULT 0,
+                ""ConveyanceAllowance"" numeric NOT NULL DEFAULT 0,
+                ""MedicalAllowance"" numeric NOT NULL DEFAULT 0,
+                ""OtherAllowances"" numeric NOT NULL DEFAULT 0,
+                ""OvertimePay"" numeric NOT NULL DEFAULT 0,
+                ""Bonus"" numeric NOT NULL DEFAULT 0,
+                ""GrossPay"" numeric NOT NULL DEFAULT 0,
+                ""EmployeePF"" numeric NOT NULL DEFAULT 0,
+                ""EmployeeESIC"" numeric NOT NULL DEFAULT 0,
+                ""ProfessionalTax"" numeric NOT NULL DEFAULT 0,
+                ""IncomeTaxTDS"" numeric NOT NULL DEFAULT 0,
+                ""LoanDeduction"" numeric NOT NULL DEFAULT 0,
+                ""OtherDeductions"" numeric NOT NULL DEFAULT 0,
+                ""TotalDeductions"" numeric NOT NULL DEFAULT 0,
+                ""NetPay"" numeric NOT NULL DEFAULT 0,
+                ""WorkingDays"" integer NOT NULL DEFAULT 0,
+                ""PresentDays"" integer NOT NULL DEFAULT 0,
+                ""LeaveDays"" integer NOT NULL DEFAULT 0,
+                ""AbsentDays"" integer NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Generated',
+                ""PayslipUrl"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Payslips"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TaxDeclarations"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""FinancialYear"" text NOT NULL DEFAULT '',
+                ""TaxRegime"" text NOT NULL DEFAULT 'New',
+                ""EPF"" numeric NOT NULL DEFAULT 0, ""PPF"" numeric NOT NULL DEFAULT 0,
+                ""LIC"" numeric NOT NULL DEFAULT 0, ""ELSS"" numeric NOT NULL DEFAULT 0,
+                ""HomeLoanPrincipal"" numeric NOT NULL DEFAULT 0, ""OtherSection80C"" numeric NOT NULL DEFAULT 0,
+                ""HRAExemption"" numeric NOT NULL DEFAULT 0, ""LTAExemption"" numeric NOT NULL DEFAULT 0,
+                ""MedicalInsurance80D"" numeric NOT NULL DEFAULT 0, ""HomeLoanInterest"" numeric NOT NULL DEFAULT 0,
+                ""NPS80CCD"" numeric NOT NULL DEFAULT 0,
+                ""TotalDeductions"" numeric NOT NULL DEFAULT 0,
+                ""TaxableIncome"" numeric NOT NULL DEFAULT 0,
+                ""EstimatedTax"" numeric NOT NULL DEFAULT 0,
+                ""TDSDeducted"" numeric NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TaxDeclarations"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""StatutoryFilings"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""FilingType"" text NOT NULL DEFAULT '',
+                ""Period"" text NOT NULL DEFAULT '',
+                ""DueDate"" timestamp with time zone NOT NULL,
+                ""FiledDate"" timestamp with time zone,
+                ""Amount"" numeric NOT NULL DEFAULT 0,
+                ""PenaltyAmount"" numeric NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""AcknowledgementNo"" text,
+                ""DocumentUrl"" text,
+                ""FiledById"" text,
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_StatutoryFilings"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""ExpenseClaims"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Category"" text NOT NULL DEFAULT '',
+                ""Description"" text,
+                ""Amount"" numeric NOT NULL DEFAULT 0,
+                ""ExpenseDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ReceiptUrl"" text,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""ReimbursedAt"" timestamp with time zone,
+                ""RejectionReason"" text,
+                ""ProjectCode"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ExpenseClaims"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""CompensationReviews"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""ReviewDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""OldCTC"" numeric NOT NULL DEFAULT 0,
+                ""NewCTC"" numeric NOT NULL DEFAULT 0,
+                ""HikeAmount"" numeric NOT NULL DEFAULT 0,
+                ""HikePercentage"" numeric NOT NULL DEFAULT 0,
+                ""EffectiveDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""Reason"" text,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_CompensationReviews"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""BenefitPlans"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""Type"" text NOT NULL DEFAULT '',
+                ""Provider"" text,
+                ""Description"" text,
+                ""EmployerContribution"" numeric NOT NULL DEFAULT 0,
+                ""EmployeeContribution"" numeric NOT NULL DEFAULT 0,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_BenefitPlans"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""EmployeeBenefits"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""BenefitPlanId"" uuid NOT NULL,
+                ""EnrolledAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EndDate"" timestamp with time zone,
+                ""Status"" text NOT NULL DEFAULT 'Active',
+                ""NomineeName"" text,
+                ""NomineeRelation"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_EmployeeBenefits"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""BonusRecords"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""BonusType"" text NOT NULL DEFAULT '',
+                ""Amount"" numeric NOT NULL DEFAULT 0,
+                ""Month"" integer NOT NULL DEFAULT 1,
+                ""Year"" integer NOT NULL DEFAULT 2025,
+                ""Reason"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""ApprovedById"" text,
+                ""DisbursedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_BonusRecords"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""SalaryBenchmarks"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""RoleTitle"" text NOT NULL DEFAULT '',
+                ""Industry"" text,
+                ""Location"" text,
+                ""ExperienceRange"" text NOT NULL DEFAULT '',
+                ""P25"" numeric NOT NULL DEFAULT 0,
+                ""Median"" numeric NOT NULL DEFAULT 0,
+                ""P75"" numeric NOT NULL DEFAULT 0,
+                ""P90"" numeric NOT NULL DEFAULT 0,
+                ""DataSource"" text,
+                ""DataYear"" integer NOT NULL DEFAULT 2025,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_SalaryBenchmarks"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""Goals"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Description"" text,
+                ""Category"" text NOT NULL DEFAULT 'Individual',
+                ""StartDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EndDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""Progress"" integer NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Active',
+                ""Priority"" text NOT NULL DEFAULT 'Medium',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Goals"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""KeyResults"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""GoalId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""TargetValue"" numeric NOT NULL DEFAULT 0,
+                ""CurrentValue"" numeric NOT NULL DEFAULT 0,
+                ""Unit"" text NOT NULL DEFAULT '',
+                ""Status"" text NOT NULL DEFAULT 'OnTrack',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_KeyResults"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""ReviewCycles"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""Type"" text NOT NULL DEFAULT 'Annual',
+                ""StartDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EndDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""SelfReviewDeadline"" timestamp with time zone,
+                ""ManagerReviewDeadline"" timestamp with time zone,
+                ""Status"" text NOT NULL DEFAULT 'Upcoming',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ReviewCycles"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""PerformanceReviews"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""ReviewCycleId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""ReviewerId"" text,
+                ""SelfRating"" numeric,
+                ""ManagerRating"" numeric,
+                ""FinalRating"" numeric,
+                ""PerformanceGrade"" text,
+                ""SelfComments"" text,
+                ""ManagerComments"" text,
+                ""DevelopmentPlan"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""SubmittedAt"" timestamp with time zone,
+                ""CompletedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_PerformanceReviews"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""FeedbackRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""FromEmployeeId"" uuid NOT NULL,
+                ""ToEmployeeId"" uuid NOT NULL,
+                ""ReviewCycleId"" uuid,
+                ""FeedbackType"" text NOT NULL DEFAULT '360',
+                ""Message"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""DueDate"" timestamp with time zone,
+                ""CompletedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_FeedbackRequests"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""FeedbackResponses"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""FeedbackRequestId"" uuid NOT NULL,
+                ""OverallRating"" numeric,
+                ""RatingsJson"" text,
+                ""Strengths"" text,
+                ""AreasToImprove"" text,
+                ""AdditionalComments"" text,
+                ""IsAnonymous"" boolean NOT NULL DEFAULT false,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_FeedbackResponses"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""ContinuousFeedbacks"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""FromEmployeeId"" uuid NOT NULL,
+                ""ToEmployeeId"" uuid NOT NULL,
+                ""FeedbackType"" text NOT NULL DEFAULT 'Praise',
+                ""Content"" text NOT NULL DEFAULT '',
+                ""IsAnonymous"" boolean NOT NULL DEFAULT false,
+                ""Tag"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ContinuousFeedbacks"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""Courses"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Description"" text,
+                ""Category"" text,
+                ""Format"" text NOT NULL DEFAULT 'Online',
+                ""Level"" text NOT NULL DEFAULT 'Beginner',
+                ""DurationHours"" integer NOT NULL DEFAULT 0,
+                ""ThumbnailUrl"" text,
+                ""ContentUrl"" text,
+                ""Provider"" text,
+                ""IsMandatory"" boolean NOT NULL DEFAULT false,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Courses"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""CourseEnrollments"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""CourseId"" uuid NOT NULL,
+                ""EnrolledAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""StartedAt"" timestamp with time zone,
+                ""CompletedAt"" timestamp with time zone,
+                ""DueDate"" timestamp with time zone,
+                ""ProgressPercent"" integer NOT NULL DEFAULT 0,
+                ""Score"" numeric,
+                ""Status"" text NOT NULL DEFAULT 'Enrolled',
+                ""CertificateUrl"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_CourseEnrollments"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TrainingEvents"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""CourseId"" uuid,
+                ""TrainerName"" text,
+                ""TrainerOrg"" text,
+                ""StartDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EndDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""Location"" text,
+                ""MaxParticipants"" integer NOT NULL DEFAULT 20,
+                ""Status"" text NOT NULL DEFAULT 'Scheduled',
+                ""Description"" text,
+                ""Cost"" numeric,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TrainingEvents"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TrainingRegistrations"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TrainingEventId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""Status"" text NOT NULL DEFAULT 'Registered',
+                ""FeedbackScore"" numeric,
+                ""Feedback"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TrainingRegistrations"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""SkillAssessments"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""SkillName"" text NOT NULL DEFAULT '',
+                ""Category"" text,
+                ""RequiredLevel"" integer NOT NULL DEFAULT 3,
+                ""CurrentLevel"" integer NOT NULL DEFAULT 1,
+                ""AssessedOn"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ReassessedOn"" timestamp with time zone,
+                ""Notes"" text,
+                ""RecommendedCourse"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_SkillAssessments"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""CertificationRecords"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""CertificationName"" text NOT NULL DEFAULT '',
+                ""IssuingBody"" text,
+                ""CertificateId"" text,
+                ""IssueDate"" timestamp with time zone,
+                ""ExpiryDate"" timestamp with time zone,
+                ""CertificateUrl"" text,
+                ""Status"" text NOT NULL DEFAULT 'Valid',
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_CertificationRecords"" PRIMARY KEY (""Id"")
+            );");
+
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""Documents"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EntityType"" text NOT NULL DEFAULT '',
+                ""EntityId"" uuid NOT NULL,
+                ""FileName"" text NOT NULL DEFAULT '',
+                ""FileUrl"" text,
+                ""FileSizeBytes"" bigint NOT NULL DEFAULT 0,
+                ""MimeType"" text,
+                ""Category"" text,
+                ""Description"" text,
+                ""UploadedById"" text,
+                ""UploadedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""IsConfidential"" boolean NOT NULL DEFAULT false,
+                ""ExpiryDate"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Documents"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""LetterTemplates"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""LetterType"" text NOT NULL DEFAULT '',
+                ""Content"" text NOT NULL DEFAULT '',
+                ""FooterText"" text,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_LetterTemplates"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""IssuedLetters"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TemplateId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""IssuedById"" text,
+                ""IssuedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""DocumentUrl"" text,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""CustomContent"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_IssuedLetters"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""ExitRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""ResignationDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""LastWorkingDay"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ExitType"" text NOT NULL DEFAULT 'Resignation',
+                ""Reason"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""HRComments"" text,
+                ""ApprovedById"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""NoticePeriodWaived"" boolean NOT NULL DEFAULT false,
+                ""ExitInterviewSummary"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ExitRequests"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""ExitChecklistItems"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""ExitRequestId"" uuid NOT NULL,
+                ""Task"" text NOT NULL DEFAULT '',
+                ""Department"" text,
+                ""AssignedToId"" text,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""CompletedAt"" timestamp with time zone,
+                ""Remarks"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_ExitChecklistItems"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""EmployerReviews"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""ReviewerName"" text NOT NULL DEFAULT 'Anonymous',
+                ""ReviewerRole"" text,
+                ""ReviewerType"" text NOT NULL DEFAULT 'Employee',
+                ""Rating"" numeric NOT NULL DEFAULT 0,
+                ""Pros"" text, ""Cons"" text, ""Advice"" text,
+                ""RecommendToFriend"" boolean NOT NULL DEFAULT true,
+                ""Source"" text NOT NULL DEFAULT 'Internal',
+                ""Status"" text NOT NULL DEFAULT 'Published',
+                ""ReviewDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_EmployerReviews"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TalentCommunityMembers"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Email"" text NOT NULL DEFAULT '',
+                ""FullName"" text,
+                ""Phone"" text,
+                ""CurrentRole"" text,
+                ""ExperienceYears"" integer,
+                ""SkillsJson"" text,
+                ""Status"" text NOT NULL DEFAULT 'Active',
+                ""Source"" text,
+                ""JoinedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""LastEngagedAt"" timestamp with time zone,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TalentCommunityMembers"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""CareerPages"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Headline"" text,
+                ""Description"" text,
+                ""LogoUrl"" text,
+                ""BannerUrl"" text,
+                ""ValuesJson"" text,
+                ""BenefitsJson"" text,
+                ""IsPublished"" boolean NOT NULL DEFAULT false,
+                ""PublishedSlug"" text,
+                ""ThemeColor"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_CareerPages"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""CampusEvents"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Institution"" text,
+                ""Location"" text,
+                ""EventDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EventType"" text NOT NULL DEFAULT 'CareerFair',
+                ""ExpectedParticipants"" integer NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Planned',
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_CampusEvents"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""Policies"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Category"" text,
+                ""Content"" text NOT NULL DEFAULT '',
+                ""EffectiveDate"" timestamp with time zone,
+                ""ExpiryDate"" timestamp with time zone,
+                ""Version"" integer NOT NULL DEFAULT 1,
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""RequiresAcknowledgment"" boolean NOT NULL DEFAULT true,
+                ""DocumentUrl"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Policies"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""PolicyAcknowledgments"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""PolicyId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""AcknowledgedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""IpAddress"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_PolicyAcknowledgments"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""Integrations"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""Category"" text,
+                ""Description"" text,
+                ""LogoUrl"" text,
+                ""Status"" text NOT NULL DEFAULT 'Available',
+                ""ConfigJson"" text,
+                ""LastSyncAt"" timestamp with time zone,
+                ""LastSyncStatus"" text,
+                ""IsOAuth"" boolean NOT NULL DEFAULT false,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_Integrations"" PRIMARY KEY (""Id"")
+            );");
+        // ─── END HR MODULE TABLES ─────────────────────────────────────────────
+
         // Seed data
         await SeedData.Initialize(context, userManager, roleManager);
-        
+
         Log.Information("Database initialized successfully");
     }
     catch (Exception ex)

@@ -9,5 +9,8 @@ namespace Decypher.Web.Services
         Task<dynamic> GetVendorPerformanceAsync(string tenantId);
         Task<dynamic> GetCandidatePipelineAsync(string tenantId);
         Task<dynamic> GetTimeToHireMetricsAsync(string tenantId);
+        Task<dynamic> GetMonthlyTrendAsync(string tenantId, int months);
+        Task<dynamic> GetTopSkillsAsync(string tenantId, int topN);
+        Task<dynamic> GetTimeToFillByRoleAsync(string tenantId);
     }
 }

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface LeaveRequest {
   id: number; employee: string; empId: string; type: string;
@@ -181,37 +183,22 @@ interface LeaveRequest {
   `]
 })
 export class LeaveManagementComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/attendance`;
   tab = 'apply';
   search = '';
   filterStatus = '';
   successMsg = '';
-
-  employees = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer'];
-
-  balances = [
-    { type: 'Annual Leave', used: 6, total: 18, color: '#6b4df0' },
-    { type: 'Sick Leave', used: 2, total: 10, color: '#10b981' },
-    { type: 'Casual Leave', used: 3, total: 8, color: '#f59e0b' },
-    { type: 'Maternity Leave', used: 0, total: 180, color: '#ec4899' },
-  ];
-
-  form = { employee: '', type: '', from: '', to: '', reason: '' };
-
+  leaveTypes: any[] = [];
+  employees: any[] = [];
+  balances: any[] = [];
+  leaveRequests: LeaveRequest[] = [];
   dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
   calCells: any[] = [];
+  form = { employeeId: '', type: '', from: '', to: '', reason: '' };
 
-  leaveRequests: LeaveRequest[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', type: 'Annual Leave', from: '2026-05-10', to: '2026-05-12', days: 3, reason: 'Family trip', status: 'Pending', appliedOn: '2026-05-02' },
-    { id: 2, employee: 'Priya Sharma', empId: 'EMP002', type: 'Sick Leave', from: '2026-05-06', to: '2026-05-07', days: 2, reason: 'Fever and rest', status: 'Approved', appliedOn: '2026-05-05' },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', type: 'Casual Leave', from: '2026-05-15', to: '2026-05-15', days: 1, reason: 'Personal work', status: 'Pending', appliedOn: '2026-05-04' },
-    { id: 4, employee: 'Sneha Patel', empId: 'EMP004', type: 'Annual Leave', from: '2026-04-21', to: '2026-04-25', days: 5, reason: 'Vacation', status: 'Approved', appliedOn: '2026-04-10' },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', type: 'Casual Leave', from: '2026-05-08', to: '2026-05-08', days: 1, reason: 'Bank work', status: 'Rejected', appliedOn: '2026-05-03' },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', type: 'Sick Leave', from: '2026-05-20', to: '2026-05-22', days: 3, reason: 'Medical procedure', status: 'Pending', appliedOn: '2026-05-05' },
-  ];
+  constructor(private http: HttpClient) {}
 
   get pendingLeaves() { return this.leaveRequests.filter(l => l.status === 'Pending'); }
-
   get filteredHistory() {
     return this.leaveRequests.filter(l => {
       const matchSearch = !this.search || l.employee.toLowerCase().includes(this.search.toLowerCase());
@@ -222,31 +209,86 @@ export class LeaveManagementComponent implements OnInit {
 
   ngOnInit() {
     this.buildCalendar();
+    this.loadLeaveTypes();
+    this.loadRequests();
+    this.loadBalances();
+    this.loadEmployees();
+  }
+
+  loadLeaveTypes() {
+    this.http.get<any[]>(`${this.api}/leave/types`).subscribe(data => { this.leaveTypes = data || []; });
+  }
+
+  loadBalances() {
+    this.http.get<any[]>(`${this.api}/leave/balances`).subscribe(data => {
+      const colors = ['#6b4df0', '#10b981', '#f59e0b', '#ec4899', '#3bbdea', '#ef4444'];
+      this.balances = (data || []).map((b: any, i: number) => ({
+        type: b.leaveTypeName || b.type, used: b.usedDays || 0, total: b.totalDays || 0, color: colors[i % colors.length]
+      }));
+    });
+  }
+
+  loadRequests() {
+    this.http.get<any[]>(`${this.api}/leave/requests`).subscribe(data => {
+      this.leaveRequests = (data || []).map((r: any) => ({
+        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+        type: r.leaveTypeName || r.type, from: r.startDate?.slice(0, 10) || '',
+        to: r.endDate?.slice(0, 10) || '', days: r.numberOfDays || 0,
+        reason: r.reason || '', status: r.status || 'Pending',
+        appliedOn: r.createdAt?.slice(0, 10) || ''
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = data || []; });
   }
 
   buildCalendar() {
-    const firstDay = new Date(2026, 4, 1).getDay();
-    const daysInMonth = 31;
-    const leaveDays: { [key: number]: string } = { 10: 'Arjun', 11: 'Arjun', 12: 'Arjun', 6: 'Priya', 7: 'Priya', 20: 'Ananya', 21: 'Ananya', 22: 'Ananya' };
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    this.calCells = [];
     for (let i = 0; i < firstDay; i++) this.calCells.push({ day: '', isWeekend: false, hasLeave: false });
     for (let d = 1; d <= daysInMonth; d++) {
       const dow = (firstDay + d - 1) % 7;
-      this.calCells.push({ day: d, isWeekend: dow === 0 || dow === 6, hasLeave: !!leaveDays[d], who: leaveDays[d] || '', isToday: d === 6 });
+      this.calCells.push({ day: d, isWeekend: dow === 0 || dow === 6, hasLeave: false, isToday: d === now.getDate() });
     }
   }
 
   submitLeave() {
-    if (!this.form.employee || !this.form.type || !this.form.from || !this.form.to) { alert('Please fill all required fields'); return; }
-    const from = new Date(this.form.from), to = new Date(this.form.to);
-    const days = Math.ceil((to.getTime() - from.getTime()) / 86400000) + 1;
-    this.leaveRequests.unshift({ id: Date.now(), employee: this.form.employee, empId: 'EMP00X', type: this.form.type, from: this.form.from, to: this.form.to, days, reason: this.form.reason, status: 'Pending', appliedOn: new Date().toISOString().slice(0, 10) });
-    this.successMsg = `Leave request submitted for ${this.form.employee} (${days} days)`;
-    this.resetForm();
-    setTimeout(() => this.successMsg = '', 3000);
+    if (!this.form.employeeId || !this.form.type || !this.form.from || !this.form.to) { alert('Please fill all required fields'); return; }
+    const leaveType = this.leaveTypes.find(t => t.name === this.form.type);
+    const payload = {
+      employeeId: this.form.employeeId,
+      leaveTypeId: leaveType?.id,
+      startDate: this.form.from,
+      endDate: this.form.to,
+      reason: this.form.reason
+    };
+    this.http.post<any>(`${this.api}/leave/requests`, payload).subscribe({
+      next: req => {
+        this.successMsg = `Leave request submitted (${req.numberOfDays || '?'} days)`;
+        this.loadRequests();
+        this.loadBalances();
+        this.resetForm();
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to submit leave request')
+    });
   }
 
-  resetForm() { this.form = { employee: '', type: '', from: '', to: '', reason: '' }; }
+  resetForm() { this.form = { employeeId: '', type: '', from: '', to: '', reason: '' }; }
 
-  approveLeave(l: LeaveRequest) { l.status = 'Approved'; }
-  rejectLeave(l: LeaveRequest) { l.status = 'Rejected'; }
+  approveLeave(l: LeaveRequest) {
+    this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Approved' }).subscribe({
+      next: () => { l.status = 'Approved'; this.loadBalances(); }
+    });
+  }
+
+  rejectLeave(l: LeaveRequest) {
+    this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Rejected' }).subscribe({
+      next: () => { l.status = 'Rejected'; }
+    });
+  }
 }
