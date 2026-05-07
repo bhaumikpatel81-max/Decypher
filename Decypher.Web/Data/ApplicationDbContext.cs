@@ -24,6 +24,7 @@ namespace Decypher.Web.Data
 
         // DbSets
         public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
         public DbSet<Requirement> Requirements { get; set; }
         public DbSet<Candidate> Candidates { get; set; }

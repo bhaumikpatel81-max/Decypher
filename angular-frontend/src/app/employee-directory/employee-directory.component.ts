@@ -34,7 +34,8 @@ import { environment } from '../../environments/environment';
           </select>
           <select class="select" [(ngModel)]="draft.location">
             <option value="">Location</option>
-            <option>Ahmedabad HQ</option><option>Mumbai</option><option>Delhi</option><option>Bangalore</option><option>Remote</option>
+            <option *ngFor="let l of locations">{{l}}</option>
+            <option value="Other">Other</option>
           </select>
           <input class="input" placeholder="Reporting Manager" [(ngModel)]="draft.manager">
           <input class="input" type="date" [(ngModel)]="draft.doj" title="Date of Joining">
@@ -64,7 +65,7 @@ import { environment } from '../../environments/environment';
         </select>
         <select class="select" style="max-width:160px;" [(ngModel)]="filterLocation" (change)="applyFilter()">
           <option value="">All Locations</option>
-          <option>Ahmedabad HQ</option><option>Mumbai</option><option>Delhi</option><option>Bangalore</option><option>Remote</option>
+          <option *ngFor="let l of locations">{{l}}</option>
         </select>
       </div>
 
@@ -170,7 +171,8 @@ export class EmployeeDirectoryComponent implements OnInit {
   loading = false;
   search = ''; filterDept = ''; filterStatus = ''; filterLocation = '';
   selected: any = null;
-  departments = ['Engineering','HR','Finance','Sales','Marketing','Operations','Legal','Product'];
+  departments: string[] = [];
+  locations: string[] = [];
   colors = ['#6b4df0','#2563eb','#10b981','#f59e0b','#db2777','#0891b2','#7c3aed','#059669','#dc2626','#8b5cf6'];
 
   employees: any[] = [];
@@ -193,6 +195,9 @@ export class EmployeeDirectoryComponent implements OnInit {
         this.employees = (data || []).map(e => this.decorate(e));
         this.filtered = this.employees;
         this.loading = false;
+        // Derive dropdown options from loaded data
+        this.departments = [...new Set(this.employees.map(e => e.department).filter(Boolean))].sort();
+        this.locations   = [...new Set(this.employees.map(e => e.location).filter(Boolean))].sort();
       },
       error: () => { this.loading = false; }
     });

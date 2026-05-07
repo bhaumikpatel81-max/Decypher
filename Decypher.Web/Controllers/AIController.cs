@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Decypher.Web.Services;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ namespace Decypher.Web.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [AllowAnonymous]
+    [EnableRateLimiting("ai")]
     public class AIController : ControllerBase
     {
         private readonly IAIService _aiService;

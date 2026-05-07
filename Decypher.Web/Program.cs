@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 using Decypher.Web.Data;
 using Decypher.Web.Models;
 using Decypher.Web.Services;
@@ -10,6 +12,16 @@ using Decypher.Web.Services.AI;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Startup validation: fail fast if required configuration is absent ──────────
+var startupErrors = new List<string>();
+if (string.IsNullOrWhiteSpace(builder.Configuration["Jwt:Key"]) || builder.Configuration["Jwt:Key"]!.Length < 32)
+    startupErrors.Add("Jwt:Key must be set to a string of at least 32 characters.");
+if (string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection"))
+    && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DATABASE_URL")))
+    startupErrors.Add("A database connection string must be configured via ConnectionStrings:DefaultConnection or DATABASE_URL.");
+if (startupErrors.Count > 0)
+    throw new InvalidOperationException("Startup configuration errors:\n" + string.Join("\n", startupErrors));
 
 // Run as a Windows Service (no-op when started normally)
 builder.Host.UseWindowsService(options => options.ServiceName = "Decypher");
@@ -135,20 +147,47 @@ builder.Services.AddSession(options =>
 });
 
 // Configure CORS
-var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',') ?? new[] { "http://localhost:5000" };
+// In development, allow localhost. In production, only explicitly listed origins are permitted.
+var allowedOrigins = builder.Configuration["AllowedOrigins"]
+    ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.SetIsOriginAllowed(origin =>
             {
-                var uri = new Uri(origin);
-                return uri.Host == "localhost" || allowedOrigins.Contains(origin);
+                if (builder.Environment.IsDevelopment())
+                    return new Uri(origin).Host == "localhost";
+                return allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
             })
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
     });
+});
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+builder.Services.AddRateLimiter(opts =>
+{
+    // Auth endpoints: 10 attempts per minute per IP
+    opts.AddFixedWindowLimiter("auth", o =>
+    {
+        o.Window           = TimeSpan.FromMinutes(1);
+        o.PermitLimit      = 10;
+        o.QueueLimit       = 0;
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+    // AI endpoints: 20 requests per minute per IP
+    opts.AddFixedWindowLimiter("ai", o =>
+    {
+        o.Window           = TimeSpan.FromMinutes(1);
+        o.PermitLimit      = 20;
+        o.QueueLimit       = 5;
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+    opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
 // Add application services
@@ -1221,6 +1260,216 @@ using (var scope = app.Services.CreateScope())
             );");
         // ─── END HR MODULE TABLES ─────────────────────────────────────────────
 
+        // ─── Helpdesk & Travel tables ─────────────────────────────────────────
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""HelpdeskTickets"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TicketNumber"" text NOT NULL DEFAULT '',
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Description"" text,
+                ""Category"" text NOT NULL DEFAULT 'IT',
+                ""SubCategory"" text NOT NULL DEFAULT '',
+                ""Priority"" text NOT NULL DEFAULT 'Medium',
+                ""Status"" text NOT NULL DEFAULT 'Open',
+                ""RequesterId"" uuid NOT NULL,
+                ""RequesterName"" text NOT NULL DEFAULT '',
+                ""RequesterEmail"" text,
+                ""AssigneeId"" uuid,
+                ""AssigneeName"" text,
+                ""AssignedTeam"" text,
+                ""DueDate"" timestamp with time zone,
+                ""ResolvedAt"" timestamp with time zone,
+                ""Resolution"" text,
+                ""SatisfactionRating"" integer,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_HelpdeskTickets"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""HelpdeskTicketComments"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TicketId"" uuid NOT NULL,
+                ""AuthorId"" text NOT NULL DEFAULT '',
+                ""AuthorName"" text NOT NULL DEFAULT '',
+                ""Content"" text NOT NULL DEFAULT '',
+                ""IsInternal"" boolean NOT NULL DEFAULT false,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_HelpdeskTicketComments"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""HelpdeskWorkflowSteps"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TicketId"" uuid NOT NULL,
+                ""Action"" text NOT NULL DEFAULT '',
+                ""ActorName"" text NOT NULL DEFAULT '',
+                ""Notes"" text,
+                ""Timestamp"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_HelpdeskWorkflowSteps"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TravelRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""RequestNumber"" text NOT NULL DEFAULT '',
+                ""EmployeeId"" uuid NOT NULL,
+                ""EmployeeName"" text NOT NULL DEFAULT '',
+                ""TravelType"" text NOT NULL DEFAULT 'Domestic',
+                ""Purpose"" text NOT NULL DEFAULT '',
+                ""FromCity"" text NOT NULL DEFAULT '',
+                ""ToCity"" text NOT NULL DEFAULT '',
+                ""DepartureDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ReturnDate"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""EstimatedBudget"" numeric NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""ApproverId"" text,
+                ""ApproverName"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""RejectionReason"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TravelRequests"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""AdvanceRequests"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TravelRequestId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""EmployeeName"" text NOT NULL DEFAULT '',
+                ""RequestedAmount"" numeric NOT NULL DEFAULT 0,
+                ""ApprovedAmount"" numeric,
+                ""Status"" text NOT NULL DEFAULT 'Pending',
+                ""ApproverId"" text,
+                ""DisbursedAt"" timestamp with time zone,
+                ""SettledAt"" timestamp with time zone,
+                ""Notes"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_AdvanceRequests"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TravelExpenseClaims"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""TravelRequestId"" uuid NOT NULL,
+                ""EmployeeId"" uuid NOT NULL,
+                ""EmployeeName"" text NOT NULL DEFAULT '',
+                ""TotalAmount"" numeric NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'Draft',
+                ""SubmittedAt"" timestamp with time zone,
+                ""ApproverId"" text,
+                ""ApprovedAt"" timestamp with time zone,
+                ""RejectionReason"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TravelExpenseClaims"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""TravelExpenseLineItems"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""ClaimId"" uuid NOT NULL,
+                ""Category"" text NOT NULL DEFAULT '',
+                ""Description"" text NOT NULL DEFAULT '',
+                ""Date"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""Amount"" numeric NOT NULL DEFAULT 0,
+                ""ReceiptUrl"" text,
+                ""IsApproved"" boolean NOT NULL DEFAULT false,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_TravelExpenseLineItems"" PRIMARY KEY (""Id"")
+            );");
+
+        // ─── Security & Platform tables ───────────────────────────────────────
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""RefreshTokens"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""UserId"" text NOT NULL,
+                ""Token"" text NOT NULL,
+                ""ExpiresAt"" timestamp with time zone NOT NULL,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedByIp"" text,
+                ""IsRevoked"" boolean NOT NULL DEFAULT false,
+                ""RevokedAt"" timestamp with time zone,
+                ""ReplacedByToken"" text,
+                CONSTRAINT ""PK_RefreshTokens"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""WorkflowDefinitions"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Name"" text NOT NULL DEFAULT '',
+                ""EntityType"" text NOT NULL DEFAULT '',
+                ""StepsJson"" text NOT NULL DEFAULT '[]',
+                ""IsActive"" boolean NOT NULL DEFAULT true,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_WorkflowDefinitions"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""WorkflowInstances"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""DefinitionId"" uuid NOT NULL,
+                ""EntityId"" uuid NOT NULL,
+                ""EntityType"" text NOT NULL DEFAULT '',
+                ""CurrentStep"" integer NOT NULL DEFAULT 0,
+                ""TotalSteps"" integer NOT NULL DEFAULT 0,
+                ""Status"" text NOT NULL DEFAULT 'InProgress',
+                ""StartedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CompletedAt"" timestamp with time zone,
+                ""SLADeadline"" timestamp with time zone,
+                ""SLABreached"" boolean NOT NULL DEFAULT false,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_WorkflowInstances"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""WorkflowStepHistories"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""InstanceId"" uuid NOT NULL,
+                ""StepIndex"" integer NOT NULL DEFAULT 0,
+                ""StepName"" text NOT NULL DEFAULT '',
+                ""Action"" text NOT NULL DEFAULT '',
+                ""ActorName"" text NOT NULL DEFAULT '',
+                ""ActorId"" text,
+                ""Notes"" text,
+                ""ActedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_WorkflowStepHistories"" PRIMARY KEY (""Id"")
+            );
+            CREATE TABLE IF NOT EXISTS ""HRAnnouncements"" (
+                ""Id"" uuid NOT NULL DEFAULT gen_random_uuid(),
+                ""TenantId"" uuid NOT NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Body"" text NOT NULL DEFAULT '',
+                ""Category"" text NOT NULL DEFAULT 'General',
+                ""IsPinned"" boolean NOT NULL DEFAULT false,
+                ""PublishedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""ExpiresAt"" timestamp with time zone,
+                ""AuthorId"" text,
+                ""AuthorName"" text,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""CreatedBy"" text, ""UpdatedBy"" text, ""IsDeleted"" boolean NOT NULL DEFAULT false,
+                CONSTRAINT ""PK_HRAnnouncements"" PRIMARY KEY (""Id"")
+            );
+            ALTER TABLE ""AttendancePolicies""
+                ADD COLUMN IF NOT EXISTS ""GeoFenceName"" text,
+                ADD COLUMN IF NOT EXISTS ""GeoFenceLat"" double precision,
+                ADD COLUMN IF NOT EXISTS ""GeoFenceLng"" double precision,
+                ADD COLUMN IF NOT EXISTS ""StrictGeoFence"" boolean NOT NULL DEFAULT false;");
+        // ─── END SECURITY & PLATFORM TABLES ──────────────────────────────────
+
         // Seed data
         await SeedData.Initialize(context, userManager, roleManager);
 
@@ -1253,6 +1502,8 @@ app.UseRouting();
 
 // Use CORS
 app.UseCors("AllowFrontend");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

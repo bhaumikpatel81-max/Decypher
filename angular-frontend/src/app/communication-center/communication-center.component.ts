@@ -278,67 +278,53 @@ export class CommunicationCenterComponent implements OnInit {
   variableValues: Record<string, string> = {};
   messagePreview = '';
 
-  private readonly emailTemplates: MsgTemplate[] = [
-    {
-      id: 'et1', name: 'Interview Invite',
-      subject: 'Interview Invitation — {{company}}',
-      body: 'Dear {{name}},\n\nWe are pleased to invite you for an interview at {{company}}. Please confirm your availability at your earliest convenience.\n\nBest regards,\nHR Team',
-      variables: ['name', 'company']
-    },
-    {
-      id: 'et2', name: 'Application Received',
-      subject: 'We received your application',
-      body: 'Dear {{name}},\n\nThank you for applying to our organization. We will review your profile and get in touch shortly.\n\nBest regards,\nHR Team',
-      variables: ['name']
-    },
-    {
-      id: 'et3', name: 'Offer Letter',
-      subject: 'Congratulations — Job Offer from {{company}}',
-      body: 'Dear {{name}},\n\nWe are delighted to extend an offer of employment. Please review the attached letter and confirm acceptance by {{deadline}}.\n\nBest regards,\nHR Team',
-      variables: ['name', 'company', 'deadline']
-    },
+  // Seeded fallbacks shown until API responds
+  private fallbackEmail: MsgTemplate[] = [
+    { id: 'et1', name: 'Interview Invite',    subject: 'Interview Invitation — {{company}}', body: 'Dear {{name}},\n\nWe are pleased to invite you for an interview at {{company}}.\n\nBest regards,\nHR Team', variables: ['name','company'] },
+    { id: 'et2', name: 'Application Received', subject: 'We received your application',       body: 'Dear {{name}},\n\nThank you for applying. We will review your profile shortly.\n\nBest regards,\nHR Team', variables: ['name'] },
+    { id: 'et3', name: 'Offer Letter',         subject: 'Job Offer from {{company}}',          body: 'Dear {{name}},\n\nWe are delighted to extend an offer. Please confirm by {{deadline}}.\n\nBest regards,\nHR Team', variables: ['name','company','deadline'] },
+  ];
+  private fallbackSms: MsgTemplate[] = [
+    { id: 'st1', name: 'Interview Reminder', body: 'Hi {{name}}, your interview is on {{date}}. Reply YES to confirm.', variables: ['name','date'] },
+    { id: 'st2', name: 'Status Update',      body: 'Hi {{name}}, your application status has been updated. Check the portal.', variables: ['name'] },
+  ];
+  private fallbackWhatsapp: MsgTemplate[] = [
+    { id: 'wt1', name: 'Welcome Message',      body: 'Hi {{name}} 👋, welcome to {{company}}! Your application for *{{role}}* has been received.', variables: ['name','company','role'] },
+    { id: 'wt2', name: 'Interview Schedule',   body: 'Hi {{name}}, your interview for *{{role}}* is on *{{date}}* at {{time}}.', variables: ['name','role','date','time'] },
   ];
 
-  private readonly smsTemplates: MsgTemplate[] = [
-    {
-      id: 'st1', name: 'Interview Reminder',
-      body: 'Hi {{name}}, your interview is scheduled for {{date}}. Please confirm your attendance by replying YES.',
-      variables: ['name', 'date']
-    },
-    {
-      id: 'st2', name: 'Status Update',
-      body: 'Hi {{name}}, your application status has been updated. Please check the portal for details.',
-      variables: ['name']
-    },
-    {
-      id: 'st3', name: 'Document Request',
-      body: 'Hi {{name}}, please share your latest documents at the earliest. Contact HR for assistance.',
-      variables: ['name']
-    },
-  ];
-
-  private readonly whatsappTemplates: MsgTemplate[] = [
-    {
-      id: 'wt1', name: 'Welcome Message',
-      body: 'Hi {{name}} 👋, welcome to {{company}}! Your application for *{{role}}* has been received. We will be in touch soon.',
-      variables: ['name', 'company', 'role']
-    },
-    {
-      id: 'wt2', name: 'Interview Schedule',
-      body: 'Hi {{name}}, your interview for *{{role}}* is scheduled on *{{date}}* at {{time}}. Please confirm your attendance.',
-      variables: ['name', 'role', 'date', 'time']
-    },
-    {
-      id: 'wt3', name: 'Offer Congratulations',
-      body: 'Hi {{name}} 🎉 Congratulations! We are delighted to offer you the role of *{{role}}* at {{company}}. Please check your email for the offer letter.',
-      variables: ['name', 'role', 'company']
-    },
-  ];
+  emailTemplates: MsgTemplate[] = [...this.fallbackEmail];
+  smsTemplates:   MsgTemplate[] = [...this.fallbackSms];
+  whatsappTemplates: MsgTemplate[] = [...this.fallbackWhatsapp];
 
   get activeTemplates(): MsgTemplate[] {
     return this.activeTab === 'email' ? this.emailTemplates
          : this.activeTab === 'sms'   ? this.smsTemplates
          : this.whatsappTemplates;
+  }
+
+  loadTemplates() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/communications/templates`).subscribe({
+      next: data => {
+        const email     = data.filter(t => t.channel === 'email'    || t.type === 'email');
+        const sms       = data.filter(t => t.channel === 'sms'      || t.type === 'sms');
+        const whatsapp  = data.filter(t => t.channel === 'whatsapp' || t.type === 'whatsapp');
+        if (email.length)    this.emailTemplates    = email.map(this.mapTemplate);
+        if (sms.length)      this.smsTemplates      = sms.map(this.mapTemplate);
+        if (whatsapp.length) this.whatsappTemplates = whatsapp.map(this.mapTemplate);
+      },
+      error: () => { /* keep fallbacks */ }
+    });
+  }
+
+  private mapTemplate(t: any): MsgTemplate {
+    return {
+      id: t.id ?? t.templateId,
+      name: t.name ?? t.title,
+      subject: t.subject,
+      body: t.body ?? t.content ?? '',
+      variables: t.variables ?? t.placeholders ?? []
+    };
   }
 
   get filteredHistory() {
@@ -356,6 +342,7 @@ export class CommunicationCenterComponent implements OnInit {
   ngOnInit() {
     this.loadCandidates();
     this.loadHistory();
+    this.loadTemplates();
   }
 
   loadCandidates() {

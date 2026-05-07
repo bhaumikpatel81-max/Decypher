@@ -221,6 +221,12 @@ namespace Decypher.Web.Models
         public bool GeoFenceEnabled { get; set; } = false;
         public bool BiometricEnabled { get; set; } = false;
         public bool IsDefault { get; set; } = true;
+
+        [MaxLength(200)]
+        public string? GeoFenceName { get; set; }
+        public double? GeoFenceLat { get; set; }
+        public double? GeoFenceLng { get; set; }
+        public bool StrictGeoFence { get; set; } = false;
     }
 
     // ═══════════════════════════════════════════════════════════════

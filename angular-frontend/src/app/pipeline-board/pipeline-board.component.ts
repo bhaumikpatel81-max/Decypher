@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -179,7 +180,7 @@ export class PipelineBoardComponent implements OnInit {
 
   readonly stageColors = ['#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6'];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
     this.http.get<any[]>(`${environment.apiUrl}/api/pipeline-board/stages`)
@@ -196,7 +197,7 @@ export class PipelineBoardComponent implements OnInit {
       });
   }
 
-  openCandidate(id: string) { /* navigate to candidate detail */ }
+  openCandidate(id: string) { this.router.navigate(['/candidate-portal'], { queryParams: { candidateId: id } }); }
 
   get totalCandidates() { return this.board.reduce((s, col) => s + col.candidates.length, 0); }
   get avgPerStage()  { return this.board.length ? Math.round(this.totalCandidates / this.board.length) : 0; }

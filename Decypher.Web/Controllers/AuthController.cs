@@ -1,10 +1,14 @@
+using Decypher.Web.Data;
+using Decypher.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
-using Decypher.Web.Models;
 
 namespace Decypher.Web.Controllers;
 
@@ -15,18 +19,22 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _db;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ApplicationDbContext db)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _db = db;
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -43,18 +51,76 @@ public class AuthController : ControllerBase
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        return Ok(new { token = GenerateJwtToken(user), user = MapToCurrentUser(user) });
+        var token   = GenerateJwtToken(user);
+        var refresh = await CreateRefreshTokenAsync(user.Id, GetClientIp());
+        return Ok(new { token, refreshToken = refresh.Token, user = MapToCurrentUser(user) });
     }
 
     [HttpPost("guest")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> GuestLogin()
     {
         var guestUser = await _userManager.FindByEmailAsync("guest@decypher.app");
         if (guestUser == null)
             return StatusCode(503, new { error = "Guest account not available" });
 
-        return Ok(new { token = GenerateJwtToken(guestUser), user = MapToCurrentUser(guestUser) });
+        var token   = GenerateJwtToken(guestUser);
+        var refresh = await CreateRefreshTokenAsync(guestUser.Id, GetClientIp());
+        return Ok(new { token, refreshToken = refresh.Token, user = MapToCurrentUser(guestUser) });
     }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    {
+        var stored = await _db.RefreshTokens.FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
+        if (stored == null || !stored.IsActive)
+            return Unauthorized(new { error = "Invalid or expired refresh token." });
+
+        var user = await _userManager.FindByIdAsync(stored.UserId);
+        if (user == null || !user.IsActive)
+            return Unauthorized(new { error = "User not found." });
+
+        // Rotate: revoke old, issue new
+        stored.IsRevoked = true;
+        stored.RevokedAt = DateTime.UtcNow;
+        var newRefresh = await CreateRefreshTokenAsync(user.Id, GetClientIp());
+        stored.ReplacedByToken = newRefresh.Token;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { token = GenerateJwtToken(user), refreshToken = newRefresh.Token, user = MapToCurrentUser(user) });
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshRequest? request)
+    {
+        if (!string.IsNullOrEmpty(request?.RefreshToken))
+        {
+            var stored = await _db.RefreshTokens.FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
+            if (stored != null && !stored.IsRevoked)
+            {
+                stored.IsRevoked = true;
+                stored.RevokedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+            }
+        }
+        return Ok(new { message = "Logged out." });
+    }
+
+    private async Task<RefreshToken> CreateRefreshTokenAsync(string userId, string? ip)
+    {
+        var token = new RefreshToken
+        {
+            UserId       = userId,
+            Token        = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            ExpiresAt    = DateTime.UtcNow.AddDays(30),
+            CreatedByIp  = ip
+        };
+        _db.RefreshTokens.Add(token);
+        await _db.SaveChangesAsync();
+        return token;
+    }
+
+    private string? GetClientIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
 
     private string GenerateJwtToken(ApplicationUser user)
     {
@@ -108,6 +174,7 @@ public class AuthController : ControllerBase
 }
 
 public record LoginRequest(string Email, string Password);
+public record RefreshRequest(string RefreshToken);
 
 public record CurrentUserDto
 {

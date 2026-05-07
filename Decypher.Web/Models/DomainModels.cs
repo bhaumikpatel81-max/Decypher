@@ -373,4 +373,32 @@ namespace Decypher.Web.Models
         // Navigation properties
         public virtual Tenant Tenant { get; set; } = null!;
     }
+
+    public class RefreshToken
+    {
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        [Required, MaxLength(512)]
+        public string Token { get; set; } = string.Empty;
+
+        public DateTime ExpiresAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [MaxLength(45)]
+        public string? CreatedByIp { get; set; }
+
+        public bool IsRevoked { get; set; } = false;
+        public DateTime? RevokedAt { get; set; }
+
+        [MaxLength(512)]
+        public string? ReplacedByToken { get; set; }
+
+        public bool IsActive => !IsRevoked && DateTime.UtcNow < ExpiresAt;
+
+        public virtual ApplicationUser User { get; set; } = null!;
+    }
 }

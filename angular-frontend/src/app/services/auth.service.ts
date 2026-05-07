@@ -21,15 +21,15 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<{ token: string; user: CurrentUser }> {
-    return this.http.post<{ token: string; user: CurrentUser }>(`${this.apiUrl}/login`, { email, password }).pipe(
-      tap(result => this.setSession(result.token, result.user))
+  login(email: string, password: string): Observable<{ token: string; refreshToken?: string; user: CurrentUser }> {
+    return this.http.post<{ token: string; refreshToken?: string; user: CurrentUser }>(`${this.apiUrl}/login`, { email, password }).pipe(
+      tap(result => this.setSession(result.token, result.user, result.refreshToken))
     );
   }
 
-  guestLogin(): Observable<{ token: string; user: CurrentUser }> {
-    return this.http.post<{ token: string; user: CurrentUser }>(`${this.apiUrl}/guest`, {}).pipe(
-      tap(result => this.setSession(result.token, result.user))
+  guestLogin(): Observable<{ token: string; refreshToken?: string; user: CurrentUser }> {
+    return this.http.post<{ token: string; refreshToken?: string; user: CurrentUser }>(`${this.apiUrl}/guest`, {}).pipe(
+      tap(result => this.setSession(result.token, result.user, result.refreshToken))
     );
   }
 
@@ -47,15 +47,20 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      this.http.post(`${this.apiUrl}/logout`, { refreshToken }).subscribe({ error: () => {} });
+    }
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('refresh_token');
     this.currentUserSubject.next(null);
   }
 
-  private setSession(token: string, user: CurrentUser): void {
+  private setSession(token: string, user: CurrentUser, refreshToken?: string): void {
     localStorage.setItem('authToken', token);
     localStorage.setItem('currentUser', JSON.stringify(user));
-    localStorage.setItem('tenantId', '11111111-1111-1111-1111-111111111111');
+    if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
     this.currentUserSubject.next(user);
   }
 

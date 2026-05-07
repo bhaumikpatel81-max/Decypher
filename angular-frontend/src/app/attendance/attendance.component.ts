@@ -449,8 +449,9 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     { val: '—', lbl: 'Attendance Rate', color: '#6b4df0' },
   ];
 
-  fence = { name: 'Amnex HQ — Ahmedabad', lat: 23.0225, lng: 72.5714, radius: 200, strict: true };
+  fence = { name: '', lat: 0, lng: 0, radius: 200, strict: false };
   bio = { faceEnabled: true, fingerEnabled: true, cardEnabled: true, geoRequired: true, doorAuto: true, lateThreshold: 15, startTime: '09:00' };
+  settingsMsg = '';
 
   records: AttendanceRecord[] = [];
 
@@ -462,6 +463,23 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     this.loadDailySummary();
     this.loadRecords();
     this.loadEmployees();
+    this.loadPolicy();
+  }
+
+  loadPolicy() {
+    this.http.get<any>(`${this.api}/policy`).subscribe({
+      next: p => {
+        if (!p) return;
+        this.fence.name   = p.geoFenceName   ?? p.name ?? '';
+        this.fence.lat    = p.geoFenceLat    ?? 0;
+        this.fence.lng    = p.geoFenceLng    ?? 0;
+        this.fence.radius = p.geoFenceRadiusMeters ?? 200;
+        this.fence.strict = p.strictGeoFence ?? false;
+        this.bio.lateThreshold = p.graceMinutes ?? 15;
+        this.bio.startTime = p.shiftStartTime ?? '09:00:00';
+      },
+      error: () => {}
+    });
   }
 
   loadDailySummary() {
@@ -699,6 +717,22 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     });
   }
 
-  saveFenceSettings() { alert(`Geo fence saved: ${this.fence.name} (${this.fence.lat}, ${this.fence.lng}) radius ${this.fence.radius}m`); }
-  saveBioSettings() { alert('Biometric settings saved.'); }
+  saveFenceSettings() {
+    this.http.post<any>(`${this.api}/policy`, {
+      geoFenceName: this.fence.name, geoFenceLat: this.fence.lat,
+      geoFenceLng: this.fence.lng, geoFenceRadiusMeters: this.fence.radius,
+      strictGeoFence: this.fence.strict, geoFenceEnabled: true
+    }).subscribe({
+      next: () => { this.settingsMsg = 'Geo fence saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
+      error: () => { this.settingsMsg = 'Save failed.'; setTimeout(() => this.settingsMsg = '', 3000); }
+    });
+  }
+  saveBioSettings() {
+    this.http.post<any>(`${this.api}/policy`, {
+      biometricEnabled: true, graceMinutes: this.bio.lateThreshold
+    }).subscribe({
+      next: () => { this.settingsMsg = 'Biometric settings saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
+      error: () => {}
+    });
+  }
 }

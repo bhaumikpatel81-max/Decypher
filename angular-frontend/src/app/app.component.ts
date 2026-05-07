@@ -48,10 +48,9 @@ import { AuthService, CurrentUser } from './services/auth.service';
 
         <button class="btn btn-primary login-btn" type="submit">Sign in</button>
 
-        <div class="credential-hint">
+        <div class="credential-hint" *ngIf="showDemoHint">
           <strong>Demo credentials</strong>
-          <span>Super Admin: admin&#64;decypher.app / Admin&#64;2024</span>
-          <span>Recruiter: recruiter&#64;decypher.app / Recruiter&#64;2024</span>
+          <span>Contact your administrator for access credentials.</span>
         </div>
       </form>
     </section>
@@ -527,10 +526,11 @@ export class AppComponent implements OnInit {
   currentPageTitle = 'Dashboard';
   currentBreadcrumb = 'Home / Dashboard';
   canAccessAdmin = false;
-  email = 'admin@decypher.app';
-  password = 'Admin@2024';
+  email = '';
+  password = '';
   selectedLogin = 'super';
   loginError = '';
+  showDemoHint = false;
   insightText = 'Live pipeline risk is calculated from current candidate records.';
 
   allApps = [
@@ -616,6 +616,10 @@ export class AppComponent implements OnInit {
     { path: '/helpdesk',               label: 'IT & HR Helpdesk',       shortLabel: 'Helpdesk',          symbol: '🎫', color: '#ef4444', adminOnly: false },
     // Travel
     { path: '/admin-travel',           label: 'Admin & Travel',         shortLabel: 'Travel',            symbol: '✈️', color: '#0891b2', adminOnly: false },
+    // Employee Portal
+    { path: '/portal',                 label: 'Employee Portal',        shortLabel: 'Portal',            symbol: '🏠', color: '#6366f1', adminOnly: false },
+    // Workflow Engine
+    { path: '/workflow-builder',       label: 'Workflow Engine',        shortLabel: 'Workflows',         symbol: '⚙️', color: '#7c3aed', adminOnly: true  },
   ];
 
   recentApps: any[] = [];
@@ -656,8 +660,10 @@ export class AppComponent implements OnInit {
       paths:['/helpdesk'] },
     { id:'travel',        label:'Admin & Travel',           symbol:'✈️', color:'#0891b2',
       paths:['/admin-travel'] },
+    { id:'portal',        label:'Employee Self-Service',    symbol:'🏠', color:'#6366f1',
+      paths:['/portal'] },
     { id:'admin',         label:'Settings',                 symbol:'AD', color:'#343a48',
-      paths:['/users','/import-center','/integrations'] },
+      paths:['/users','/import-center','/integrations','/workflow-builder'] },
   ];
 
   expandedGroups = new Set<string>(['recruitment']);
@@ -731,13 +737,8 @@ export class AppComponent implements OnInit {
 
   usePreset(type: string) {
     this.selectedLogin = type;
-    if (type === 'super') {
-      this.email = 'admin@decypher.app';
-      this.password = 'Admin@2024';
-    } else if (type === 'team') {
-      this.email = 'recruiter@decypher.app';
-      this.password = 'Recruiter@2024';
-    }
+    this.email = '';
+    this.password = '';
   }
 
   login() {
@@ -801,6 +802,8 @@ export class AppComponent implements OnInit {
       '/jd-checker':            { title: 'JD Analyzer',           breadcrumb: 'AI Tools / JD Analyzer' },
       '/jd-generator':          { title: 'JD Generator',          breadcrumb: 'AI Tools / JD Generator' },
       '/import-center':         { title: 'Import Center',         breadcrumb: 'Admin / Import Center' },
+      '/portal':                { title: 'Employee Portal',       breadcrumb: 'Self-Service / Portal' },
+      '/workflow-builder':      { title: 'Workflow Engine',       breadcrumb: 'Admin / Workflow Engine' },
       // Admin
       '/users':                 { title: 'User Management',       breadcrumb: 'Admin / User Management' },
       '/compliance':            { title: 'Compliance',            breadcrumb: 'Admin / Compliance' },
