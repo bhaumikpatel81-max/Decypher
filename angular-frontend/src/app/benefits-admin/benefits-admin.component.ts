@@ -154,54 +154,61 @@ export class BenefitsAdminComponent implements OnInit {
   tab = 'catalogue';
   selectedEmpId = '';
 
-  benefits = [
-    { id: 'b1', name: 'Health Insurance', category: 'Insurance', icon: '🏥', description: 'Comprehensive family floater health cover ₹5L', cost: 2500, enrolled: 8 },
-    { id: 'b2', name: 'Life Insurance', category: 'Insurance', icon: '🛡️', description: 'Term life insurance 10x annual CTC', cost: 800, enrolled: 7 },
-    { id: 'b3', name: 'Meal Card', category: 'Allowance', icon: '🍽️', description: 'Sodexo meal card ₹2200/month', cost: 2200, enrolled: 6 },
-    { id: 'b4', name: 'Gym Membership', category: 'Wellness', icon: '💪', description: 'CultFit or local gym subscription', cost: 1000, enrolled: 4 },
-    { id: 'b5', name: 'Learning Budget', category: 'Development', icon: '📚', description: '₹25,000/year for courses & certifications', cost: 2083, enrolled: 6 },
-    { id: 'b6', name: 'WFH Allowance', category: 'Allowance', icon: '🏠', description: 'Work from home internet & equipment stipend', cost: 1500, enrolled: 5 },
-  ];
+  benefits: any[] = [];
+  employees: any[] = [];
+  enrollments: { [empId: string]: string[] } = {};
+  claimsHistory: any[] = [];
 
-  employees = [
-    { id: 'EMP001', name: 'Arjun Mehta', role: 'Sr. Developer', pointsUsed: 750, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Learning', points: 250 }, { benefit: 'WFH', points: 200 }] },
-    { id: 'EMP002', name: 'Priya Sharma', role: 'HR Manager', pointsUsed: 920, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Meal', points: 220 }, { benefit: 'Gym', points: 400 }] },
-    { id: 'EMP003', name: 'Rahul Gupta', role: 'DevOps', pointsUsed: 600, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Learning', points: 300 }] },
-    { id: 'EMP004', name: 'Sneha Patel', role: 'QA Lead', pointsUsed: 550, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'WFH', points: 250 }] },
-    { id: 'EMP005', name: 'Vikram Singh', role: 'Support', pointsUsed: 400, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Meal', points: 100 }] },
-    { id: 'EMP006', name: 'Ananya Iyer', role: 'Business Analyst', pointsUsed: 800, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Life', points: 200 }, { benefit: 'Learning', points: 300 }] },
-    { id: 'EMP007', name: 'Kiran Desai', role: 'Data Analyst', pointsUsed: 680, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'Learning', points: 380 }] },
-    { id: 'EMP008', name: 'Rohan Nair', role: 'Network Admin', pointsUsed: 480, flexAllocations: [{ benefit: 'Health', points: 300 }, { benefit: 'WFH', points: 180 }] },
-  ];
-
-  enrollments: { [empId: string]: string[] } = {
-    EMP001: ['b1', 'b2', 'b5', 'b6'], EMP002: ['b1', 'b2', 'b3', 'b4'],
-    EMP003: ['b1', 'b5'], EMP004: ['b1', 'b6'], EMP005: ['b1', 'b3'],
-    EMP006: ['b1', 'b2', 'b5'], EMP007: ['b1', 'b5'], EMP008: ['b1', 'b6'],
-  };
-
-  claimsHistory = [
-    { employee: 'Arjun Mehta', benefit: 'Health Insurance', amount: 18500, date: '2026-04-12', status: 'Approved' },
-    { employee: 'Priya Sharma', benefit: 'Learning Budget', amount: 12000, date: '2026-04-15', status: 'Approved' },
-    { employee: 'Ananya Iyer', benefit: 'Gym Membership', amount: 8000, date: '2026-05-01', status: 'Pending' },
-    { employee: 'Rahul Gupta', benefit: 'WFH Allowance', amount: 4500, date: '2026-05-03', status: 'Pending' },
-    { employee: 'Sneha Patel', benefit: 'Meal Card', amount: 2200, date: '2026-04-30', status: 'Approved' },
-  ];
-
-  get totalBenefitCost() { return this.benefits.reduce((s, b) => s + b.cost * b.enrolled, 0); }
+  get totalBenefitCost() { return this.benefits.reduce((s, b) => s + (b.cost || 0) * (b.enrolled || 0), 0); }
   get totalEnrolled() { return Object.values(this.enrollments).reduce((s, arr) => s + arr.length, 0); }
   get filteredEmployees() { return this.selectedEmpId ? this.employees.filter(e => e.id === this.selectedEmpId) : this.employees; }
 
   isEnrolled(empId: string, benefitId: string): boolean { return (this.enrollments[empId] || []).includes(benefitId); }
 
-  toggleEnrollment(empId: string, benefitId: string) {
-    if (!this.enrollments[empId]) this.enrollments[empId] = [];
-    const idx = this.enrollments[empId].indexOf(benefitId);
-    if (idx > -1) this.enrollments[empId].splice(idx, 1);
-    else this.enrollments[empId].push(benefitId);
-    const b = this.benefits.find(b => b.id === benefitId);
-    if (b) b.enrolled = this.employees.filter(e => (this.enrollments[e.id] || []).includes(benefitId)).length;
+  ngOnInit() { this.loadBenefits(); this.loadEmployees(); }
+
+  loadBenefits() {
+    this.http.get<any[]>(`${this.api}/benefits`).subscribe(data => {
+      this.benefits = (data || []).map(b => ({
+        id: b.id?.toString(), name: b.name, category: b.category || '',
+        icon: b.icon || '🎁', description: b.description || '', cost: b.monthlyCost || 0, enrolled: b.enrolledCount || 0
+      }));
+    });
   }
 
-  ngOnInit() {}
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+        role: e.designation || '', pointsUsed: 0, flexAllocations: []
+      }));
+      this.loadEnrollments();
+    });
+  }
+
+  loadEnrollments() {
+    this.http.get<any[]>(`${this.api}/benefits/employee/all`).subscribe({
+      next: data => {
+        (data || []).forEach(en => {
+          const empId = en.employeeId?.toString();
+          if (!this.enrollments[empId]) this.enrollments[empId] = [];
+          this.enrollments[empId].push(en.benefitId?.toString());
+        });
+      }
+    });
+  }
+
+  toggleEnrollment(empId: string, benefitId: string) {
+    const enrolled = this.isEnrolled(empId, benefitId);
+    this.http.post(`${this.api}/benefits/enroll`, { employeeId: empId, benefitId, enroll: !enrolled }).subscribe({
+      next: () => {
+        if (!this.enrollments[empId]) this.enrollments[empId] = [];
+        const idx = this.enrollments[empId].indexOf(benefitId);
+        if (enrolled && idx > -1) this.enrollments[empId].splice(idx, 1);
+        else if (!enrolled) this.enrollments[empId].push(benefitId);
+        const b = this.benefits.find(b => b.id === benefitId);
+        if (b) b.enrolled = this.employees.filter(e => this.isEnrolled(e.id, benefitId)).length;
+      }
+    });
+  }
 }

@@ -192,11 +192,7 @@ export class Feedback360Component implements OnInit {
   employees = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer'];
   feedCategories = ['Communication', 'Collaboration', 'Technical Skills', 'Leadership', 'Problem Solving'];
 
-  requests = [
-    { subject: 'Arjun Mehta', due: '2026-05-31', completed: 2, reviewers: [{ name: 'Priya Sharma', done: true }, { name: 'Rahul Gupta', done: true }, { name: 'Sneha Patel', done: false }] },
-    { subject: 'Priya Sharma', due: '2026-05-31', completed: 1, reviewers: [{ name: 'Arjun Mehta', done: true }, { name: 'Ananya Iyer', done: false }] },
-    { subject: 'Ananya Iyer', due: '2026-05-31', completed: 0, reviewers: [{ name: 'Arjun Mehta', done: false }, { name: 'Priya Sharma', done: false }, { name: 'Vikram Singh', done: false }] },
-  ];
+  requests: any[] = [];
 
   newReq = { subject: '', reviewers: [] as string[], due: '' };
 
@@ -217,7 +213,24 @@ export class Feedback360Component implements OnInit {
     }).join(' ');
   }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadRequests(); this.loadEmployees(); }
+
+  loadRequests() {
+    this.http.get<any[]>(`${this.api}/feedback/requests`).subscribe(data => {
+      this.requests = (data || []).map(r => ({
+        id: r.id, subject: r.requesteeName || r.subject,
+        due: r.dueDate?.slice(0,10) || '',
+        completed: r.responses?.length || 0,
+        reviewers: [{ name: r.reviewerName || '', done: r.status === 'Completed' }]
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+    });
+  }
 
   toggleReviewer(e: string) {
     const idx = this.newReq.reviewers.indexOf(e);

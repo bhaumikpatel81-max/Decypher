@@ -140,29 +140,11 @@ export class CertificationTrackerComponent implements OnInit {
   expiryFilter = 0;
   msg = '';
 
-  empList = [
-    { name: 'Arjun Mehta', id: 'EMP001' }, { name: 'Priya Sharma', id: 'EMP002' },
-    { name: 'Rahul Gupta', id: 'EMP003' }, { name: 'Sneha Patel', id: 'EMP004' },
-    { name: 'Vikram Singh', id: 'EMP005' }, { name: 'Ananya Iyer', id: 'EMP006' },
-    { name: 'Kiran Desai', id: 'EMP007' }, { name: 'Rohan Nair', id: 'EMP008' },
-  ];
+  empList: { name: string; id: string }[] = [];
 
   form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' };
 
-  certs: Certification[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', name: 'AWS Solutions Architect', issuer: 'Amazon Web Services', obtained: '2024-05-15', expiry: '2026-05-15', certId: 'AWS-SAA-000123', status: 'Expiring Soon', daysLeft: 9 },
-    { id: 2, employee: 'Arjun Mehta', empId: 'EMP001', name: 'Angular Certified Developer', issuer: 'Google', obtained: '2025-01-10', expiry: '2027-01-10', certId: 'GGL-ANG-056789', status: 'Active', daysLeft: 614 },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', name: 'Kubernetes Administrator', issuer: 'CNCF', obtained: '2024-08-20', expiry: '2026-08-20', certId: 'CNCF-CKA-009876', status: 'Active', daysLeft: 106 },
-    { id: 4, employee: 'Rahul Gupta', empId: 'EMP003', name: 'AWS DevOps Engineer', issuer: 'Amazon Web Services', obtained: '2023-11-05', expiry: '2025-11-05', certId: 'AWS-DEV-001234', status: 'Expired', daysLeft: -182 },
-    { id: 5, employee: 'Sneha Patel', empId: 'EMP004', name: 'ISTQB Foundation', issuer: 'ISTQB', obtained: '2024-03-12', expiry: '2027-03-12', certId: 'ISTQB-FL-054321', status: 'Active', daysLeft: 675 },
-    { id: 6, employee: 'Kiran Desai', empId: 'EMP007', name: 'Microsoft Power BI', issuer: 'Microsoft', obtained: '2025-02-14', expiry: '2027-02-14', certId: 'MS-PBI-078901', status: 'Active', daysLeft: 649 },
-    { id: 7, employee: 'Ananya Iyer', empId: 'EMP006', name: 'PMP', issuer: 'PMI', obtained: '2023-06-01', expiry: '2026-06-01', certId: 'PMI-PMP-334455', status: 'Expiring Soon', daysLeft: 26 },
-    { id: 8, employee: 'Rohan Nair', empId: 'EMP008', name: 'CCNA', issuer: 'Cisco', obtained: '2024-09-18', expiry: '2027-09-18', certId: 'CSC-CCNA-112233', status: 'Active', daysLeft: 865 },
-    { id: 9, employee: 'Priya Sharma', empId: 'EMP002', name: 'SHRM-CP', issuer: 'SHRM', obtained: '2025-01-20', expiry: '2028-01-20', certId: 'SHRM-CP-556677', status: 'Active', daysLeft: 989 },
-    { id: 10, employee: 'Vikram Singh', empId: 'EMP005', name: 'CompTIA A+', issuer: 'CompTIA', obtained: '2022-11-30', expiry: '2025-11-30', certId: 'CTIA-AP-998877', status: 'Expired', daysLeft: -157 },
-    { id: 11, employee: 'Arjun Mehta', empId: 'EMP001', name: 'Scrum Master (CSM)', issuer: 'Scrum Alliance', obtained: '2025-03-10', expiry: '2027-03-10', certId: 'SA-CSM-445566', status: 'Active', daysLeft: 673 },
-    { id: 12, employee: 'Kiran Desai', empId: 'EMP007', name: 'Google Data Analytics', issuer: 'Google', obtained: '2025-04-01', expiry: '2027-04-01', certId: 'GGL-DA-889900', status: 'Active', daysLeft: 695 },
-  ];
+  certs: Certification[] = [];
 
   get activeCerts() { return this.certs.filter(c => c.status === 'Active').length; }
   get expiredCerts() { return this.certs.filter(c => c.status === 'Expired').length; }
@@ -177,18 +159,45 @@ export class CertificationTrackerComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadCerts(); this.loadEmployees(); }
+
+  loadCerts() {
+    this.http.get<any[]>(`${this.api}/certifications`).subscribe(data => {
+      const today = new Date().getTime();
+      this.certs = (data || []).map(c => {
+        const expDate = new Date(c.expiryDate || c.expiry || '').getTime();
+        const daysLeft = Math.ceil((expDate - today) / 86400000);
+        return {
+          id: c.id, employee: c.employeeName || '', empId: c.employeeCode || '',
+          name: c.certificationName || c.name, issuer: c.issuingOrganization || c.issuer || '',
+          obtained: (c.obtainedDate || c.obtained || '')?.slice(0, 10),
+          expiry: (c.expiryDate || c.expiry || '')?.slice(0, 10),
+          certId: c.certificateId || c.certId || '', daysLeft,
+          status: daysLeft < 0 ? 'Expired' : daysLeft < 30 ? 'Expiring Soon' : 'Active'
+        };
+      });
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.empList = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), id: e.employeeCode || e.id }));
+    });
+  }
 
   addCert() {
     if (!this.form.employee || !this.form.name) { alert('Fill required fields'); return; }
-    const emp = this.empList.find(e => e.name === this.form.employee)!;
-    const expiry = new Date(this.form.expiry);
-    const today = new Date();
-    const daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / 86400000);
-    this.certs.unshift({ id: Date.now(), employee: this.form.employee, empId: emp.id, name: this.form.name, issuer: this.form.issuer, obtained: this.form.obtained, expiry: this.form.expiry, certId: this.form.certId, status: daysLeft < 0 ? 'Expired' : daysLeft < 30 ? 'Expiring Soon' : 'Active', daysLeft });
-    this.msg = `Certification added for ${this.form.employee}`;
-    this.form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' };
-    setTimeout(() => this.msg = '', 3000);
+    const emp = this.empList.find(e => e.name === this.form.employee);
+    const payload = { employeeName: this.form.employee, employeeCode: emp?.id || '', certificationName: this.form.name, issuingOrganization: this.form.issuer, obtainedDate: this.form.obtained, expiryDate: this.form.expiry, certificateId: this.form.certId };
+    this.http.post<any>(`${this.api}/certifications`, payload).subscribe({
+      next: res => {
+        this.loadCerts();
+        this.msg = `Certification added for ${this.form.employee}`;
+        this.form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to add certification')
+    });
   }
 
   viewCert(c: Certification) { alert(`Viewing certificate: ${c.name} (${c.certId})`); }

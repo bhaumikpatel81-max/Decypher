@@ -243,7 +243,17 @@ export class TaxStatutoryComponent implements OnInit {
     { state: 'Maharashtra', employees: 2, amount: 200, status: 'Filed' },
   ];
 
-  ngOnInit() {}
+  ngOnInit() { this.loadFilings(); }
+
+  loadFilings() {
+    this.http.get<any[]>(`${this.api}/statutory-filings`).subscribe(data => {
+      if (!data || !data.length) return;
+      this.filingHistory = data.map(f => ({
+        month: f.period || '', pf: f.pfAmount || 0, esi: f.esiAmount || 0,
+        pt: f.ptAmount || 0, tds: f.tdsAmount || 0, status: f.status || 'Pending'
+      }));
+    });
+  }
 
   downloadChallan(type: string) { alert(`Downloading ${type} challan PDF`); }
   generateChallan(type: string) { alert(`${type} challan generated`); }

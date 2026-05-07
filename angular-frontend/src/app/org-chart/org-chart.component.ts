@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-org-chart',
@@ -87,40 +89,50 @@ import { Component } from '@angular/core';
     .org-child::before { content:''; position:absolute; top:-12px; left:50%; width:2px; height:12px; background:var(--border); }
   `]
 })
-export class OrgChartComponent {
+export class OrgChartComponent implements OnInit {
+  private apiUrl = `${environment.apiUrl}/api/employees`;
   search = ''; filterDept = '';
   depts = ['Engineering','HR','Finance','Sales','Marketing','Product'];
   colors = ['#6b4df0','#2563eb','#10b981','#f59e0b','#db2777','#0891b2','#7c3aed'];
-
   kpis = [
-    { val: 8, lbl: 'Departments', color: '#6b4df0' },
-    { val: 142, lbl: 'Total Employees', color: '#2563eb' },
-    { val: 12, lbl: 'Team Leads', color: '#10b981' },
-    { val: 3, lbl: 'C-Level', color: '#f59e0b' },
+    { val: 0, lbl: 'Departments', color: '#6b4df0' },
+    { val: 0, lbl: 'Total Employees', color: '#2563eb' },
+    { val: 0, lbl: 'Managers', color: '#10b981' },
+    { val: 0, lbl: 'Locations', color: '#f59e0b' },
   ];
-
-  tree: any[] = [
-    { name:'Bhaumik Patel', role:'CEO', dept:'Leadership', initials:'BP', color:'#292966', expanded:true, reports:[
-      { name:'Kavita Shah', role:'CHRO', dept:'HR', initials:'KS', color:'#6b4df0', reports:[
-        { name:'Priya Sharma', role:'HR Manager', dept:'HR', initials:'PS', color:'#8b5cf6' },
-        { name:'Rohan Desai', role:'TA Head', dept:'HR', initials:'RD', color:'#a78bfa' },
-      ]},
-      { name:'Arjun Mehta', role:'CTO', dept:'Engineering', initials:'AM', color:'#2563eb', reports:[
-        { name:'Sneha Patel', role:'Eng Lead', dept:'Engineering', initials:'SP', color:'#3b82f6' },
-        { name:'Vikram Singh', role:'Product Manager', dept:'Product', initials:'VS', color:'#60a5fa' },
-      ]},
-      { name:'Deepak Joshi', role:'CFO', dept:'Finance', initials:'DJ', color:'#059669', reports:[
-        { name:'Rahul Gupta', role:'Finance Analyst', dept:'Finance', initials:'RG', color:'#10b981' },
-      ]},
-      { name:'Anjali Nair', role:'CMO', dept:'Marketing', initials:'AN', color:'#db2777', reports:[
-        { name:'Karan Malhotra', role:'Marketing Lead', dept:'Marketing', initials:'KM', color:'#ec4899' },
-      ]},
-    ]},
-  ];
-
+  tree: any[] = [];
   filteredTree: any[] = [];
 
-  ngOnInit() { this.filteredTree = this.tree; }
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() { this.loadOrgChart(); }
+
+  loadOrgChart() {
+    this.http.get<any[]>(`${this.apiUrl}/org-chart`).subscribe({
+      next: data => {
+        const colorList = this.colors;
+        const decorate = (nodes: any[], depth = 0): any[] => (nodes || []).map((n, i) => ({
+          ...n,
+          name: `${n.firstName || ''} ${n.lastName || ''}`.trim(),
+          role: n.designation || n.role || '',
+          dept: n.department || '',
+          initials: ((n.firstName || '?')[0] + (n.lastName || '?')[0]).toUpperCase(),
+          color: colorList[(depth + i) % colorList.length],
+          expanded: depth === 0,
+          reports: decorate(n.directReports || [], depth + 1)
+        }));
+        this.tree = decorate(data);
+        this.filteredTree = this.tree;
+        const allEmp: any[] = [];
+        const flatten = (nodes: any[]) => nodes.forEach(n => { allEmp.push(n); flatten(n.reports || []); });
+        flatten(this.tree);
+        this.kpis[0].val = [...new Set(allEmp.map(e => e.dept))].length;
+        this.kpis[1].val = allEmp.length;
+        this.kpis[2].val = allEmp.filter(e => (e.reports || []).length > 0).length;
+        this.kpis[3].val = [...new Set(allEmp.map(e => e.location))].filter(Boolean).length;
+      }
+    });
+  }
 
   applyFilter() {
     if (!this.filterDept) { this.filteredTree = this.tree; return; }

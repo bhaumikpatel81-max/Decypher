@@ -179,18 +179,7 @@ export class ContinuousFeedbackComponent implements OnInit {
     { val: 5, emoji: '😄', label: 'Great' },
   ];
 
-  kudosList = [
-    { from: 'Priya Sharma', to: 'Arjun Mehta', type: 'Innovation', message: 'Amazing work on the new dashboard redesign!', date: 'May 5' },
-    { from: 'Arjun Mehta', to: 'Rahul Gupta', type: 'Teamwork', message: 'Went above and beyond during the server migration', date: 'May 4' },
-    { from: 'Ananya Iyer', to: 'Sneha Patel', type: 'Customer Focus', message: 'Client loved the QA thoroughness on their build', date: 'May 3' },
-    { from: 'Kiran Desai', to: 'Vikram Singh', type: 'Teamwork', message: 'Always available for support queries, thank you!', date: 'May 2' },
-    { from: 'Arjun Mehta', to: 'Ananya Iyer', type: 'Leadership', message: 'Led the roadmap session brilliantly', date: 'May 1' },
-    { from: 'Rahul Gupta', to: 'Rohan Nair', type: 'Innovation', message: 'Network monitoring solution saved us hours', date: 'Apr 30' },
-    { from: 'Sneha Patel', to: 'Kiran Desai', type: 'Innovation', message: 'Data dashboard was incredibly insightful', date: 'Apr 29' },
-    { from: 'Vikram Singh', to: 'Priya Sharma', type: 'Leadership', message: 'Onboarding process improvement was excellent', date: 'Apr 28' },
-    { from: 'Rohan Nair', to: 'Arjun Mehta', type: 'Customer Focus', message: 'Handled the critical client escalation perfectly', date: 'Apr 27' },
-    { from: 'Priya Sharma', to: 'Ananya Iyer', type: 'Customer Focus', message: 'Exceptional stakeholder communication skills', date: 'Apr 26' },
-  ];
+  kudosList: any[] = [];
 
   kudosForm = { to: '', type: '', message: '' };
   ooForm = { with: '', date: '', agenda: '', notes: '', actions: '' };
@@ -218,7 +207,23 @@ export class ContinuousFeedbackComponent implements OnInit {
   moodEmoji(val: number) { return this.moods.find(m => m.val === val)?.emoji || '😐'; }
   moodColor(val: number) { return val >= 4 ? '#10b981' : val === 3 ? '#f59e0b' : '#ef4444'; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadFeedback(); this.loadEmployees(); }
+
+  loadFeedback() {
+    this.http.get<any[]>(`${this.api}/continuous-feedback/00000000-0000-0000-0000-000000000000`).subscribe(data => {
+      this.kudosList = (data || []).map(f => ({
+        id: f.id, from: f.giverName || 'Colleague', to: f.recipientName || '',
+        type: f.category || 'Teamwork', message: f.message || '',
+        date: f.createdAt ? new Date(f.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+    });
+  }
 
   sendKudos() {
     if (!this.kudosForm.to || !this.kudosForm.type) { alert('Select recipient and type'); return; }

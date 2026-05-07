@@ -164,27 +164,18 @@ export class BonusIncentivesComponent implements OnInit {
   tab = 'add';
   msg = '';
 
-  employees = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer', 'Kiran Desai', 'Rohan Nair'];
+  employees: string[] = [];
 
   bonusTypes = [
-    { name: 'Performance Bonus', icon: '🏆', color: '#6b4df0', count: 8, total: 480000 },
-    { name: 'Festival Bonus', icon: '🎉', color: '#f59e0b', count: 8, total: 160000 },
-    { name: 'Referral Bonus', icon: '🤝', color: '#10b981', count: 3, total: 60000 },
-    { name: 'Spot Award', icon: '⭐', color: '#3b82f6', count: 5, total: 50000 },
+    { name: 'Performance Bonus', icon: '🏆', color: '#6b4df0', count: 0, total: 0 },
+    { name: 'Festival Bonus', icon: '🎉', color: '#f59e0b', count: 0, total: 0 },
+    { name: 'Referral Bonus', icon: '🤝', color: '#10b981', count: 0, total: 0 },
+    { name: 'Spot Award', icon: '⭐', color: '#3b82f6', count: 0, total: 0 },
   ];
 
   form = { employee: '', type: '', amount: 0, reason: '', date: '', rating: 0 };
 
-  bonuses: BonusRecord[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', type: 'Performance Bonus', amount: 90000, reason: 'Outstanding delivery on HRMS project', date: '2026-04-30', rating: 5, status: 'Approved' },
-    { id: 2, employee: 'Priya Sharma', empId: 'EMP002', type: 'Performance Bonus', amount: 70000, reason: 'HR digitization initiative', date: '2026-04-30', rating: 4, status: 'Approved' },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', type: 'Spot Award', amount: 15000, reason: 'Zero-downtime migration', date: '2026-03-15', rating: 0, status: 'Approved' },
-    { id: 4, employee: 'Sneha Patel', empId: 'EMP004', type: 'Festival Bonus', amount: 20000, reason: 'Diwali bonus 2025', date: '2025-11-01', rating: 0, status: 'Approved' },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', type: 'Referral Bonus', amount: 20000, reason: 'Referred Kiran Desai', date: '2026-01-15', rating: 0, status: 'Approved' },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', type: 'Performance Bonus', amount: 80000, reason: 'Client retention impact', date: '2026-04-30', rating: 5, status: 'Pending' },
-    { id: 7, employee: 'Kiran Desai', empId: 'EMP007', type: 'Spot Award', amount: 10000, reason: 'Data pipeline automation', date: '2026-02-20', rating: 0, status: 'Approved' },
-    { id: 8, employee: 'Rohan Nair', empId: 'EMP008', type: 'Performance Bonus', amount: 50000, reason: 'Network uptime 99.98%', date: '2026-04-30', rating: 4, status: 'Pending' },
-  ];
+  bonuses: BonusRecord[] = [];
 
   get totalDisbursed() { return this.bonuses.filter(b => b.status === 'Approved').reduce((s, b) => s + b.amount, 0); }
   get approvedCount() { return this.bonuses.filter(b => b.status === 'Approved').length; }
@@ -193,13 +184,44 @@ export class BonusIncentivesComponent implements OnInit {
   get pendingBonuses() { return this.bonuses.filter(b => b.status === 'Pending'); }
   get suggestedBonus() { const base = 80000; return Math.round(base * this.form.rating / 5 / 1000) * 1000; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadBonuses(); this.loadEmployees(); }
+
+  loadBonuses() {
+    this.http.get<any[]>(`${this.api}/bonuses`).subscribe(data => {
+      this.bonuses = (data || []).map(b => ({
+        id: b.id, employee: b.employeeName || '', empId: b.employeeCode || '',
+        type: b.bonusType || '', amount: b.amount || 0, reason: b.reason || '',
+        date: b.date?.slice(0, 10) || '', rating: b.performanceRating || 0, status: b.status || 'Pending'
+      }));
+      this.recomputeBonusTypes();
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+    });
+  }
+
+  recomputeBonusTypes() {
+    this.bonusTypes.forEach(t => {
+      const matching = this.bonuses.filter(b => b.type === t.name && b.status === 'Approved');
+      t.count = matching.length;
+      t.total = matching.reduce((s, b) => s + b.amount, 0);
+    });
+  }
 
   submitBonus() {
     if (!this.form.employee || !this.form.type) { alert('Fill all required fields'); return; }
-    this.bonuses.unshift({ id: Date.now(), employee: this.form.employee, empId: 'EMP00X', type: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, rating: this.form.rating, status: 'Pending' });
-    this.msg = `Bonus submitted for ${this.form.employee}`;
-    this.form = { employee: '', type: '', amount: 0, reason: '', date: '', rating: 0 };
-    setTimeout(() => this.msg = '', 3000);
+    const payload = { employeeName: this.form.employee, bonusType: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, performanceRating: this.form.rating };
+    this.http.post<any>(`${this.api}/bonuses`, payload).subscribe({
+      next: res => {
+        this.bonuses.unshift({ id: res.id, employee: this.form.employee, empId: '', type: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, rating: this.form.rating, status: 'Pending' });
+        this.msg = `Bonus submitted for ${this.form.employee}`;
+        this.form = { employee: '', type: '', amount: 0, reason: '', date: '', rating: 0 };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to submit bonus')
+    });
   }
 }

@@ -173,36 +173,17 @@ export class ExpenseManagementComponent implements OnInit {
 
   categories = ['Travel', 'Meal', 'Accommodation', 'Equipment', 'Other'];
 
-  employees = [
-    { name: 'Arjun Mehta', empId: 'EMP001' }, { name: 'Priya Sharma', empId: 'EMP002' },
-    { name: 'Rahul Gupta', empId: 'EMP003' }, { name: 'Sneha Patel', empId: 'EMP004' },
-    { name: 'Vikram Singh', empId: 'EMP005' }, { name: 'Ananya Iyer', empId: 'EMP006' },
-  ];
+  employees: any[] = [];
 
   form = { employee: '', category: '', amount: 0, date: '', description: '' };
 
-  expenses: Expense[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', category: 'Travel', amount: 4500, date: '2026-05-01', description: 'Cab to client office', status: 'Approved' },
-    { id: 2, employee: 'Priya Sharma', empId: 'EMP002', category: 'Accommodation', amount: 8500, date: '2026-05-02', description: 'Hotel for offsite', status: 'Approved' },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', category: 'Equipment', amount: 12000, date: '2026-05-03', description: 'USB-C hub for home office', status: 'Pending' },
-    { id: 4, employee: 'Sneha Patel', empId: 'EMP004', category: 'Meal', amount: 1800, date: '2026-05-03', description: 'Team lunch during QA sprint', status: 'Pending' },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', category: 'Travel', amount: 6200, date: '2026-04-28', description: 'Flight to Mumbai client', status: 'Approved' },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', category: 'Other', amount: 2500, date: '2026-04-29', description: 'Conference registration', status: 'Approved' },
-    { id: 7, employee: 'Arjun Mehta', empId: 'EMP001', category: 'Meal', amount: 950, date: '2026-04-30', description: 'Working dinner', status: 'Rejected' },
-    { id: 8, employee: 'Kiran Desai', empId: 'EMP007', category: 'Equipment', amount: 18000, date: '2026-05-04', description: 'External monitor for WFH', status: 'Pending' },
-    { id: 9, employee: 'Rohan Nair', empId: 'EMP008', category: 'Travel', amount: 3800, date: '2026-05-05', description: 'Train to data center', status: 'Pending' },
-    { id: 10, employee: 'Priya Sharma', empId: 'EMP002', category: 'Accommodation', amount: 9200, date: '2026-05-04', description: 'Hotel for recruitment drive', status: 'Pending' },
-  ];
+  expenses: Expense[] = [];
 
-  categoryStats = [
-    { name: 'Travel', total: 14500, color: '#6b4df0' },
-    { name: 'Accommodation', total: 17700, color: '#10b981' },
-    { name: 'Equipment', total: 30000, color: '#3b82f6' },
-    { name: 'Meal', total: 2750, color: '#f59e0b' },
-    { name: 'Other', total: 2500, color: '#ec4899' },
-  ];
+  categoryStats: { name: string; total: number; color: string }[] = [];
 
-  get maxCatVal() { return Math.max(...this.categoryStats.map(c => c.total)); }
+  private catColors: { [k: string]: string } = { Travel: '#6b4df0', Accommodation: '#10b981', Equipment: '#3b82f6', Meal: '#f59e0b', Other: '#ec4899' };
+
+  get maxCatVal() { return Math.max(...this.categoryStats.map(c => c.total), 1); }
   get totalClaims() { return this.expenses.reduce((s, e) => s + e.amount, 0); }
   get approvedAmount() { return this.expenses.filter(e => e.status === 'Approved').reduce((s, e) => s + e.amount, 0); }
   get pendingExpenses() { return this.expenses.filter(e => e.status === 'Pending'); }
@@ -219,18 +200,56 @@ export class ExpenseManagementComponent implements OnInit {
     return m[cat] || '📦';
   }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadExpenses(); this.loadEmployees(); }
+
+  loadExpenses() {
+    this.http.get<any[]>(`${this.api}/expenses`).subscribe(data => {
+      this.expenses = (data || []).map(e => ({
+        id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
+        category: e.category, amount: e.amount, date: e.expenseDate?.slice(0, 10) || '',
+        description: e.description, status: e.status
+      }));
+      this.recomputeCategoryStats();
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '' }));
+    });
+  }
+
+  recomputeCategoryStats() {
+    const totals: { [k: string]: number } = {};
+    this.expenses.forEach(e => { totals[e.category] = (totals[e.category] || 0) + e.amount; });
+    this.categoryStats = Object.entries(totals).map(([name, total]) => ({ name, total, color: this.catColors[name] || '#94a3b8' }));
+  }
 
   submitClaim() {
     if (!this.form.employee || !this.form.category || !this.form.amount) { alert('Fill all required fields'); return; }
-    const emp = this.employees.find(e => e.name === this.form.employee)!;
-    this.expenses.unshift({ id: Date.now(), employee: this.form.employee, empId: emp.empId, category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' });
-    this.msg = `Expense claim of ₹${this.form.amount} submitted`;
-    this.form = { employee: '', category: '', amount: 0, date: '', description: '' };
-    setTimeout(() => this.msg = '', 3000);
+    const emp = this.employees.find(e => e.name === this.form.employee);
+    const payload = {
+      employeeName: this.form.employee, employeeCode: emp?.empId || '',
+      category: this.form.category, amount: this.form.amount,
+      expenseDate: this.form.date, description: this.form.description
+    };
+    this.http.post<any>(`${this.api}/expenses`, payload).subscribe({
+      next: res => {
+        this.expenses.unshift({ id: res.id, employee: this.form.employee, empId: emp?.empId || '', category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' });
+        this.recomputeCategoryStats();
+        this.msg = `Expense claim of ₹${this.form.amount} submitted`;
+        this.form = { employee: '', category: '', amount: 0, date: '', description: '' };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to submit claim')
+    });
   }
 
-  approve(e: Expense) { e.status = 'Approved'; }
-  reject(e: Expense) { e.status = 'Rejected'; }
+  approve(e: Expense) {
+    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Approved' }).subscribe({ next: () => { e.status = 'Approved'; } });
+  }
+  reject(e: Expense) {
+    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Rejected' }).subscribe({ next: () => { e.status = 'Rejected'; } });
+  }
   uploadReceipt() { alert('Receipt upload triggered'); }
 }

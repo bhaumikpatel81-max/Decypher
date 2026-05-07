@@ -180,14 +180,33 @@ export class SalaryStructureComponent implements OnInit {
 
   assignForm = { emp: '', grade: '', ctc: 0, date: '' };
 
-  empList = ['Arjun Mehta', 'Priya Sharma', 'Rahul Gupta', 'Sneha Patel', 'Vikram Singh', 'Ananya Iyer', 'Kiran Desai', 'Rohan Nair'];
+  empList: string[] = [];
 
   get totalEarningsPct() { return this.components.filter(c => c.type === 'earning').reduce((s, c) => s + (c.fixed ? 0 : c.value), 0); }
   get totalDeductionPct() { return this.components.filter(c => c.type === 'deduction' && !c.fixed).reduce((s, c) => s + c.value, 0); }
   get grossPreview() { return this.components.filter(c => c.type === 'earning').reduce((s, c) => s + (c.fixed ? c.value : 1200000 * c.value / 100 / 12), 0); }
   get netPayPreview() { return this.grossPreview - this.components.filter(c => c.type === 'deduction').reduce((s, c) => s + (c.fixed ? c.value : 1200000 * c.value / 100 / 12), 0); }
 
-  ngOnInit() { this.calcPreview(); }
+  ngOnInit() { this.calcPreview(); this.loadEmployees(); this.loadComponents(); }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.empList = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+    });
+  }
+
+  loadComponents() {
+    this.http.get<any[]>(`${this.api}/salary-components`).subscribe(data => {
+      if (data && data.length) {
+        this.components = data.map(c => ({
+          name: c.name, value: c.percentage || c.fixedAmount || 0,
+          min: 0, max: c.type === 'deduction' ? 30 : 70, step: 1,
+          fixed: !!c.fixedAmount && !c.percentage, type: c.componentType?.toLowerCase() || 'earning',
+          desc: c.description || ''
+        }));
+      }
+    });
+  }
 
   calcPreview() {
     if (!this.previewCTC) return;
@@ -214,6 +233,26 @@ export class SalaryStructureComponent implements OnInit {
     ];
   }
 
-  saveComponents() { alert('Salary structure saved'); }
-  assignStructure() { if (!this.assignForm.emp || !this.assignForm.grade) { alert('Fill all fields'); return; } alert(`Salary structure assigned to ${this.assignForm.emp}`); this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; }
+  saveComponents() {
+    const payload = this.components.map(c => ({
+      name: c.name, componentType: c.type,
+      percentage: c.fixed ? null : c.value,
+      fixedAmount: c.fixed ? c.value : null
+    }));
+    this.http.post(`${this.api}/salary-components`, payload).subscribe({
+      next: () => alert('Salary structure saved'),
+      error: err => alert(err?.error?.message || 'Failed to save')
+    });
+  }
+
+  assignStructure() {
+    if (!this.assignForm.emp || !this.assignForm.grade) { alert('Fill all fields'); return; }
+    this.http.post(`${this.api}/employee-salary/assign`, {
+      employeeName: this.assignForm.emp, grade: this.assignForm.grade,
+      annualCtc: this.assignForm.ctc, effectiveDate: this.assignForm.date
+    }).subscribe({
+      next: () => { alert(`Salary structure assigned to ${this.assignForm.emp}`); this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; },
+      error: err => alert(err?.error?.message || 'Failed to assign')
+    });
+  }
 }

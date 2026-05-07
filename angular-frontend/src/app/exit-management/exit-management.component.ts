@@ -124,35 +124,54 @@ export class ExitManagementComponent implements OnInit {
     { val:94, lbl:'Avg Days to Close', color:'#6b4df0' },
   ];
 
-  exits: any[] = [
-    { id:1, employee:'Divya Reddy', empId:'EMP008', designation:'Marketing Lead', department:'Marketing', lastDay:'2024-02-28', exitType:'Resignation', stage:'Clearance', clearances:[
-      { dept:'IT Assets', done:true },{ dept:'Finance', done:true },{ dept:'Library', done:false },{ dept:'Admin', done:true },{ dept:'HR', done:false },{ dept:'Manager', done:true },
-    ]},
-    { id:2, employee:'Karan Malhotra', empId:'EMP007', designation:'Legal Counsel', department:'Legal', lastDay:'2024-03-15', exitType:'Contract End', stage:'Initiated', clearances:[
-      { dept:'IT Assets', done:false },{ dept:'Finance', done:false },{ dept:'Library', done:false },{ dept:'Admin', done:false },{ dept:'HR', done:false },{ dept:'Manager', done:false },
-    ]},
-    { id:3, employee:'Rahul Gupta', empId:'EMP003', designation:'Finance Analyst', department:'Finance', lastDay:'2023-12-31', exitType:'Retirement', stage:'Completed', clearances:[
-      { dept:'IT Assets', done:true },{ dept:'Finance', done:true },{ dept:'Library', done:true },{ dept:'Admin', done:true },{ dept:'HR', done:true },{ dept:'Manager', done:true },
-    ]},
-  ];
+  exits: any[] = [];
 
   get activeExits() { return this.exits.filter(e => e.stage !== 'Completed'); }
   get completedExits() { return this.exits.filter(e => e.stage === 'Completed'); }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadExits(); }
+
+  loadExits() {
+    this.http.get<any[]>(`${this.api}/exits`).subscribe(data => {
+      this.exits = (data || []).map(e => ({
+        id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
+        designation: e.designation || '', department: e.department || '',
+        lastDay: e.lastWorkingDate?.slice(0,10) || '', exitType: e.exitType || 'Resignation',
+        stage: e.status || 'Initiated',
+        clearances: (e.checklistItems || []).map((item: any) => ({ id: item.id, dept: item.itemName, done: item.isCompleted }))
+      }));
+      const active = this.exits.filter(e => e.stage !== 'Completed').length;
+      this.kpis[0].val = active;
+      this.kpis[2].val = this.exits.filter(e => e.stage === 'Completed').length;
+    });
+  }
 
   initiateExit() {
     if (!this.draft.employee) return;
-    this.exits.unshift({ id:Date.now(), ...this.draft, stage:'Initiated', clearances:[
-      { dept:'IT Assets', done:false },{ dept:'Finance', done:false },{ dept:'Library', done:false },
-      { dept:'Admin', done:false },{ dept:'HR', done:false },{ dept:'Manager', done:false },
-    ]});
-    this.draft = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' };
-    this.showForm = false;
+    const payload = {
+      employeeName: this.draft.employee, employeeCode: this.draft.empId,
+      designation: this.draft.designation, department: this.draft.department,
+      lastWorkingDate: this.draft.lastDay, exitType: this.draft.exitType, reason: this.draft.reason
+    };
+    this.http.post<any>(`${this.api}/exits`, payload).subscribe({
+      next: () => { this.loadExits(); this.draft = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' }; this.showForm = false; },
+      error: err => alert(err?.error?.message || 'Failed to initiate exit')
+    });
   }
 
-  completedClearances(ex: any): number { return ex.clearances.filter((c: any) => c.done).length; }
-  toggleClearance(ex: any, c: any) { c.done = !c.done; if (this.completedClearances(ex) >= ex.clearances.length * 0.5) ex.stage = 'Clearance'; }
-  completeExit(ex: any) { ex.stage = 'Completed'; this.kpis[2].val++; this.kpis[0].val--; }
+  completedClearances(ex: any): number { return (ex.clearances || []).filter((c: any) => c.done).length; }
+
+  toggleClearance(ex: any, c: any) {
+    this.http.patch(`${this.api}/exits/checklist/${c.id}`, { isCompleted: !c.done }).subscribe({
+      next: () => { c.done = !c.done; if (this.completedClearances(ex) >= ex.clearances.length) ex.stage = 'Clearance'; }
+    });
+  }
+
+  completeExit(ex: any) {
+    this.http.patch(`${this.api}/exits/${ex.id}/status`, { status: 'Completed' }).subscribe({
+      next: () => { ex.stage = 'Completed'; this.loadExits(); }
+    });
+  }
+
   sendReminder(ex: any) { alert(`Reminder sent to all pending clearance departments for ${ex.employee}`); }
 }

@@ -145,14 +145,7 @@ export class SkillGapComponent implements OnInit {
 
   requiredBySkill = [4, 3, 3, 4, 3, 4, 4, 2, 3, 3];
 
-  employees = [
-    { name: 'Arjun Mehta', role: 'Sr. Developer', dept: 'Engineering', skills: { Angular: 5, 'Node.js': 4, AWS: 3, SQL: 4, Leadership: 3, Communication: 4, Agile: 4, DevOps: 2, Python: 2, 'Data Analysis': 2 } },
-    { name: 'Rahul Gupta', role: 'DevOps Engineer', dept: 'Engineering', skills: { Angular: 2, 'Node.js': 3, AWS: 5, SQL: 3, Leadership: 2, Communication: 3, Agile: 4, DevOps: 5, Python: 3, 'Data Analysis': 2 } },
-    { name: 'Sneha Patel', role: 'QA Lead', dept: 'Engineering', skills: { Angular: 3, 'Node.js': 2, AWS: 2, SQL: 4, Leadership: 3, Communication: 5, Agile: 5, DevOps: 1, Python: 2, 'Data Analysis': 3 } },
-    { name: 'Priya Sharma', role: 'HR Manager', dept: 'HR', skills: { Angular: 1, 'Node.js': 1, AWS: 1, SQL: 3, Leadership: 5, Communication: 5, Agile: 3, DevOps: 1, Python: 1, 'Data Analysis': 3 } },
-    { name: 'Kiran Desai', role: 'Data Analyst', dept: 'Operations', skills: { Angular: 2, 'Node.js': 2, AWS: 3, SQL: 5, Leadership: 2, Communication: 4, Agile: 3, DevOps: 2, Python: 5, 'Data Analysis': 5 } },
-    { name: 'Vikram Singh', role: 'Sr. Developer', dept: 'Engineering', skills: { Angular: 3, 'Node.js': 3, AWS: 2, SQL: 3, Leadership: 2, Communication: 3, Agile: 3, DevOps: 2, Python: 2, 'Data Analysis': 1 } },
-  ];
+  employees: any[] = [];
 
   courseMap: { [skill: string]: string } = {
     Angular: 'Angular Advanced Patterns', 'Node.js': 'Node.js Microservices', AWS: 'AWS Solutions Architect',
@@ -189,7 +182,28 @@ export class SkillGapComponent implements OnInit {
   get noGaps() { let c = 0; this.employees.forEach(e => this.skills.forEach(s => { if (this.getGap(e, s) >= 0) c++; })); return c; }
   get avgGapScore() { let g = 0, c = 0; this.employees.forEach(e => this.skills.forEach(s => { g += this.getGap(e, s); c++; })); return c ? g / c : 0; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadGapAnalysis(); }
+
+  loadGapAnalysis() {
+    this.http.get<any[]>(`${this.api}/skills/gap-analysis`).subscribe(data => {
+      if (!data || !data.length) return;
+      const skillSet = new Set<string>();
+      data.forEach(d => skillSet.add(d.skillName));
+      this.skills = Array.from(skillSet);
+      this.requiredBySkill = this.skills.map(s => {
+        const entry = data.find(d => d.skillName === s);
+        return entry?.requiredLevel || 3;
+      });
+      const empMap: { [name: string]: any } = {};
+      data.forEach(d => {
+        if (!empMap[d.employeeName]) {
+          empMap[d.employeeName] = { name: d.employeeName, role: d.role || '', dept: d.department || '', skills: {} };
+        }
+        empMap[d.employeeName].skills[d.skillName] = d.currentLevel || 0;
+      });
+      this.employees = Object.values(empMap);
+    });
+  }
 
   enrollInCourse(skill: string, emp: string) { alert(`${emp} enrolled in "${this.courseFor(skill)}"`); }
 }

@@ -157,36 +157,21 @@ export class OvertimeComponent implements OnInit {
   filterStatus = '';
   msg = '';
 
-  employees = [
-    { name: 'Arjun Mehta', empId: 'EMP001', hourlyRate: 625 },
-    { name: 'Priya Sharma', empId: 'EMP002', hourlyRate: 562 },
-    { name: 'Rahul Gupta', empId: 'EMP003', hourlyRate: 500 },
-    { name: 'Sneha Patel', empId: 'EMP004', hourlyRate: 468 },
-    { name: 'Vikram Singh', empId: 'EMP005', hourlyRate: 437 },
-    { name: 'Ananya Iyer', empId: 'EMP006', hourlyRate: 593 },
-    { name: 'Kiran Desai', empId: 'EMP007', hourlyRate: 531 },
-    { name: 'Rohan Nair', empId: 'EMP008', hourlyRate: 406 },
-  ];
+  employees: any[] = [];
 
   form = { employee: '', date: '', from: '', to: '', reason: '' };
 
-  records: OTRecord[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', date: '2026-05-01', from: '18:00', to: '22:00', hours: 4, reason: 'Sprint deadline', status: 'Approved', rate: 937, pay: 3750 },
-    { id: 2, employee: 'Rahul Gupta', empId: 'EMP003', date: '2026-05-02', from: '19:00', to: '23:00', hours: 4, reason: 'Server migration', status: 'Approved', rate: 750, pay: 3000 },
-    { id: 3, employee: 'Sneha Patel', empId: 'EMP004', date: '2026-05-03', from: '18:00', to: '20:00', hours: 2, reason: 'UAT support', status: 'Pending', rate: 703, pay: 1406 },
-    { id: 4, employee: 'Arjun Mehta', empId: 'EMP001', date: '2026-05-04', from: '18:00', to: '21:00', hours: 3, reason: 'Feature delivery', status: 'Pending', rate: 937, pay: 2812 },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', date: '2026-04-28', from: '22:00', to: '02:00', hours: 4, reason: 'Night support', status: 'Approved', rate: 656, pay: 2625 },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', date: '2026-04-30', from: '18:00', to: '20:00', hours: 2, reason: 'Client presentation', status: 'Approved', rate: 890, pay: 1780 },
-    { id: 7, employee: 'Kiran Desai', empId: 'EMP007', date: '2026-05-05', from: '18:00', to: '22:00', hours: 4, reason: 'Data reconciliation', status: 'Rejected', rate: 797, pay: 3187 },
-    { id: 8, employee: 'Rohan Nair', empId: 'EMP008', date: '2026-05-05', from: '20:00', to: '23:00', hours: 3, reason: 'Network upgrade', status: 'Pending', rate: 609, pay: 1828 },
-  ];
+  records: OTRecord[] = [];
 
   get pendingOT() { return this.records.filter(r => r.status === 'Pending'); }
   get totalOTHours() { return this.records.filter(r => r.status === 'Approved').reduce((s, r) => s + r.hours, 0); }
   get totalOTCost() { return this.records.filter(r => r.status === 'Approved').reduce((s, r) => s + r.pay, 0); }
   get topOTEmployee() {
-    const emp = this.employees.map(e => ({ name: e.name.split(' ')[0], hrs: this.records.filter(r => r.employee === e.name && r.status === 'Approved').reduce((s, r) => s + r.hours, 0) }));
-    return emp.sort((a, b) => b.hrs - a.hrs)[0]?.name || 'N/A';
+    if (!this.records.length) return 'N/A';
+    const map: { [k: string]: number } = {};
+    this.records.filter(r => r.status === 'Approved').forEach(r => { map[r.employee] = (map[r.employee] || 0) + r.hours; });
+    const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
+    return top ? top[0].split(' ')[0] : 'N/A';
   }
   get filteredRecords() {
     return this.records.filter(r => {
@@ -195,7 +180,24 @@ export class OvertimeComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadOvertimeRecords(); this.loadEmployees(); }
+
+  loadOvertimeRecords() {
+    this.http.get<any[]>(`${this.api}/overtime`).subscribe(data => {
+      this.records = (data || []).map(r => ({
+        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+        date: r.date?.slice(0, 10) || '', from: r.fromTime || '', to: r.toTime || '',
+        hours: r.hours || 0, reason: r.reason || '', status: r.status || 'Pending',
+        rate: r.rate || 0, pay: r.overtimePay || 0
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '', hourlyRate: Math.round((e.salary || 0) / 12 / 26 / 8) }));
+    });
+  }
 
   calcFormHours(): number {
     if (!this.form.from || !this.form.to) return 0;
@@ -208,11 +210,17 @@ export class OvertimeComponent implements OnInit {
 
   submitOT() {
     if (!this.form.employee || !this.form.date) { alert('Fill all fields'); return; }
-    const emp = this.employees.find(e => e.name === this.form.employee)!;
+    const emp = this.employees.find(e => e.name === this.form.employee);
     const hrs = this.calcFormHours();
-    this.records.unshift({ id: Date.now(), employee: this.form.employee, empId: emp.empId, date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: emp.hourlyRate * 1.5, pay: Math.round(hrs * emp.hourlyRate * 1.5) });
-    this.msg = `OT request submitted for ${this.form.employee}`;
-    this.form = { employee: '', date: '', from: '', to: '', reason: '' };
-    setTimeout(() => this.msg = '', 3000);
+    const payload = { employeeName: this.form.employee, employeeCode: emp?.empId || '', date: this.form.date, fromTime: this.form.from, toTime: this.form.to, hours: hrs, reason: this.form.reason };
+    this.http.post<any>(`${this.api}/overtime`, payload).subscribe({
+      next: res => {
+        this.records.unshift({ id: res.id, employee: this.form.employee, empId: emp?.empId || '', date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: (emp?.hourlyRate || 0) * 1.5, pay: Math.round(hrs * (emp?.hourlyRate || 0) * 1.5) });
+        this.msg = `OT request submitted for ${this.form.employee}`;
+        this.form = { employee: '', date: '', from: '', to: '', reason: '' };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to submit OT')
+    });
   }
 }

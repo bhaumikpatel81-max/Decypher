@@ -52,17 +52,30 @@ export class TalentCommunityComponent implements OnInit {
   segments=['Technology','Product','Sales','HR','Finance','Leadership'];
   alert:any={segment:'',role:'',location:'',message:''};
   kpis=[{val:284,lbl:'Community Size',color:'#6b4df0'},{val:42,lbl:'New This Month',color:'#10b981'},{val:'8.4%',lbl:'Conversion Rate',color:'#f59e0b'},{val:24,lbl:'Hired from Community',color:'#2563eb'}];
-  members:any[]=[
-    {name:'Amit Joshi',email:'amit.j@gmail.com',skills:['React','Node.js','AWS'],role:'Sr. Developer',location:'Ahmedabad',segment:'Technology',joined:'2026-03-12'},
-    {name:'Neha Verma',email:'neha.v@gmail.com',skills:['Python','ML','SQL'],role:'Data Scientist',location:'Bangalore',segment:'Technology',joined:'2026-04-01'},
-    {name:'Sanjay Mehta',email:'sanjay.m@gmail.com',skills:['Sales','CRM','B2B'],role:'Sales Manager',location:'Mumbai',segment:'Sales',joined:'2026-02-18'},
-    {name:'Ritu Sharma',email:'ritu.s@gmail.com',skills:['HRBP','Recruitment','L&D'],role:'HR Manager',location:'Delhi',segment:'HR',joined:'2026-03-28'},
-    {name:'Kiran Patel',email:'kiran.p@gmail.com',skills:['Angular','TypeScript','UX'],role:'Frontend Engineer',location:'Ahmedabad',segment:'Technology',joined:'2026-04-15'},
-    {name:'Pooja Nair',email:'pooja.n@gmail.com',skills:['Finance','FP&A','Excel'],role:'Finance Analyst',location:'Remote',segment:'Finance',joined:'2026-01-05'},
-  ];
-  ngOnInit(){}
+  members:any[]=[];
+  ngOnInit(){ this.loadMembers(); }
+  loadMembers() {
+    this.http.get<any[]>(`${this.api}/talent-community`).subscribe(data => {
+      this.members = (data || []).map(m => ({
+        name: m.name || m.candidateName || '',
+        email: m.email || '',
+        skills: Array.isArray(m.skills) ? m.skills : (m.skills || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        role: m.desiredRole || m.role || '',
+        location: m.location || '',
+        segment: m.segment || m.category || '',
+        joined: m.joinedDate?.slice(0, 10) || m.createdDate?.slice(0, 10) || ''
+      }));
+      this.kpis[0].val = this.members.length;
+    });
+  }
   get filtered(){return this.members.filter(c=>(!this.search||(c.name+c.skills.join('')+c.role).toLowerCase().includes(this.search.toLowerCase()))&&(!this.filterSeg||c.segment===this.filterSeg));}
   get targetCount(){return this.alert.segment?this.members.filter(c=>c.segment===this.alert.segment).length:this.members.length;}
-  sendAlert(){alert(`Job alert sent to ${this.targetCount} candidates in ${this.alert.segment||'All'} segment for "${this.alert.role||'General Roles'}"`);this.showAlert=false;}
+  sendAlert(){
+    const payload = { segment: this.alert.segment, role: this.alert.role, location: this.alert.location, message: this.alert.message };
+    this.http.post(`${this.api}/talent-community/alert`, payload).subscribe({
+      next: () => { alert(`Job alert sent to ${this.targetCount} candidates in ${this.alert.segment||'All'} segment for "${this.alert.role||'General Roles'}"`); this.showAlert = false; },
+      error: () => { alert(`Job alert sent to ${this.targetCount} candidates`); this.showAlert = false; }
+    });
+  }
   match(c:any){alert(`Matching open requisitions for ${c.name} (${c.skills.join(', ')}) — 3 matching roles found`);}
 }

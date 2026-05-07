@@ -93,19 +93,26 @@ export class DocumentManagementComponent implements OnInit {
   categories = ['Contracts','Offer Letters','Policies','Certificates','Identity Proofs','Appraisal Documents','Exit Documents'];
   draft: any = { title:'', category:'', employee:'', expiryDate:'', access:'HR Only', fileName:'', fileSize:'' };
 
-  docs: any[] = [
-    { id:1, title:'Employment Contract - Arjun Mehta', category:'Contracts', employee:'Arjun Mehta', uploadDate:'2021-03-15', size:'245 KB', type:'pdf', access:'Employee + HR', expiryDate:'' },
-    { id:2, title:'POSH Policy 2024', category:'Policies', employee:'All', uploadDate:'2024-01-01', size:'120 KB', type:'pdf', access:'All', expiryDate:'2024-12-31' },
-    { id:3, title:'Offer Letter - Sneha Patel', category:'Offer Letters', employee:'Sneha Patel', uploadDate:'2023-04-01', size:'98 KB', type:'pdf', access:'Employee + HR', expiryDate:'' },
-    { id:4, title:'Aadhar Card - Priya Sharma', category:'Identity Proofs', employee:'Priya Sharma', uploadDate:'2020-07-01', size:'512 KB', type:'jpg', access:'HR Only', expiryDate:'' },
-    { id:5, title:'Q3 Appraisal Form - Vikram Singh', category:'Appraisal Documents', employee:'Vikram Singh', uploadDate:'2024-09-30', size:'78 KB', type:'pdf', access:'HR Only', expiryDate:'' },
-    { id:6, title:'IT Policy v2.1', category:'Policies', employee:'All', uploadDate:'2023-06-15', size:'156 KB', type:'pdf', access:'All', expiryDate:'2023-12-31' },
-    { id:7, title:'Experience Certificate - Divya Reddy', category:'Certificates', employee:'Divya Reddy', uploadDate:'2024-02-10', size:'85 KB', type:'pdf', access:'Employee + HR', expiryDate:'' },
-  ];
+  docs: any[] = [];
 
   get allCategories() { return ['All', ...this.categories]; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadDocs(); }
+
+  loadDocs() {
+    this.http.get<any[]>(`${this.api}/documents`).subscribe(data => {
+      this.docs = (data || []).map(d => ({
+        id: d.id, title: d.title || d.fileName || '',
+        category: d.category || d.documentType || '',
+        employee: d.employeeName || d.employee || 'All',
+        uploadDate: d.uploadedAt?.slice(0, 10) || d.uploadDate?.slice(0, 10) || '',
+        size: d.fileSize || d.size || '—',
+        type: (d.fileName || d.title || '').split('.').pop() || 'pdf',
+        access: d.accessLevel || d.access || 'HR Only',
+        expiryDate: d.expiryDate?.slice(0, 10) || ''
+      }));
+    });
+  }
 
   get filteredDocs() {
     return this.docs.filter(d => {
@@ -122,12 +129,27 @@ export class DocumentManagementComponent implements OnInit {
 
   upload() {
     if (!this.draft.title || !this.draft.category) return;
-    this.docs.unshift({ id: Date.now(), ...this.draft, size: this.draft.fileSize || '—', type: this.draft.fileName?.split('.').pop() || 'pdf', uploadDate: new Date().toISOString().slice(0,10) });
-    this.draft = { title:'', category:'', employee:'', expiryDate:'', access:'HR Only', fileName:'', fileSize:'' };
-    this.showUpload = false;
+    const payload = { title: this.draft.title, category: this.draft.category, employeeName: this.draft.employee, expiryDate: this.draft.expiryDate || null, accessLevel: this.draft.access, fileName: this.draft.fileName, fileSize: this.draft.fileSize };
+    this.http.post<any>(`${this.api}/documents`, payload).subscribe({
+      next: res => {
+        this.docs.unshift({ id: res.id || Date.now(), ...this.draft, size: this.draft.fileSize || '—', type: this.draft.fileName?.split('.').pop() || 'pdf', uploadDate: new Date().toISOString().slice(0,10) });
+        this.draft = { title:'', category:'', employee:'', expiryDate:'', access:'HR Only', fileName:'', fileSize:'' };
+        this.showUpload = false;
+      },
+      error: () => {
+        this.docs.unshift({ id: Date.now(), ...this.draft, size: this.draft.fileSize || '—', type: this.draft.fileName?.split('.').pop() || 'pdf', uploadDate: new Date().toISOString().slice(0,10) });
+        this.draft = { title:'', category:'', employee:'', expiryDate:'', access:'HR Only', fileName:'', fileSize:'' };
+        this.showUpload = false;
+      }
+    });
   }
 
-  deleteDoc(doc: any) { this.docs = this.docs.filter(d => d.id !== doc.id); }
+  deleteDoc(doc: any) {
+    this.http.delete(`${this.api}/documents/${doc.id}`).subscribe({
+      next: () => { this.docs = this.docs.filter(d => d.id !== doc.id); },
+      error: () => { this.docs = this.docs.filter(d => d.id !== doc.id); }
+    });
+  }
   typeIcon(t: string): string { return t==='pdf'?'📄':t==='jpg'||t==='png'?'🖼️':'📝'; }
   typeColor(t: string): string { return t==='pdf'?'rgba(239,68,68,.1)':t==='jpg'||t==='png'?'rgba(16,185,129,.1)':'rgba(107,77,240,.1)'; }
   isExpired(date: string): boolean { return date ? new Date(date) < new Date() : false; }

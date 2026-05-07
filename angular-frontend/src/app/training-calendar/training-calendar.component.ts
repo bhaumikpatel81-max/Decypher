@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface TrainingSession {
   id: number; name: string; type: string; trainer: string;
@@ -142,6 +144,8 @@ interface TrainingSession {
   `]
 })
 export class TrainingCalendarComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/learning`;
+  constructor(private http: HttpClient) {}
   tab = 'list';
   search = '';
   filterStatus = '';
@@ -150,16 +154,7 @@ export class TrainingCalendarComponent implements OnInit {
 
   newSession = { name: '', type: 'Technical Workshop', trainer: '', date: '', capacity: 20, venue: '' };
 
-  sessions: TrainingSession[] = [
-    { id: 1, name: 'Angular 17 Advanced Workshop', type: 'Technical Workshop', trainer: 'Arjun Mehta', date: '2026-05-12', venue: 'Conference Room A', capacity: 15, enrolled: 12, status: 'Upcoming' },
-    { id: 2, name: 'POSH Awareness Training', type: 'Compliance', trainer: 'Priya Sharma', date: '2026-05-08', venue: 'Online (Zoom)', capacity: 50, enrolled: 48, status: 'Upcoming' },
-    { id: 3, name: 'Leadership Fundamentals', type: 'Leadership', trainer: 'External Trainer', date: '2026-04-28', venue: 'Boardroom', capacity: 10, enrolled: 9, status: 'Completed', attended: false },
-    { id: 4, name: 'AWS Cloud Practitioner', type: 'Technical Workshop', trainer: 'Rahul Gupta', date: '2026-04-20', venue: 'Lab Room 2', capacity: 12, enrolled: 10, status: 'Completed', attended: true },
-    { id: 5, name: 'Effective Communication', type: 'Soft Skills', trainer: 'External Trainer', date: '2026-05-20', venue: 'Online (Teams)', capacity: 30, enrolled: 22, status: 'Upcoming' },
-    { id: 6, name: 'Product Demo Training', type: 'Product Training', trainer: 'Ananya Iyer', date: '2026-05-15', venue: 'Conference Room B', capacity: 20, enrolled: 18, status: 'Upcoming' },
-    { id: 7, name: 'Agile & Scrum Fundamentals', type: 'Technical Workshop', trainer: 'Arjun Mehta', date: '2026-04-10', venue: 'Online (Zoom)', capacity: 25, enrolled: 24, status: 'Completed', attended: true },
-    { id: 8, name: 'Data Privacy & GDPR', type: 'Compliance', trainer: 'Priya Sharma', date: '2026-05-25', venue: 'Conference Room A', capacity: 30, enrolled: 15, status: 'Upcoming' },
-  ];
+  sessions: TrainingSession[] = [];
 
   get upcoming() { return this.sessions.filter(s => s.status === 'Upcoming').length; }
   get completed() { return this.sessions.filter(s => s.status === 'Completed').length; }
@@ -172,26 +167,59 @@ export class TrainingCalendarComponent implements OnInit {
     );
   }
 
-  ngOnInit() { this.buildCalendar(); }
+  ngOnInit() { this.loadSessions(); }
 
-  buildCalendar() {
-    const firstDay = new Date(2026, 4, 1).getDay();
-    const trainingDays: { [day: number]: string[] } = {
-      8: ['POSH Training'], 12: ['Angular WS'], 15: ['Product Demo'],
-      20: ['Communication'], 25: ['Data Privacy'],
-    };
-    for (let i = 0; i < firstDay; i++) this.calCells.push({ day: '', sessions: [] });
-    for (let d = 1; d <= 31; d++) this.calCells.push({ day: d, sessions: trainingDays[d] || [] });
+  loadSessions() {
+    this.http.get<any[]>(`${this.api}/training`).subscribe(data => {
+      this.sessions = (data || []).map(s => ({
+        id: s.id, name: s.title || s.name, type: s.trainingType || 'Technical Workshop',
+        trainer: s.trainerName || '', date: s.scheduledDate?.slice(0, 10) || '',
+        venue: s.venue || '', capacity: s.maxCapacity || 20, enrolled: s.registeredCount || 0,
+        status: s.status as 'Upcoming' | 'Completed' | 'In Progress', attended: false
+      }));
+      this.buildCalendar();
+    });
   }
 
-  register(s: TrainingSession) { s.enrolled = Math.min(s.enrolled + 1, s.capacity); alert(`Registered for ${s.name}`); }
+  buildCalendar() {
+    this.calCells = [];
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const trainingDays: { [day: number]: string[] } = {};
+    this.sessions.forEach(s => {
+      const d = new Date(s.date);
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+        const day = d.getDate();
+        if (!trainingDays[day]) trainingDays[day] = [];
+        trainingDays[day].push(s.name.slice(0, 12));
+      }
+    });
+    for (let i = 0; i < firstDay; i++) this.calCells.push({ day: '', sessions: [] });
+    for (let d = 1; d <= daysInMonth; d++) this.calCells.push({ day: d, sessions: trainingDays[d] || [] });
+  }
+
+  register(s: TrainingSession) {
+    this.http.post(`${this.api}/training/${s.id}/register`, {}).subscribe({
+      next: () => { s.enrolled = Math.min(s.enrolled + 1, s.capacity); alert(`Registered for ${s.name}`); },
+      error: err => alert(err?.error?.message || 'Registration failed')
+    });
+  }
+
   markAttendance(s: TrainingSession) { s.attended = true; alert(`Attendance marked for ${s.name}`); }
 
   createSession() {
     if (!this.newSession.name || !this.newSession.date) { alert('Fill required fields'); return; }
-    this.sessions.unshift({ id: Date.now(), ...this.newSession, enrolled: 0, status: 'Upcoming' });
-    this.msg = `Session "${this.newSession.name}" created`;
-    this.newSession = { name: '', type: 'Technical Workshop', trainer: '', date: '', capacity: 20, venue: '' };
-    setTimeout(() => this.msg = '', 3000);
+    const payload = { title: this.newSession.name, trainingType: this.newSession.type, trainerName: this.newSession.trainer, scheduledDate: this.newSession.date, maxCapacity: this.newSession.capacity, venue: this.newSession.venue };
+    this.http.post<any>(`${this.api}/training`, payload).subscribe({
+      next: res => {
+        this.sessions.unshift({ id: res.id, name: this.newSession.name, type: this.newSession.type as any, trainer: this.newSession.trainer, date: this.newSession.date, venue: this.newSession.venue, capacity: this.newSession.capacity, enrolled: 0, status: 'Upcoming' });
+        this.buildCalendar();
+        this.msg = `Session "${this.newSession.name}" created`;
+        this.newSession = { name: '', type: 'Technical Workshop', trainer: '', date: '', capacity: 20, venue: '' };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to create session')
+    });
   }
 }

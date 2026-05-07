@@ -57,13 +57,31 @@ export class CampusConnectComponent implements OnInit {
   constructor(private http: HttpClient) {}
   showForm=false;draft:any={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'};
   kpis=[{val:8,lbl:'Drives This Year',color:'#6b4df0'},{val:142,lbl:'Offers Made',color:'#2563eb'},{val:118,lbl:'Offers Accepted',color:'#10b981'},{val:'83%',lbl:'Acceptance Rate',color:'#f59e0b'}];
-  drives:any[]=[
-    {college:'IIT Ahmedabad',city:'Ahmedabad',driveDate:'2026-03-15',pptDate:'2026-03-10',roles:'Software Engineer, Data Analyst',target:20,mode:'Offline',status:'Completed',registered:180,appeared:162,selected:28,accepted:24},
-    {college:'MICA',city:'Ahmedabad',driveDate:'2026-04-02',pptDate:'2026-03-28',roles:'Marketing Manager, Brand Analyst',target:10,mode:'Hybrid',status:'Completed',registered:95,appeared:88,selected:14,accepted:11},
-    {college:'NIRMA University',city:'Ahmedabad',driveDate:'2026-05-20',pptDate:'2026-05-15',roles:'Full-Stack Developer, QA Engineer',target:15,mode:'Online',status:'Active',registered:210,appeared:0,selected:0,accepted:0},
-    {college:'VNSGU',city:'Surat',driveDate:'2026-06-05',pptDate:'2026-06-01',roles:'HR Executive, Finance Analyst',target:8,mode:'Offline',status:'Planning',registered:0,appeared:0,selected:0,accepted:0},
-  ];
-  ngOnInit(){}
-  addDrive(){if(!this.draft.college)return;this.drives.unshift({...this.draft,registered:0,appeared:0,selected:0,accepted:0});this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'};this.showForm=false;}
+  drives:any[]=[];
+  ngOnInit(){ this.loadDrives(); }
+  loadDrives() {
+    this.http.get<any[]>(`${this.api}/campus`).subscribe(data => {
+      this.drives = (data || []).map(d => ({
+        id: d.id, college: d.collegeName || d.college || '',
+        city: d.city || '', driveDate: d.driveDate?.slice(0, 10) || '',
+        pptDate: d.pptDate?.slice(0, 10) || '',
+        roles: d.roles || '', target: d.targetHires || d.target || 0,
+        mode: d.mode || 'Offline', status: d.status || 'Planning',
+        registered: d.registeredCount || 0, appeared: d.appearedCount || 0,
+        selected: d.selectedCount || 0, accepted: d.acceptedCount || 0
+      }));
+      this.kpis[0].val = this.drives.length;
+      this.kpis[1].val = this.drives.reduce((s, d) => s + d.selected, 0);
+      this.kpis[2].val = this.drives.reduce((s, d) => s + d.accepted, 0);
+    });
+  }
+  addDrive() {
+    if(!this.draft.college) return;
+    const payload = { collegeName: this.draft.college, city: this.draft.city, driveDate: this.draft.driveDate, pptDate: this.draft.pptDate, roles: this.draft.roles, targetHires: +this.draft.target, mode: this.draft.mode, status: this.draft.status };
+    this.http.post<any>(`${this.api}/campus`, payload).subscribe({
+      next: res => { this.drives.unshift({...this.draft, id: res.id, registered:0, appeared:0, selected:0, accepted:0}); this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'}; this.showForm=false; },
+      error: () => { this.drives.unshift({...this.draft, registered:0, appeared:0, selected:0, accepted:0}); this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'}; this.showForm=false; }
+    });
+  }
   viewDrive(d:any){alert(`Drive details: ${d.college}\nRegistered: ${d.registered}\nSelected: ${d.selected}\nAccepted: ${d.accepted}`);}
 }

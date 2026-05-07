@@ -147,26 +147,37 @@ export class ShiftManagementComponent implements OnInit {
     { name: 'Night', code: 'NGT', hours: '22:00 – 06:00', color: '#3b82f6', count: 1 },
   ];
 
-  employees: Employee[] = [
-    { id: 'EMP001', name: 'Arjun Mehta', role: 'Sr. Developer', shifts: { Mon: 'GEN', Tue: 'GEN', Wed: 'GEN', Thu: 'GEN', Fri: 'GEN', Sat: '', Sun: '' } },
-    { id: 'EMP002', name: 'Priya Sharma', role: 'HR Manager', shifts: { Mon: 'GEN', Tue: 'GEN', Wed: 'GEN', Thu: 'GEN', Fri: 'GEN', Sat: '', Sun: '' } },
-    { id: 'EMP003', name: 'Rahul Gupta', role: 'DevOps Engineer', shifts: { Mon: 'MOR', Tue: 'MOR', Wed: 'EVE', Thu: 'EVE', Fri: 'NGT', Sat: 'NGT', Sun: '' } },
-    { id: 'EMP004', name: 'Sneha Patel', role: 'QA Lead', shifts: { Mon: 'GEN', Tue: 'GEN', Wed: 'GEN', Thu: 'MOR', Fri: 'MOR', Sat: '', Sun: '' } },
-    { id: 'EMP005', name: 'Vikram Singh', role: 'Support Engineer', shifts: { Mon: 'EVE', Tue: 'EVE', Wed: 'EVE', Thu: 'NGT', Fri: 'NGT', Sat: 'NGT', Sun: '' } },
-    { id: 'EMP006', name: 'Ananya Iyer', role: 'Business Analyst', shifts: { Mon: 'GEN', Tue: 'GEN', Wed: 'GEN', Thu: 'GEN', Fri: 'GEN', Sat: '', Sun: '' } },
-    { id: 'EMP007', name: 'Kiran Desai', role: 'Data Analyst', shifts: { Mon: 'MOR', Tue: 'GEN', Wed: 'GEN', Thu: 'EVE', Fri: 'EVE', Sat: '', Sun: '' } },
-    { id: 'EMP008', name: 'Rohan Nair', role: 'Network Admin', shifts: { Mon: 'NGT', Tue: 'NGT', Wed: 'MOR', Thu: 'MOR', Fri: 'GEN', Sat: 'GEN', Sun: '' } },
-  ];
+  employees: Employee[] = [];
 
   assignForm = { empId: '', week: '', shift: '', selectedDays: [] as string[] };
 
-  swapRequests = [
-    { empA: 'Rahul Gupta', shiftA: 'Night (Fri)', empB: 'Rohan Nair', shiftB: 'Morning (Fri)', date: '2026-05-08', reason: 'Medical appointment', status: 'Pending' },
-    { empA: 'Vikram Singh', shiftA: 'Evening (Mon)', empB: 'Kiran Desai', shiftB: 'Morning (Mon)', date: '2026-05-11', reason: 'Personal commitment', status: 'Approved' },
-    { empA: 'Sneha Patel', shiftA: 'Morning (Thu)', empB: 'Arjun Mehta', shiftB: 'General (Thu)', date: '2026-05-14', reason: 'Team sync conflict', status: 'Pending' },
-  ];
+  swapRequests: any[] = [];
 
-  ngOnInit() {}
+  ngOnInit() { this.loadAssignments(); }
+
+  loadAssignments() {
+    this.http.get<any[]>(`${this.api}/shifts/assignments`).subscribe(data => {
+      const empMap: { [id: string]: Employee } = {};
+      (data || []).forEach(a => {
+        if (!empMap[a.employeeId]) {
+          empMap[a.employeeId] = { id: a.employeeId, name: a.employeeName || '', role: a.designation || '', shifts: {} };
+        }
+        const dayAbbr = new Date(a.date).toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3);
+        empMap[a.employeeId].shifts[dayAbbr] = a.shiftCode || '';
+      });
+      this.employees = Object.values(empMap);
+      if (!this.employees.length) this.loadEmployeesFallback();
+    });
+  }
+
+  loadEmployeesFallback() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+        role: e.designation || '', shifts: {}
+      }));
+    });
+  }
 
   shiftColor(code: string): string {
     const map: { [k: string]: string } = { MOR: '#f59e0b', GEN: '#6b4df0', EVE: '#10b981', NGT: '#3b82f6' };
@@ -180,11 +191,16 @@ export class ShiftManagementComponent implements OnInit {
   }
 
   assignShift() {
-    if (!this.assignForm.empId || !this.assignForm.shift) { alert('Select employee and shift'); return; }
-    const emp = this.employees.find(e => e.id === this.assignForm.empId);
-    if (!emp) return;
-    this.assignForm.selectedDays.forEach(d => emp.shifts[d] = this.assignForm.shift);
-    this.assignMsg = `Shift ${this.assignForm.shift} assigned to ${emp.name} for ${this.assignForm.selectedDays.join(', ')}`;
-    setTimeout(() => this.assignMsg = '', 3000);
+    if (!this.assignForm.empId || !this.assignForm.shift || !this.assignForm.selectedDays.length) { alert('Select employee, shift and days'); return; }
+    const payload = { employeeId: this.assignForm.empId, shiftCode: this.assignForm.shift, weekStart: this.assignForm.week, days: this.assignForm.selectedDays };
+    this.http.post(`${this.api}/shifts/assign`, payload).subscribe({
+      next: () => {
+        const emp = this.employees.find(e => e.id === this.assignForm.empId);
+        if (emp) this.assignForm.selectedDays.forEach(d => emp.shifts[d] = this.assignForm.shift);
+        this.assignMsg = `Shift ${this.assignForm.shift} assigned for ${this.assignForm.selectedDays.join(', ')}`;
+        setTimeout(() => this.assignMsg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to assign shift')
+    });
   }
 }

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-payslip-portal',
@@ -134,64 +136,83 @@ import { Component, OnInit } from '@angular/core';
   `]
 })
 export class PayslipPortalComponent implements OnInit {
-  selectedEmp = 'EMP001';
+  private api = `${environment.apiUrl}/api/payroll`;
+  constructor(private http: HttpClient) {}
+  selectedEmp = '';
   selectedMonthIdx = 0;
 
-  employees = [
-    { id: 'EMP001', name: 'Arjun Mehta', role: 'Sr. Developer', dept: 'Engineering', ctc: 1500000, pan: 'AAAPX1234A', bank: 'HDFC ****6789' },
-    { id: 'EMP002', name: 'Priya Sharma', role: 'HR Manager', dept: 'Human Resources', ctc: 1350000, pan: 'BBBPY5678B', bank: 'ICICI ****4321' },
-    { id: 'EMP003', name: 'Rahul Gupta', role: 'DevOps Engineer', dept: 'Infrastructure', ctc: 1200000, pan: 'CCCQZ9012C', bank: 'SBI ****8765' },
-  ];
-
-  months = [
-    { idx: 0, label: 'Apr 2026', net: 105050 }, { idx: 1, label: 'Mar 2026', net: 105050 },
-    { idx: 2, label: 'Feb 2026', net: 101200 }, { idx: 3, label: 'Jan 2026', net: 101200 },
-    { idx: 4, label: 'Dec 2025', net: 101200 }, { idx: 5, label: 'Nov 2025', net: 98500 },
-    { idx: 6, label: 'Oct 2025', net: 98500 }, { idx: 7, label: 'Sep 2025', net: 98500 },
-    { idx: 8, label: 'Aug 2025', net: 95000 }, { idx: 9, label: 'Jul 2025', net: 95000 },
-    { idx: 10, label: 'Jun 2025', net: 95000 }, { idx: 11, label: 'May 2025', net: 92000 },
-  ];
-
+  employees: any[] = [];
+  months: any[] = [];
   slip: any = null;
+  allPayslips: any[] = [];
 
   get currentEmp() { return this.employees.find(e => e.id === this.selectedEmp); }
 
-  ngOnInit() { this.loadPayslip(); }
+  ngOnInit() { this.loadEmployees(); }
 
-  loadPayslip() {
-    const emp = this.currentEmp;
-    if (!emp) return;
-    const monthly = emp.ctc / 12;
-    const basic = monthly * 0.5;
-    const hra = monthly * 0.20;
-    const da = monthly * 0.05;
-    const special = monthly * 0.15;
-    const gross = basic + hra + da + special;
-    const pf = basic * 0.12;
-    const pt = 200;
-    const tds = gross * 0.08;
-    const net = Math.round(gross - pf - pt - tds);
-    const m = this.months[this.selectedMonthIdx];
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        id: e.id || e.employeeCode, name: `${e.firstName} ${e.lastName}`.trim(),
+        role: e.designation || '', dept: e.department || '',
+        ctc: e.salary || 0, pan: e.pan || 'N/A', bank: e.bankAccount || 'N/A'
+      }));
+      if (this.employees.length) { this.selectedEmp = this.employees[0].id; this.loadPayslips(); }
+    });
+  }
+
+  loadPayslips() {
+    this.http.get<any[]>(`${this.api}/payslips`).subscribe(data => {
+      this.allPayslips = data || [];
+      this.buildMonthList();
+    });
+  }
+
+  buildMonthList() {
+    const empSlips = this.allPayslips.filter(s => s.employeeId === this.selectedEmp);
+    if (empSlips.length) {
+      this.months = empSlips.map((s, i) => ({
+        idx: i, label: s.periodLabel || s.period || '', net: s.netPay || 0, data: s
+      }));
+      this.selectedMonthIdx = 0;
+      this.buildSlipFromData(this.months[0].data);
+    } else {
+      this.months = [];
+      this.slip = null;
+    }
+  }
+
+  buildSlipFromData(s: any) {
+    const parts = (s.periodLabel || '').split(' ');
     this.slip = {
-      monthLabel: m.label.split(' ')[0], year: m.label.split(' ')[1],
-      daysWorked: 26,
-      earnings: [
-        { label: 'Basic Salary', amount: Math.round(basic) },
-        { label: 'House Rent Allowance', amount: Math.round(hra) },
-        { label: 'Dearness Allowance', amount: Math.round(da) },
-        { label: 'Special Allowance', amount: Math.round(special) },
+      monthLabel: parts[0] || '', year: parts[1] || '',
+      daysWorked: s.daysWorked || 26,
+      earnings: s.earnings || [
+        { label: 'Basic Salary', amount: s.basicSalary || 0 },
+        { label: 'House Rent Allowance', amount: s.hra || 0 },
+        { label: 'Dearness Allowance', amount: s.da || 0 },
+        { label: 'Special Allowance', amount: s.specialAllowance || 0 },
       ],
-      deductions: [
-        { label: 'Provident Fund', amount: Math.round(pf) },
-        { label: 'Professional Tax', amount: pt },
-        { label: 'Tax Deducted at Source', amount: Math.round(tds) },
+      deductions: s.deductions || [
+        { label: 'Provident Fund', amount: s.pf || 0 },
+        { label: 'Professional Tax', amount: s.pt || 200 },
+        { label: 'Tax Deducted at Source', amount: s.tds || 0 },
       ],
-      gross: Math.round(gross), totalDeductions: Math.round(pf + pt + tds),
-      netPay: net, netInWords: 'Rupees One Lakh Five Thousand Fifty Only',
+      gross: s.grossPay || 0, totalDeductions: s.totalDeductions || 0,
+      netPay: s.netPay || 0, netInWords: s.netInWords || ''
     };
   }
 
-  selectMonth(idx: number) { this.selectedMonthIdx = idx; this.loadPayslip(); }
+  loadPayslip() {
+    if (!this.selectedEmp) return;
+    this.buildMonthList();
+  }
+
+  selectMonth(idx: number) {
+    this.selectedMonthIdx = idx;
+    if (this.months[idx]?.data) this.buildSlipFromData(this.months[idx].data);
+  }
+
   downloadPayslip() { alert('Payslip PDF downloaded'); }
   emailPayslip() { alert('Payslip emailed to employee'); }
 }

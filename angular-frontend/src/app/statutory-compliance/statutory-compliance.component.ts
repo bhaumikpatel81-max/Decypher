@@ -72,7 +72,34 @@ export class StatutoryComplianceComponent implements OnInit {
     {type:'TDS',month:'Mar 2026',amount:'2,08,900',filedOn:'07 Apr 2026',ref:'TDS2603C9012'},
     {type:'PT',month:'Apr 2026',amount:'28,600',filedOn:'30 Apr 2026',ref:'PT2604D3456'},
   ];
-  ngOnInit(){}
-  upload(){if(!this.draft.month||!this.draft.amount)return;this.history.unshift({...this.draft,filedOn:new Date().toLocaleDateString('en-GB'),ref:this.draft.type+Date.now()});this.markFiled(this.compStatus.find(c=>c.type===this.draft.type));this.showUpload=false;}
-  markFiled(c:any){if(c)c.status='Filed';}
+  ngOnInit(){ this.loadFilings(); }
+
+  loadFilings() {
+    this.http.get<any[]>(`${this.api}/statutory`).subscribe(data => {
+      if (!data || !data.length) return;
+      this.history = data.map(f => ({
+        type: f.complianceType || '', month: f.period || '',
+        amount: f.amount || 0, filedOn: f.filedDate?.slice(0,10) || '', ref: f.referenceNumber || ''
+      }));
+      data.forEach(f => {
+        const c = this.compStatus.find(cs => cs.type === f.complianceType);
+        if (c) { c.status = f.status || 'Pending'; c.amount = f.amount?.toString() || c.amount; }
+      });
+      const overdue = this.compStatus.filter(c => c.status === 'Overdue').length;
+      const filed = this.compStatus.filter(c => c.status === 'Filed').length;
+      this.kpis[0].val = `${filed}/${this.compStatus.length}`;
+      this.kpis[1].val = overdue;
+    });
+  }
+
+  upload() {
+    if (!this.draft.month || !this.draft.amount) return;
+    const payload = { complianceType: this.draft.type, period: this.draft.month, amount: +this.draft.amount, referenceNumber: this.draft.ref, status: 'Filed', filedDate: new Date().toISOString().slice(0,10) };
+    this.http.post<any>(`${this.api}/statutory`, payload).subscribe({
+      next: () => { this.loadFilings(); this.markFiled(this.compStatus.find(c => c.type === this.draft.type)); this.showUpload = false; },
+      error: err => alert(err?.error?.message || 'Upload failed')
+    });
+  }
+
+  markFiled(c:any){ if(c) c.status='Filed'; }
 }

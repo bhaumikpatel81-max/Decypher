@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-letters-certificates',
@@ -94,12 +96,24 @@ import { Component } from '@angular/core';
     .letter-header { margin-bottom:20px; }
   `]
 })
-export class LettersCertificatesComponent {
+export class LettersCertificatesComponent implements OnInit {
+  private api = `${environment.apiUrl}/api/employees`;
+  constructor(private http: HttpClient) {}
   preview: any = null;
-  history: any[] = [
-    { type:'Experience Certificate', employee:'Divya Reddy', empId:'EMP008', date:'2024-02-10' },
-    { type:'Appointment Letter', employee:'Anjali Nair', empId:'EMP006', date:'2022-09-12' },
-  ];
+  history: any[] = [];
+
+  ngOnInit() { this.loadHistory(); }
+
+  loadHistory() {
+    this.http.get<any[]>(`${this.api}/letters`).subscribe(data => {
+      this.history = (data || []).map(h => ({
+        id: h.id, type: h.letterType || h.type || '',
+        employee: h.employeeName || h.employee || '',
+        empId: h.employeeCode || h.empId || '',
+        date: h.generatedDate?.slice(0, 10) || h.date?.slice(0, 10) || ''
+      }));
+    });
+  }
 
   letterTypes = [
     { id:'appointment', label:'Appointment Letter' },
@@ -122,7 +136,11 @@ export class LettersCertificatesComponent {
     const t = this.letterTypes.find(x => x.id === this.gen.type);
     const body = this.buildBody();
     this.preview = { title: t?.label, date: this.gen.date, body, ...this.gen };
-    this.history.unshift({ type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date });
+    const payload = { letterType: t?.label, employeeName: this.gen.employeeName, employeeCode: this.gen.empId, designation: this.gen.designation, department: this.gen.department, generatedDate: this.gen.date, additionalInfo: this.gen.extra };
+    this.http.post<any>(`${this.api}/letters`, payload).subscribe({
+      next: res => { this.history.unshift({ id: res.id, type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date }); },
+      error: () => { this.history.unshift({ type: t?.label, employee: this.gen.employeeName, empId: this.gen.empId, date: this.gen.date }); }
+    });
   }
 
   buildBody(): string {

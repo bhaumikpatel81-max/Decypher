@@ -159,39 +159,11 @@ export class PolicyManagementComponent implements OnInit {
 
   form = { title: '', category: '', version: '1.0', effectiveDate: '' };
 
-  policies: Policy[] = [
-    { id: 1, title: 'Work From Home Policy', category: 'HR', version: '2.1', effectiveDate: '2026-01-01', status: 'Active', acknowledged: 7, total: 8 },
-    { id: 2, title: 'Code of Conduct', category: 'HR', version: '3.0', effectiveDate: '2025-07-01', status: 'Active', acknowledged: 8, total: 8 },
-    { id: 3, title: 'Information Security Policy', category: 'IT', version: '1.5', effectiveDate: '2025-10-01', status: 'Active', acknowledged: 6, total: 8 },
-    { id: 4, title: 'Data Privacy & GDPR', category: 'Legal', version: '2.0', effectiveDate: '2025-05-25', status: 'Active', acknowledged: 5, total: 8 },
-    { id: 5, title: 'Travel & Expense Policy', category: 'Finance', version: '1.2', effectiveDate: '2026-04-01', status: 'Active', acknowledged: 4, total: 8 },
-    { id: 6, title: 'Office Safety Guidelines', category: 'Safety', version: '1.0', effectiveDate: '2025-03-01', status: 'Active', acknowledged: 8, total: 8 },
-    { id: 7, title: 'POSH Policy', category: 'HR', version: '2.0', effectiveDate: '2024-12-01', status: 'Active', acknowledged: 8, total: 8 },
-    { id: 8, title: 'Leave Policy 2026', category: 'HR', version: '1.0', effectiveDate: '2026-01-01', status: 'Draft', acknowledged: 0, total: 8 },
-  ];
+  policies: Policy[] = [];
 
-  employees = [
-    { id: 'EMP001', name: 'Arjun Mehta', dept: 'Engineering' },
-    { id: 'EMP002', name: 'Priya Sharma', dept: 'HR' },
-    { id: 'EMP003', name: 'Rahul Gupta', dept: 'DevOps' },
-    { id: 'EMP004', name: 'Sneha Patel', dept: 'QA' },
-    { id: 'EMP005', name: 'Vikram Singh', dept: 'Support' },
-    { id: 'EMP006', name: 'Ananya Iyer', dept: 'Business' },
-    { id: 'EMP007', name: 'Kiran Desai', dept: 'Analytics' },
-    { id: 'EMP008', name: 'Rohan Nair', dept: 'Infrastructure' },
-  ];
+  employees: { id: string; name: string; dept: string }[] = [];
 
-  // empId → policyId → acknowledged
-  ackData: { [empId: string]: { [policyId: number]: boolean } } = {
-    EMP001: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: false },
-    EMP002: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: false },
-    EMP003: { 1: false, 2: true, 3: true, 4: false, 5: false, 6: true, 7: true, 8: false },
-    EMP004: { 1: true, 2: true, 3: false, 4: false, 5: false, 6: true, 7: true, 8: false },
-    EMP005: { 1: true, 2: true, 3: false, 4: false, 5: false, 6: true, 7: true, 8: false },
-    EMP006: { 1: true, 2: true, 3: true, 4: true, 5: false, 6: true, 7: true, 8: false },
-    EMP007: { 1: true, 2: true, 3: true, 4: false, 5: false, 6: true, 7: true, 8: false },
-    EMP008: { 1: true, 2: true, 3: true, 4: false, 5: false, 6: true, 7: true, 8: false },
-  };
+  ackData: { [empId: string]: { [policyId: number]: boolean } } = {};
 
   get activePolicies() { return this.policies.filter(p => p.status === 'Active').length; }
   get pendingAck() { return this.policies.reduce((s, p) => s + (p.total - p.acknowledged), 0); }
@@ -210,18 +182,57 @@ export class PolicyManagementComponent implements OnInit {
   catColor(cat: string): string { const m: { [k: string]: string } = { HR: '#6b4df0', IT: '#3b82f6', Finance: '#10b981', Legal: '#f59e0b', Safety: '#ef4444' }; return m[cat] || '#6b4df0'; }
   catIcon(cat: string): string { const m: { [k: string]: string } = { HR: '👥', IT: '💻', Finance: '💰', Legal: '⚖️', Safety: '🛡️' }; return m[cat] || '📄'; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadPolicies(); this.loadEmployees(); }
 
-  viewPolicy(p: Policy) { alert(`Viewing policy: ${p.title} v${p.version}`); }
+  loadPolicies() {
+    this.http.get<any[]>(`${this.api}/policies`).subscribe(data => {
+      this.policies = (data || []).map(p => ({
+        id: p.id, title: p.title, category: p.category || 'HR',
+        version: p.version || '1.0', effectiveDate: p.effectiveDate?.slice(0, 10) || '',
+        status: p.status || 'Draft', acknowledged: p.acknowledgedCount || 0, total: p.totalEmployees || 0
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(), dept: e.department || ''
+      }));
+    });
+  }
+
+  viewPolicy(p: Policy) {
+    this.http.get<any[]>(`${this.api}/policies/${p.id}/acknowledgments`).subscribe(acks => {
+      const map: { [empId: string]: boolean } = {};
+      (acks || []).forEach((a: any) => { map[a.employeeCode || a.employeeId] = true; });
+      this.ackData = { ...this.ackData, ...Object.fromEntries(Object.entries(map).map(([k, v]) => [k, { [p.id]: v }])) };
+      alert(`Viewing policy: ${p.title} v${p.version}`);
+    });
+  }
+
   sendAck(p: Policy) { alert(`Reminder sent to employees who haven't acknowledged "${p.title}"`); }
-  sendForAck(p: Policy) { p.status = 'Active'; alert(`"${p.title}" published and sent for acknowledgement`); }
+
+  sendForAck(p: Policy) {
+    this.http.post(`${this.api}/policies/${p.id}/publish`, {}).subscribe({
+      next: () => { p.status = 'Active'; alert(`"${p.title}" published and sent for acknowledgement`); },
+      error: err => alert(err?.error?.message || 'Failed to publish')
+    });
+  }
+
   uploadPolicy() { alert('Policy upload triggered'); }
 
   addPolicy(status: string) {
     if (!this.form.title || !this.form.category) { alert('Fill required fields'); return; }
-    this.policies.unshift({ id: Date.now(), ...this.form, status, acknowledged: 0, total: 8 });
-    this.msg = `Policy "${this.form.title}" ${status === 'Draft' ? 'saved as draft' : 'published'}`;
-    this.form = { title: '', category: '', version: '1.0', effectiveDate: '' };
-    setTimeout(() => this.msg = '', 3000);
+    const payload = { title: this.form.title, category: this.form.category, version: this.form.version, effectiveDate: this.form.effectiveDate, status };
+    this.http.post<any>(`${this.api}/policies`, payload).subscribe({
+      next: res => {
+        this.policies.unshift({ id: res.id, ...this.form, status, acknowledged: 0, total: 0 });
+        this.msg = `Policy "${this.form.title}" ${status === 'Draft' ? 'saved as draft' : 'published'}`;
+        this.form = { title: '', category: '', version: '1.0', effectiveDate: '' };
+        setTimeout(() => this.msg = '', 3000);
+      },
+      error: err => alert(err?.error?.message || 'Failed to save policy')
+    });
   }
 }

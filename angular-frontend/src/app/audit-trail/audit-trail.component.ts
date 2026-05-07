@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 @Component({ selector: 'app-audit-trail', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -42,22 +44,35 @@ import { Component, OnInit } from '@angular/core';
   </div>
 </div>`, styles: [`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}.tr-row:hover{background:var(--surface-alt)}.critical-row{background:rgba(239,68,68,.03)}.mod-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(107,77,240,.1);color:#6b4df0}.sev-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}.sev-info{background:#e0e7ff;color:#3730a3}.sev-warn{background:#fef3c7;color:#92400e}.sev-crit{background:#fee2e2;color:#991b1b}`] })
 export class AuditTrailComponent implements OnInit {
+  private api = `${environment.apiUrl}/api`;
+  constructor(private http: HttpClient) {}
   search='';filterModule='';filterSeverity='';fromDate='';toDate='';
   modules=['Employee Directory','Payroll','Attendance','Compliance','User Management','Leave','Performance','Recruitment'];
-  kpis=[{val:247,lbl:'Actions Today',color:'#6b4df0'},{val:8,lbl:'Critical Events',color:'#ef4444'},{val:23,lbl:'Unique Users',color:'#10b981'},{val:3,lbl:'Failed Logins',color:'#f59e0b'}];
-  logs:any[]=[
-    {ts:'2026-05-06 09:02:11',user:'Priya Sharma',role:'HR Manager',module:'Employee Directory',action:'Created employee',details:'Added EMP012 – Ravi Kumar, Designation: Sr. Analyst',ip:'192.168.1.45',severity:'Info'},
-    {ts:'2026-05-06 09:15:33',user:'Bhaumik Patel',role:'SuperAdmin',module:'User Management',action:'Role changed',details:'Changed role of arjun.m from Recruiter to TeamLead',ip:'192.168.1.1',severity:'Critical'},
-    {ts:'2026-05-06 09:48:20',user:'Rohan Desai',role:'Recruiter',module:'Recruitment',action:'Pipeline updated',details:'Moved Sneha Joshi from Screening to Interview stage',ip:'192.168.1.67',severity:'Info'},
-    {ts:'2026-05-06 10:05:44',user:'Kavita Shah',role:'CHRO',module:'Payroll',action:'Payroll locked',details:'Locked payroll for April 2026 — 142 employees processed',ip:'192.168.1.23',severity:'Warning'},
-    {ts:'2026-05-06 10:22:09',user:'Anjali Nair',role:'HR Manager',module:'Leave',action:'Leave approved',details:'Approved 3-day leave for Vikram Singh (EMP005)',ip:'192.168.1.55',severity:'Info'},
-    {ts:'2026-05-06 11:00:01',user:'Unknown',role:'—',module:'User Management',action:'Failed login',details:'3 failed login attempts from IP 203.45.67.89',ip:'203.45.67.89',severity:'Critical'},
-    {ts:'2026-05-06 11:30:18',user:'Deepak Joshi',role:'Finance',module:'Compliance',action:'Challan uploaded',details:'PF challan for April 2026 uploaded – ₹4,82,350',ip:'192.168.1.34',severity:'Info'},
-    {ts:'2026-05-06 12:15:55',user:'Priya Sharma',role:'HR Manager',module:'Performance',action:'Review submitted',details:'Performance review submitted for EMP003 – Rahul Gupta, Rating: 4.2',ip:'192.168.1.45',severity:'Info'},
-    {ts:'2026-05-06 13:02:40',user:'Bhaumik Patel',role:'SuperAdmin',module:'Employee Directory',action:'Employee deleted',details:'Removed EMP008 – Divya Reddy (exit process completed)',ip:'192.168.1.1',severity:'Critical'},
-    {ts:'2026-05-06 14:45:12',user:'Arjun Mehta',role:'TeamLead',module:'Attendance',action:'OT approved',details:'Approved 3hrs OT for Karan Malhotra on 2026-05-05',ip:'192.168.1.78',severity:'Info'},
-  ];
-  ngOnInit(){}
+  kpis=[{val:0,lbl:'Actions Today',color:'#6b4df0'},{val:0,lbl:'Critical Events',color:'#ef4444'},{val:0,lbl:'Unique Users',color:'#10b981'},{val:0,lbl:'Failed Logins',color:'#f59e0b'}];
+  logs:any[]=[];
+  ngOnInit(){ this.loadLogs(); }
+  loadLogs() {
+    this.http.get<any[]>(`${this.api}/audit-logs`).subscribe(data => {
+      if (!data || !data.length) return;
+      this.logs = data.map(l => ({
+        ts: l.timestamp?.replace('T',' ')?.slice(0,19) || l.ts || '',
+        user: l.userName || l.user || 'System',
+        role: l.userRole || l.role || '—',
+        module: l.module || l.moduleName || '',
+        action: l.action || l.actionType || '',
+        details: l.details || l.description || '',
+        ip: l.ipAddress || l.ip || '—',
+        severity: l.severity || 'Info'
+      }));
+      const today = new Date().toISOString().slice(0, 10);
+      const todayLogs = this.logs.filter(l => l.ts.startsWith(today));
+      this.kpis[0].val = todayLogs.length;
+      this.kpis[1].val = this.logs.filter(l => l.severity === 'Critical').length;
+      const users = new Set(this.logs.map(l => l.user));
+      this.kpis[2].val = users.size;
+      this.kpis[3].val = this.logs.filter(l => l.action?.toLowerCase().includes('failed login')).length;
+    });
+  }
   get filtered(){return this.logs.filter(l=>{
     const qs=this.search.toLowerCase();
     return(!qs||l.user.toLowerCase().includes(qs)||l.action.toLowerCase().includes(qs)||l.details.toLowerCase().includes(qs))&&(!this.filterModule||l.module===this.filterModule)&&(!this.filterSeverity||l.severity===this.filterSeverity);

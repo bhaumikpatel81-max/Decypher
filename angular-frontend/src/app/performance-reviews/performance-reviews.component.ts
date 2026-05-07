@@ -162,31 +162,10 @@ export class PerformanceReviewsComponent implements OnInit {
   cycles = ['Annual Review 2026', 'Mid-Year 2025', 'Annual Review 2025'];
   competencies = ['Communication', 'Technical', 'Leadership', 'Delivery', 'Initiative'];
 
-  reviews: ReviewRecord[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', reviewer: 'Satish Menon', dept: 'Engineering', ratings: { Communication: 4, Technical: 5, Leadership: 4, Delivery: 5, Initiative: 4 }, overall: 4.4, status: 'Submitted', cycle: 'Annual Review 2026' },
-    { id: 2, employee: 'Priya Sharma', empId: 'EMP002', reviewer: 'Satish Menon', dept: 'HR', ratings: { Communication: 5, Technical: 4, Leadership: 5, Delivery: 4, Initiative: 5 }, overall: 4.6, status: 'Acknowledged', cycle: 'Annual Review 2026' },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', reviewer: 'Arjun Mehta', dept: 'DevOps', ratings: { Communication: 3, Technical: 5, Leadership: 3, Delivery: 4, Initiative: 4 }, overall: 3.8, status: 'Submitted', cycle: 'Annual Review 2026' },
-    { id: 4, employee: 'Sneha Patel', empId: 'EMP004', reviewer: 'Arjun Mehta', dept: 'QA', ratings: { Communication: 4, Technical: 4, Leadership: 3, Delivery: 5, Initiative: 3 }, overall: 3.8, status: 'In Progress', cycle: 'Annual Review 2026' },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', reviewer: 'Priya Sharma', dept: 'Support', ratings: { Communication: 4, Technical: 3, Leadership: 3, Delivery: 4, Initiative: 3 }, overall: 3.4, status: 'In Progress', cycle: 'Annual Review 2026' },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', reviewer: 'Satish Menon', dept: 'Business', ratings: { Communication: 5, Technical: 4, Leadership: 5, Delivery: 5, Initiative: 5 }, overall: 4.8, status: 'Acknowledged', cycle: 'Annual Review 2026' },
-    { id: 7, employee: 'Kiran Desai', empId: 'EMP007', reviewer: 'Ananya Iyer', dept: 'Analytics', ratings: {}, overall: 0, status: 'Not Started', cycle: 'Annual Review 2026' },
-    { id: 8, employee: 'Rohan Nair', empId: 'EMP008', reviewer: 'Arjun Mehta', dept: 'Infrastructure', ratings: {}, overall: 0, status: 'Not Started', cycle: 'Annual Review 2026' },
-  ];
-
-  statusSummary = [
-    { label: 'Not Started', count: 2, color: '#94a3b8' },
-    { label: 'In Progress', count: 2, color: '#f59e0b' },
-    { label: 'Submitted', count: 2, color: '#6b4df0' },
-    { label: 'Acknowledged', count: 2, color: '#10b981' },
-  ];
-
-  bellData = [
-    { label: '1 (Poor)', count: 0, pct: 0, color: '#ef4444' },
-    { label: '2 (Below)', count: 0, pct: 0, color: '#f97316' },
-    { label: '3 (Meets)', count: 2, pct: 25, color: '#6b4df0' },
-    { label: '4 (Exceeds)', count: 4, pct: 50, color: '#10b981' },
-    { label: '5 (Exceptional)', count: 2, pct: 25, color: '#f59e0b' },
-  ];
+  reviews: ReviewRecord[] = [];
+  cycles: string[] = [];
+  statusSummary: any[] = [];
+  bellData: any[] = [];
 
   form: any = { employee: '', reviewer: '', ratings: {} };
 
@@ -204,7 +183,33 @@ export class PerformanceReviewsComponent implements OnInit {
 
   ratingLabel(r: number) { return ['', 'Poor', 'Below Expectations', 'Meets Expectations', 'Exceeds Expectations', 'Exceptional'][r] || ''; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadCycles(); this.loadReviews(); }
+
+  loadCycles() {
+    this.http.get<any[]>(`${this.api}/cycles`).subscribe(data => {
+      this.cycles = (data || []).map(c => c.name);
+      if (this.cycles.length) this.activeCycle = this.cycles[0];
+    });
+  }
+
+  loadReviews() {
+    this.http.get<any[]>(`${this.api}/reviews`).subscribe(data => {
+      this.reviews = (data || []).map(r => ({
+        id: r.id, employee: r.revieweeName || '', empId: r.revieweeCode || '',
+        reviewer: r.reviewerName || '', dept: r.department || '',
+        ratings: {}, overall: r.overallRating || 0, status: r.status, cycle: r.cycleName || ''
+      }));
+      const statuses = ['Not Started', 'Pending', 'Submitted', 'Acknowledged'];
+      const colors = ['#94a3b8', '#f59e0b', '#6b4df0', '#10b981'];
+      this.statusSummary = statuses.map((s, i) => ({ label: s, count: this.reviews.filter(r => r.status === s).length, color: colors[i] }));
+      const submitted = this.reviews.filter(r => r.overall > 0);
+      this.bellData = [1,2,3,4,5].map(v => ({
+        label: `${v}`, count: submitted.filter(r => Math.round(r.overall) === v).length,
+        pct: submitted.length ? Math.round(submitted.filter(r => Math.round(r.overall) === v).length / submitted.length * 100) : 0,
+        color: ['#ef4444','#f97316','#6b4df0','#10b981','#f59e0b'][v-1]
+      }));
+    });
+  }
 
   openReview(r: ReviewRecord) {
     this.form.employee = r.employee;

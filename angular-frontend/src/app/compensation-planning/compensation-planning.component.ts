@@ -167,46 +167,41 @@ export class CompensationPlanningComponent implements OnInit {
   constructor(private http: HttpClient) {}
   tab = 'cycles';
 
-  employees = [
-    { empId: 'EMP001', name: 'Arjun Mehta', dept: 'Engineering', ctc: 1500000 },
-    { empId: 'EMP002', name: 'Priya Sharma', dept: 'HR', ctc: 1350000 },
-    { empId: 'EMP003', name: 'Rahul Gupta', dept: 'DevOps', ctc: 1200000 },
-    { empId: 'EMP004', name: 'Sneha Patel', dept: 'QA', ctc: 1125000 },
-    { empId: 'EMP005', name: 'Vikram Singh', dept: 'Support', ctc: 1050000 },
-    { empId: 'EMP006', name: 'Ananya Iyer', dept: 'Business', ctc: 1425000 },
-    { empId: 'EMP007', name: 'Kiran Desai', dept: 'Analytics', ctc: 1275000 },
-    { empId: 'EMP008', name: 'Rohan Nair', dept: 'Infrastructure', ctc: 975000 },
-  ];
-
-  cycles = [
-    { name: 'Annual Review 2026', year: 2026, budget: 12, eligible: 8, approved: 5, pending: 3, active: true },
-    { name: 'Mid-Year Correction 2025', year: 2025, budget: 6, eligible: 4, approved: 4, pending: 0, active: false },
-  ];
-
-  get activeCycle() { return this.cycles.find(c => c.active) || this.cycles[0]; }
-
-  revisions: RevisionRecord[] = [
-    { id: 1, employee: 'Arjun Mehta', empId: 'EMP001', dept: 'Engineering', currentCTC: 1500000, proposedCTC: 1680000, hike: 12, reason: 'Excellent performance', effectiveDate: '2026-04-01', status: 'Approved' },
-    { id: 2, employee: 'Priya Sharma', empId: 'EMP002', dept: 'HR', currentCTC: 1350000, proposedCTC: 1498500, hike: 11, reason: 'HR transformation lead', effectiveDate: '2026-04-01', status: 'Approved' },
-    { id: 3, employee: 'Rahul Gupta', empId: 'EMP003', dept: 'DevOps', currentCTC: 1200000, proposedCTC: 1332000, hike: 11, reason: 'Critical infra ownership', effectiveDate: '2026-04-01', status: 'Approved' },
-    { id: 4, employee: 'Sneha Patel', empId: 'EMP004', dept: 'QA', currentCTC: 1125000, proposedCTC: 1237500, hike: 10, reason: 'Quality improvement', effectiveDate: '2026-04-01', status: 'Pending' },
-    { id: 5, employee: 'Vikram Singh', empId: 'EMP005', dept: 'Support', currentCTC: 1050000, proposedCTC: 1155000, hike: 10, reason: 'Customer satisfaction scores', effectiveDate: '2026-04-01', status: 'Pending' },
-    { id: 6, employee: 'Ananya Iyer', empId: 'EMP006', dept: 'Business', currentCTC: 1425000, proposedCTC: 1596000, hike: 12, reason: 'Revenue impact', effectiveDate: '2026-04-01', status: 'Approved' },
-    { id: 7, employee: 'Kiran Desai', empId: 'EMP007', dept: 'Analytics', currentCTC: 1275000, proposedCTC: 1402500, hike: 10, reason: 'Data strategy contributions', effectiveDate: '2026-04-01', status: 'Approved' },
-    { id: 8, employee: 'Rohan Nair', empId: 'EMP008', dept: 'Infrastructure', currentCTC: 975000, proposedCTC: 1072500, hike: 10, reason: 'Network uptime achievements', effectiveDate: '2026-04-01', status: 'Pending' },
-  ];
+  employees: any[] = [];
+  cycles: any[] = [];
+  revisions: RevisionRecord[] = [];
 
   newCycle = { name: '', year: '', budget: 10 };
   revForm = { empId: '', currentCTC: 0, proposedCTC: 0, hike: 0, reason: '', effectiveDate: '' };
 
-  get budgetTotal() { return this.revisions.reduce((s, r) => s + r.currentCTC * (this.activeCycle.budget / 100), 0); }
+  get activeCycle() { return this.cycles.find(c => c.active) || this.cycles[0] || { name: '', budget: 12 }; }
+  get budgetTotal() { return this.revisions.reduce((s, r) => s + r.currentCTC * ((this.activeCycle?.budget || 12) / 100), 0); }
   get budgetUsed() { return this.revisions.filter(r => r.status !== 'Rejected').reduce((s, r) => s + (r.proposedCTC - r.currentCTC), 0); }
-  get budgetUsedPct() { return this.budgetTotal ? (this.budgetUsed / this.budgetTotal) * 100 : 0; }
+  get budgetUsedPct() { return this.budgetTotal ? Math.min((this.budgetUsed / this.budgetTotal) * 100, 100) : 0; }
   get approvedRevisions() { return this.revisions.filter(r => r.status === 'Approved').length; }
   get pendingRevisions() { return this.revisions.filter(r => r.status === 'Pending').length; }
   get avgHike() { const a = this.revisions.filter(r => r.status === 'Approved'); return a.length ? a.reduce((s, r) => s + r.hike, 0) / a.length : 0; }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadRevisions(); this.loadEmployees(); }
+
+  loadRevisions() {
+    this.http.get<any[]>(`${this.api}/compensation/reviews`).subscribe(data => {
+      this.revisions = (data || []).map(r => ({
+        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '', dept: r.department || '',
+        currentCTC: r.currentCTC || 0, proposedCTC: r.proposedCTC || 0, hike: r.hikePercentage || 0,
+        reason: r.reason || '', effectiveDate: r.effectiveDate?.slice(0, 10) || '', status: r.status || 'Pending'
+      }));
+    });
+  }
+
+  loadEmployees() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+      this.employees = (data || []).map(e => ({
+        empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+        dept: e.department || '', ctc: e.salary || 0
+      }));
+    });
+  }
 
   onEmpChange() {
     const emp = this.employees.find(e => e.empId === this.revForm.empId);
@@ -220,13 +215,19 @@ export class CompensationPlanningComponent implements OnInit {
 
   submitRevision() {
     if (!this.revForm.empId || !this.revForm.proposedCTC) { alert('Fill all fields'); return; }
-    const emp = this.employees.find(e => e.empId === this.revForm.empId)!;
-    this.revisions.push({ id: Date.now(), employee: emp.name, empId: emp.empId, dept: emp.dept, currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hike: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate, status: 'Pending' });
-    alert('Revision submitted for approval');
-    this.revForm = { empId: '', currentCTC: 0, proposedCTC: 0, hike: 0, reason: '', effectiveDate: '' };
+    const emp = this.employees.find(e => e.empId === this.revForm.empId);
+    const payload = { employeeCode: this.revForm.empId, employeeName: emp?.name, department: emp?.dept, currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hikePercentage: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate };
+    this.http.post<any>(`${this.api}/compensation/reviews`, payload).subscribe({
+      next: res => {
+        this.revisions.push({ id: res.id, employee: emp?.name || '', empId: this.revForm.empId, dept: emp?.dept || '', currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hike: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate, status: 'Pending' });
+        alert('Revision submitted for approval');
+        this.revForm = { empId: '', currentCTC: 0, proposedCTC: 0, hike: 0, reason: '', effectiveDate: '' };
+      },
+      error: err => alert(err?.error?.message || 'Failed to submit')
+    });
   }
 
-  createCycle() { if (!this.newCycle.name) { alert('Enter cycle name'); return; } this.cycles.push({ ...this.newCycle, eligible: 8, approved: 0, pending: 0, active: false, year: +this.newCycle.year, budget: this.newCycle.budget }); alert('Cycle created'); this.newCycle = { name: '', year: '', budget: 10 }; }
+  createCycle() { if (!this.newCycle.name) { alert('Enter cycle name'); return; } this.cycles.push({ name: this.newCycle.name, year: +this.newCycle.year, budget: this.newCycle.budget, eligible: 0, approved: 0, pending: 0, active: false }); alert('Cycle created'); this.newCycle = { name: '', year: '', budget: 10 }; }
   generateLetter(r: RevisionRecord) { alert(`Increment letter generated for ${r.employee}`); }
   exportRevisions() { alert('Revision data exported to CSV'); }
 }

@@ -154,18 +154,7 @@ export class SalaryBenchmarkingComponent implements OnInit {
 
   departments = ['Engineering', 'HR', 'Finance', 'Sales', 'Operations'];
 
-  roles: BenchmarkRole[] = [
-    { role: 'Software Engineer L3', dept: 'Engineering', yourMedian: 1100000, p25: 900000, p50: 1200000, p75: 1600000, comparaRatio: 0.92, belowMarket: true },
-    { role: 'Senior Developer', dept: 'Engineering', yourMedian: 1500000, p25: 1300000, p50: 1600000, p75: 2100000, comparaRatio: 0.94, belowMarket: true },
-    { role: 'DevOps Engineer', dept: 'Engineering', yourMedian: 1400000, p25: 1200000, p50: 1500000, p75: 2000000, comparaRatio: 0.93, belowMarket: true },
-    { role: 'QA Lead', dept: 'Engineering', yourMedian: 1100000, p25: 900000, p50: 1100000, p75: 1450000, comparaRatio: 1.00, belowMarket: false },
-    { role: 'Data Analyst', dept: 'Engineering', yourMedian: 1200000, p25: 950000, p50: 1150000, p75: 1500000, comparaRatio: 1.04, belowMarket: false },
-    { role: 'HR Manager', dept: 'HR', yourMedian: 1350000, p25: 1100000, p50: 1300000, p75: 1700000, comparaRatio: 1.04, belowMarket: false },
-    { role: 'Business Analyst', dept: 'Operations', yourMedian: 1400000, p25: 1150000, p50: 1400000, p75: 1800000, comparaRatio: 1.00, belowMarket: false },
-    { role: 'Network Admin', dept: 'Engineering', yourMedian: 950000, p25: 850000, p50: 1050000, p75: 1400000, comparaRatio: 0.90, belowMarket: true },
-    { role: 'Support Engineer', dept: 'Operations', yourMedian: 900000, p25: 750000, p50: 900000, p75: 1200000, comparaRatio: 1.00, belowMarket: false },
-    { role: 'Product Manager', dept: 'Operations', yourMedian: 1800000, p25: 1800000, p50: 2200000, p75: 3000000, comparaRatio: 0.82, belowMarket: true },
-  ];
+  roles: BenchmarkRole[] = [];
 
   get filteredRoles() {
     return this.roles.filter(r =>
@@ -179,7 +168,27 @@ export class SalaryBenchmarkingComponent implements OnInit {
   get aboveMarketCount() { return this.roles.filter(r => r.comparaRatio > 1.1).length; }
   get belowMarketRoles() { return this.roles.filter(r => r.belowMarket); }
 
-  ngOnInit() {}
+  ngOnInit() { this.loadBenchmarks(); }
+
+  loadBenchmarks() {
+    this.http.get<any[]>(`${this.api}/benchmarks`).subscribe(data => {
+      this.roles = (data || []).map(r => {
+        const yourMedian = r.yourMedianSalary || r.yourMedian || 0;
+        const p50 = r.marketP50 || r.p50 || 0;
+        const comparaRatio = p50 ? +(yourMedian / p50).toFixed(2) : 1;
+        return {
+          role: r.role || r.jobTitle || '',
+          dept: r.department || r.dept || '',
+          yourMedian,
+          p25: r.marketP25 || r.p25 || 0,
+          p50,
+          p75: r.marketP75 || r.p75 || 0,
+          comparaRatio,
+          belowMarket: comparaRatio < 0.95
+        };
+      });
+    });
+  }
 
   importData() { alert(`Market data from "${this.importSource}" imported successfully`); }
 }

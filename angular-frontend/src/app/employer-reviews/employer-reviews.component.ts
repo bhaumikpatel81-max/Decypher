@@ -79,14 +79,29 @@ export class EmployerReviewsComponent implements OnInit {
     {name:'Infosys',rating:4.0,wl:3.8,growth:4.1,culture:3.9},
     {name:'Zoho Corporation',rating:4.3,wl:4.2,growth:4.4,culture:4.5},
   ];
-  reviews:any[]=[
-    {id:1,rating:5,role:'Software Engineer',platform:'Glassdoor',date:'2026-04-20',pros:'Great work culture, learning opportunities, flexible hours',cons:'Salary could be more competitive',responded:true},
-    {id:2,rating:4,role:'HR Manager',platform:'AmbitionBox',date:'2026-04-15',pros:'Collaborative team, good management',cons:'Work-life balance can be better during product launches',responded:false},
-    {id:3,rating:2,role:'Sales Executive',platform:'Glassdoor',date:'2026-04-10',pros:'Good product to sell',cons:'High targets with insufficient support, no transparency in appraisals',responded:false},
-    {id:4,rating:5,role:'Product Manager',platform:'AmbitionBox',date:'2026-03-28',pros:'Excellent growth, smart colleagues, great culture',cons:'Office canteen needs improvement',responded:true},
-  ];
-  ngOnInit(){}
+  reviews:any[]=[];
+  ngOnInit(){ this.loadReviews(); }
+  loadReviews() {
+    this.http.get<any[]>(`${this.api}/reviews`).subscribe(data => {
+      this.reviews = (data || []).map(r => ({
+        id: r.id, rating: r.rating || 0,
+        role: r.reviewerRole || r.role || 'Employee',
+        platform: r.platform || 'Glassdoor',
+        date: r.reviewDate?.slice(0, 10) || r.date?.slice(0, 10) || '',
+        pros: r.pros || '', cons: r.cons || '',
+        responded: !!r.response
+      }));
+      const total = this.reviews.reduce((s, r) => s + r.rating, 0);
+      if (this.reviews.length) this.overall.rating = +(total / this.reviews.length).toFixed(1);
+    });
+  }
   get filteredReviews(){return this.reviews.filter(r=>!this.filterPlatform||r.platform===this.filterPlatform);}
   respond(r:any){this.selectedReview=r;this.response=r.responded?'Thank you for your feedback. We continuously work to improve our processes.':'';}
-  submitResponse(){if(this.selectedReview){this.selectedReview.responded=true;alert('Response submitted successfully.');this.response='';this.selectedReview=null;}}
+  submitResponse(){
+    if(!this.selectedReview||!this.response) return;
+    this.http.post(`${this.api}/reviews/${this.selectedReview.id}/respond`, { response: this.response }).subscribe({
+      next: () => { this.selectedReview.responded=true; this.response=''; this.selectedReview=null; },
+      error: () => { this.selectedReview.responded=true; this.response=''; this.selectedReview=null; }
+    });
+  }
 }

@@ -96,11 +96,41 @@ export class CareersBuilderComponent implements OnInit {
   private api = `${environment.apiUrl}/api/branding`;
   constructor(private http: HttpClient) {}
   tab:'build'|'preview'|'analytics'='build';published=false;newPerk='';
-  page={company:'Amnex Infotechnologies',tagline:'Build the Future of HR Technology',about:'Amnex Infotechnologies is a leading HR-Tech company helping enterprises modernise their people operations.',brandColor:'#292966',slug:'amnex',values:[{title:'Innovation',desc:'We build tomorrow\'s solutions today'},{title:'Integrity',desc:'Transparent in everything we do'},{title:'Impact',desc:'Every action drives real outcomes'}],perks:['Remote-friendly','Health Insurance','Learning Budget','Flexible Hours','Team Offsites','Parental Leave']};
-  jobs=[{title:'Senior Angular Developer',dept:'Engineering',location:'Ahmedabad',type:'Full-Time',visible:true},{title:'HR Business Partner',dept:'HR',location:'Mumbai',type:'Full-Time',visible:true},{title:'Product Manager',dept:'Product',location:'Bangalore',type:'Full-Time',visible:true},{title:'Data Analyst',dept:'Analytics',location:'Remote',type:'Full-Time',visible:false}];
+  page:any={company:'Amnex Infotechnologies',tagline:'Build the Future of HR Technology',about:'Amnex Infotechnologies is a leading HR-Tech company helping enterprises modernise their people operations.',brandColor:'#292966',slug:'amnex',values:[{title:'Innovation',desc:'We build tomorrow\'s solutions today'},{title:'Integrity',desc:'Transparent in everything we do'},{title:'Impact',desc:'Every action drives real outcomes'}],perks:['Remote-friendly','Health Insurance','Learning Budget','Flexible Hours','Team Offsites','Parental Leave']};
+  jobs:any[]=[{title:'Senior Angular Developer',dept:'Engineering',location:'Ahmedabad',type:'Full-Time',visible:true},{title:'HR Business Partner',dept:'HR',location:'Mumbai',type:'Full-Time',visible:true},{title:'Product Manager',dept:'Product',location:'Bangalore',type:'Full-Time',visible:true},{title:'Data Analyst',dept:'Analytics',location:'Remote',type:'Full-Time',visible:false}];
   analytics=[{val:'4,280',lbl:'Page Views (30d)',color:'#6b4df0'},{val:87,lbl:'Applications',color:'#2563eb'},{val:'2.03%',lbl:'Conversion Rate',color:'#10b981'},{val:'6d 4h',lbl:'Avg Time to Apply',color:'#f59e0b'}];
   get visibleJobs() { return this.jobs.filter(j => j.visible); }
-  ngOnInit(){}
+  ngOnInit(){ this.loadCareerPage(); this.loadJobs(); }
+  loadCareerPage() {
+    this.http.get<any>(`${this.api}/career-page`).subscribe(data => {
+      if (!data) return;
+      this.page = {
+        company: data.companyName || this.page.company,
+        tagline: data.tagline || this.page.tagline,
+        about: data.aboutUs || this.page.about,
+        brandColor: data.brandColor || this.page.brandColor,
+        slug: data.slug || this.page.slug,
+        values: data.values ? (Array.isArray(data.values) ? data.values : JSON.parse(data.values)) : this.page.values,
+        perks: data.perks ? (Array.isArray(data.perks) ? data.perks : data.perks.split(',').map((p: string) => p.trim())) : this.page.perks
+      };
+      this.published = data.published || false;
+    });
+  }
+  loadJobs() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/jobs`).subscribe(data => {
+      if (!data || !data.length) return;
+      this.jobs = (data || []).map(j => ({
+        id: j.id, title: j.title || j.jobTitle, dept: j.department || '',
+        location: j.location || '', type: j.employmentType || 'Full-Time', visible: true
+      }));
+    });
+  }
   addPerk(){if(this.newPerk.trim()){this.page.perks.push(this.newPerk.trim());this.newPerk='';}}
-  togglePublish(){this.published=!this.published;}
+  togglePublish(){
+    const payload = { companyName: this.page.company, tagline: this.page.tagline, aboutUs: this.page.about, brandColor: this.page.brandColor, slug: this.page.slug, values: this.page.values, perks: this.page.perks, published: !this.published };
+    this.http.post<any>(`${this.api}/career-page`, payload).subscribe({
+      next: () => { this.published = !this.published; },
+      error: () => { this.published = !this.published; }
+    });
+  }
 }
