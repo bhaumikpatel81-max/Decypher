@@ -747,9 +747,21 @@ export class AppComponent implements OnInit {
 
   login() {
     this.loginError = '';
+    if (!this.email || !this.password) {
+      this.loginError = 'Please enter your email and password.';
+      return;
+    }
     this.authService.login(this.email, this.password).subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: err => this.loginError = err?.error?.error || 'Login failed'
+      error: err => {
+        if (err.status === 0) {
+          this.loginError = 'Cannot connect to server. Please try again in a moment.';
+        } else if (err.status === 503) {
+          this.loginError = 'Service temporarily unavailable. Please try again shortly.';
+        } else {
+          this.loginError = err?.error?.error || 'Incorrect email or password.';
+        }
+      }
     });
   }
 
@@ -758,7 +770,13 @@ export class AppComponent implements OnInit {
     this.loginError = '';
     this.authService.guestLogin().subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: () => this.loginError = 'Guest login failed'
+      error: err => {
+        if (err.status === 0) {
+          this.loginError = 'Cannot connect to server. Please try again in a moment.';
+        } else {
+          this.loginError = 'Guest login is currently unavailable.';
+        }
+      }
     });
   }
 

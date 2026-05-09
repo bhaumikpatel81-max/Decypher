@@ -158,7 +158,8 @@ builder.Services.AddCors(options =>
     {
         policy.SetIsOriginAllowed(origin =>
             {
-                if (builder.Environment.IsDevelopment())
+                // Wildcard in config or development → allow all localhost origins
+                if (allowedOrigins.Contains("*") || builder.Environment.IsDevelopment())
                     return new Uri(origin).Host == "localhost";
                 return allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
             })
@@ -1512,6 +1513,10 @@ else
     app.UseDeveloperExceptionPage();
 }
 
+// CORS must come before UseRouting so OPTIONS preflights are handled
+// before routing determines there is no OPTIONS endpoint to match.
+app.UseCors("AllowFrontend");
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -1519,9 +1524,6 @@ app.UseResponseCompression();
 app.UseResponseCaching();
 
 app.UseRouting();
-
-// Use CORS
-app.UseCors("AllowFrontend");
 
 app.UseRateLimiter();
 

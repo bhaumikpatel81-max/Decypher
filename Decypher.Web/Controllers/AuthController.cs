@@ -44,12 +44,18 @@ public class AuthController : ControllerBase
         try
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null || !user.IsActive)
-                return Unauthorized(new { error = "Invalid credentials" });
+            if (user == null)
+                return Unauthorized(new { error = "No account found with this email address." });
+            if (!user.IsActive)
+                return Unauthorized(new { error = "This account has been deactivated. Please contact your administrator." });
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
             if (!result.Succeeded)
-                return Unauthorized(new { error = "Invalid credentials" });
+            {
+                if (result.IsLockedOut)
+                    return Unauthorized(new { error = "Account locked due to multiple failed attempts. Try again in a few minutes." });
+                return Unauthorized(new { error = "Incorrect password. Please try again." });
+            }
 
             user.LastLoginAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
