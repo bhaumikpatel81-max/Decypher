@@ -16,6 +16,8 @@
   --brand-violet-300: #a98fff;
   --brand-violet-400: #8a6bff;
   --brand-violet-500: #6b4df0;  /* PRIMARY */
+  --primary: #6b4df0;
+  --primary-hover: #5a3edb;
   --brand-violet-600: #5a3edb;
   --brand-violet-700: #4a32b8;
   --brand-violet-800: #3a2791;

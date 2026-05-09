@@ -23,6 +23,26 @@ interface ReviewRecord {
         </div>
       </div>
 
+      <!-- Summary KPI Row -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px;">
+        <div class="kpi-card">
+          <div class="kpi-icon-box" style="background:rgba(107,77,240,.1);color:#6b4df0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#6b4df0;">{{reviews.length}}</div>
+          <div class="kpi-lbl">Total Reviews</div>
+          <div class="kpi-sub">This cycle</div>
+        </div>
+        <div *ngFor="let s of statusSummary" class="kpi-card">
+          <div class="kpi-icon-box" [style.background]="s.color+'1a'" [style.color]="s.color">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="kpi-val" [style.color]="s.color">{{s.count}}</div>
+          <div class="kpi-lbl">{{s.label}}</div>
+          <div class="kpi-sub">{{s.count === 1 ? 'review' : 'reviews'}}</div>
+        </div>
+      </div>
+
       <!-- Cycle Selector -->
       <div class="card" style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
         <div>
@@ -33,12 +53,6 @@ interface ReviewRecord {
         </div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary btn-sm" (click)="showCycleForm=!showCycleForm">+ New Cycle</button>
-        </div>
-        <div style="margin-left:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
-          <div *ngFor="let s of statusSummary" style="text-align:center;padding:8px 16px;background:var(--surface-alt);border-radius:8px;">
-            <div style="font-weight:700;font-size:18px;" [style.color]="s.color">{{s.count}}</div>
-            <div style="font-size:11px;color:var(--text-3);">{{s.label}}</div>
-          </div>
         </div>
       </div>
 
@@ -157,6 +171,10 @@ interface ReviewRecord {
   `,
   styles: [`
     .kpi-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center; }
+    .kpi-icon-box { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px; }
+    .kpi-val { font-size:28px;font-weight:800; }
+    .kpi-lbl { font-size:12px;color:var(--text-3);margin-top:4px; }
+    .kpi-sub { font-size:11px;color:var(--text-3);margin-top:3px; }
     .rating-badge { width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
     .rating-badge.high { background:#d1fae5;color:#065f46; }
     .rating-badge.mid { background:rgba(107,77,240,.1);color:#6b4df0; }

@@ -25,10 +25,38 @@ interface Course {
 
       <!-- KPIs -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-        <div class="kpi-card"><div class="kpi-val" style="color:#6b4df0;">{{totalHours}}</div><div class="kpi-lbl">Hours Logged</div></div>
-        <div class="kpi-card"><div class="kpi-val" style="color:#10b981;">{{completedCourses}}</div><div class="kpi-lbl">Courses Completed</div></div>
-        <div class="kpi-card"><div class="kpi-val" style="color:#f59e0b;">{{passRate}}%</div><div class="kpi-lbl">Pass Rate</div></div>
-        <div class="kpi-card"><div class="kpi-val" style="color:#3b82f6;">{{courses.length}}</div><div class="kpi-lbl">Total Courses</div></div>
+        <div class="kpi-card">
+          <div class="kpi-icon-box" style="background:rgba(107,77,240,.1);color:#6b4df0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#6b4df0;">{{totalHours}}</div>
+          <div class="kpi-lbl">Hours Logged</div>
+          <div class="kpi-sub">Total learning time</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-box" style="background:rgba(16,185,129,.1);color:#10b981;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#10b981;">{{completedCourses}}</div>
+          <div class="kpi-lbl">Courses Completed</div>
+          <div class="kpi-sub">By your team</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-box" style="background:rgba(245,158,11,.1);color:#f59e0b;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#f59e0b;">{{passRate}}%</div>
+          <div class="kpi-lbl">Pass Rate</div>
+          <div class="kpi-sub">Course completion rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-box" style="background:rgba(59,130,246,.1);color:#3b82f6;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#3b82f6;">{{courses.length}}</div>
+          <div class="kpi-lbl">Total Courses</div>
+          <div class="kpi-sub">In catalogue</div>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -122,6 +150,8 @@ interface Course {
     .kpi-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center; }
     .kpi-val { font-size:28px;font-weight:800; }
     .kpi-lbl { font-size:12px;color:var(--text-3);margin-top:4px; }
+    .kpi-sub { font-size:11px;color:var(--text-3);margin-top:3px; }
+    .kpi-icon-box { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px; }
     .course-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:box-shadow .2s; }
     .course-card:hover { box-shadow:0 4px 20px rgba(107,77,240,.12); }
     .course-type-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700; }

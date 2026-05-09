@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -40,20 +41,27 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             return BadRequest(new { error = "Email and password are required" });
 
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null || !user.IsActive)
-            return Unauthorized(new { error = "Invalid credentials" });
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null || !user.IsActive)
+                return Unauthorized(new { error = "Invalid credentials" });
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
-        if (!result.Succeeded)
-            return Unauthorized(new { error = "Invalid credentials" });
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+            if (!result.Succeeded)
+                return Unauthorized(new { error = "Invalid credentials" });
 
-        user.LastLoginAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
+            user.LastLoginAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
 
-        var token   = GenerateJwtToken(user);
-        var refresh = await CreateRefreshTokenAsync(user.Id, GetClientIp());
-        return Ok(new { token, refreshToken = refresh.Token, user = MapToCurrentUser(user) });
+            var token   = GenerateJwtToken(user);
+            var refresh = await CreateRefreshTokenAsync(user.Id, GetClientIp());
+            return Ok(new { token, refreshToken = refresh.Token, user = MapToCurrentUser(user) });
+        }
+        catch (Exception ex) when (ex is Npgsql.NpgsqlException || ex is InvalidOperationException { InnerException: Npgsql.NpgsqlException })
+        {
+            return StatusCode(503, new { error = "Service temporarily unavailable. Please try again in a moment." });
+        }
     }
 
     [HttpPost("guest")]

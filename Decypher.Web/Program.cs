@@ -1484,7 +1484,27 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    // For API paths, return a JSON error rather than redirecting to /Home/Error.
+    // Redirecting POST requests to /Home/Error causes a 405 because MapFallbackToFile
+    // only supports GET.
+    app.UseExceptionHandler(errApp =>
+    {
+        errApp.Run(async ctx =>
+        {
+            var exceptionHandlerFeature = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            var ex = exceptionHandlerFeature?.Error;
+            if (ctx.Request.Path.StartsWithSegments("/api"))
+            {
+                ctx.Response.StatusCode = 500;
+                ctx.Response.ContentType = "application/json";
+                await ctx.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred. Please try again." });
+            }
+            else
+            {
+                ctx.Response.Redirect("/");
+            }
+        });
+    });
     app.UseHsts();
 }
 else

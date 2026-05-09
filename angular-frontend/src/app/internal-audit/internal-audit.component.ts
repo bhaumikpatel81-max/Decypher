@@ -57,7 +57,7 @@ interface ReportDetail extends AuditReport {
   styles: [`
     .tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:24px; }
     .tab  { padding:10px 20px; cursor:pointer; font-weight:600; font-size:13px; color:var(--text-3); border-bottom:2px solid transparent; margin-bottom:-2px; }
-    .tab.active { color:var(--primary); border-color:var(--primary); }
+    .tab.active { color:#6b4df0; border-color:#6b4df0; }
     .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px; }
     .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:center; }
     .kpi-val  { font-size:28px; font-weight:800; }
@@ -83,7 +83,8 @@ interface ReportDetail extends AuditReport {
     .textarea  { min-height:80px; resize:vertical; }
     .input:focus,.select:focus,.textarea:focus { outline:none; border-color:var(--primary); }
     .btn       { padding:8px 18px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; border:none; }
-    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-primary { background:#6b4df0; color:#fff; }
+    .btn-primary:hover { background:#5a3edb; }
     .btn-ghost   { background:transparent; border:1.5px solid var(--border); color:var(--text); }
     .btn-danger  { background:#ef4444; color:#fff; }
     .btn-sm      { padding:5px 12px; font-size:12px; }
@@ -110,6 +111,22 @@ interface ReportDetail extends AuditReport {
     .mb-6          { margin-bottom:24px; }
     .tag-list { display:flex; flex-wrap:wrap; gap:6px; }
     .tag { padding:3px 10px; border-radius:20px; font-size:11px; background:rgba(107,77,240,.1); color:#6b4df0; font-weight:600; }
+    .empty-state { display:flex; flex-direction:column; align-items:center; text-align:center; padding:56px 24px; background:var(--surface); border:1.5px dashed var(--border); border-radius:16px; margin-top:8px; }
+    .empty-icon-wrap { width:88px; height:88px; border-radius:50%; background:rgba(107,77,240,.08); display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+    .empty-title { font-size:20px; font-weight:800; color:var(--text); margin:0 0 8px; }
+    .empty-desc { font-size:14px; color:var(--text-3); max-width:420px; line-height:1.7; margin-bottom:20px; }
+    .empty-hint { font-size:13px; color:var(--text-3); margin-top:10px; }
+    .empty-features { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; margin-top:24px; text-align:left; }
+    .empty-feature { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2); }
+    .ef-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .kpi-icon-box { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
+    .kpi-sub { font-size:11px; color:var(--text-3); margin-top:4px; }
+    .card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+    .card-title { font-size:13px; font-weight:700; }
+    .card-badge { background:rgba(107,77,240,.1); color:#6b4df0; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+    .recent-report-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:8px; cursor:pointer; border:1px solid var(--border); gap:12px; transition:background .15s; }
+    .recent-report-row:hover { background:var(--surface-alt); }
+    .obs-chip { font-size:11px; font-weight:700; color:#6b4df0; background:rgba(107,77,240,.08); padding:2px 8px; border-radius:20px; white-space:nowrap; }
   `]
 })
 export class InternalAuditComponent implements OnInit {
@@ -359,6 +376,19 @@ export class InternalAuditComponent implements OnInit {
   get totalMediumRisk(): number { return this.reports.reduce((s, r) => s + r.mediumRiskCount, 0); }
   get totalLowRisk(): number { return this.reports.reduce((s, r) => s + r.lowRiskCount, 0); }
   get recentReports(): AuditReport[] { return this.reports.slice(0, 5); }
+  get openObservations(): number { return this.totalObservations - this.totalClosed; }
+  get avgObsPerReport(): string {
+    if (!this.totalReports) return '0';
+    return (this.totalObservations / this.totalReports).toFixed(1);
+  }
+  get highRiskPct(): string {
+    if (!this.totalObservations) return '0%';
+    return Math.round((this.totalHighRisk / this.totalObservations) * 100) + '%';
+  }
+  get closureRatePct(): string {
+    if (!this.totalObservations) return '0%';
+    return Math.round((this.totalClosed / this.totalObservations) * 100) + '%';
+  }
 
   badgeClass(status: string): string {
     const map: Record<string, string> = {
