@@ -1,6 +1,6 @@
-using Decypher.Web.Data;
+﻿using Decypher.Web.Data;
 using Decypher.Web.Models;
-using Decypher.Web.Models.HRModels;
+using Decypher.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -106,3 +106,4 @@ public class PortalController(ApplicationDbContext db) : ControllerBase
 }
 
 public record AnnouncementPatch(string? Title, string? Body, bool? IsPinned, DateTime? ExpiresAt);
+

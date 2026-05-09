@@ -1,6 +1,6 @@
-using Decypher.Web.Data;
+﻿using Decypher.Web.Data;
 using Decypher.Web.Models;
-using Decypher.Web.Models.HRModels;
+using Decypher.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +20,7 @@ public class WorkflowController(ApplicationDbContext db) : ControllerBase
     private string ActorId   => User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
     private string ActorName => User.FindFirst("fullName")?.Value ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "System";
 
-    // ── Definitions ──────────────────────────────────────────────────────────
+    // â”€â”€ Definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet("definitions")]
     public async Task<IActionResult> GetDefinitions([FromQuery] string? entityType)
@@ -70,7 +70,7 @@ public class WorkflowController(ApplicationDbContext db) : ControllerBase
         return NoContent();
     }
 
-    // ── Instances ─────────────────────────────────────────────────────────────
+    // â”€â”€ Instances â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [HttpGet("instances")]
     public async Task<IActionResult> GetInstances([FromQuery] string? entityType, [FromQuery] string? status, [FromQuery] Guid? entityId)
@@ -95,7 +95,7 @@ public class WorkflowController(ApplicationDbContext db) : ControllerBase
         return inst == null ? NotFound() : Ok(inst);
     }
 
-    // POST /api/workflows/start — start a workflow instance for an entity
+    // POST /api/workflows/start â€” start a workflow instance for an entity
     [HttpPost("start")]
     public async Task<IActionResult> StartWorkflow([FromBody] StartWorkflowRequest req)
     {
@@ -202,7 +202,7 @@ public class WorkflowController(ApplicationDbContext db) : ControllerBase
         return Ok(inst);
     }
 
-    // GET /api/workflows/sla-breaches — instances past their SLA deadline
+    // GET /api/workflows/sla-breaches â€” instances past their SLA deadline
     [HttpGet("sla-breaches")]
     public async Task<IActionResult> GetSLABreaches()
     {
@@ -227,3 +227,4 @@ public class WorkflowController(ApplicationDbContext db) : ControllerBase
 
 public record StartWorkflowRequest(Guid DefinitionId, Guid EntityId, string? Notes);
 public record WorkflowActionRequest(string? Notes);
+

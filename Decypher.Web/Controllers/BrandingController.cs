@@ -1,4 +1,4 @@
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ public class BrandingController(
     ICareerPageService careerPageService,
     ICampusService campusService) : ControllerBase
 {
-    // ── Employer Reviews ──────────────────────────────────────────────────────
+    // â”€â”€ Employer Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("reviews")]
     public async Task<IActionResult> GetReviews(
         [FromQuery] int? rating, [FromQuery] string? status, [FromQuery] string? search)
@@ -48,7 +48,7 @@ public class BrandingController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Talent Community ──────────────────────────────────────────────────────
+    // â”€â”€ Talent Community â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("talent-community")]
     public async Task<IActionResult> GetMembers(
         [FromQuery] string? source, [FromQuery] string? status, [FromQuery] string? search)
@@ -95,7 +95,7 @@ public class BrandingController(
         return Ok(new { sent = true, matchedCount = matched, message = req.Message });
     }
 
-    // ── Career Page ───────────────────────────────────────────────────────────
+    // â”€â”€ Career Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("career-page")]
     public async Task<IActionResult> GetCareerPage()
         => Ok(await careerPageService.GetCareerPageAsync());
@@ -104,7 +104,7 @@ public class BrandingController(
     public async Task<IActionResult> SaveCareerPage([FromBody] CareerPage page)
         => Ok(await careerPageService.SaveCareerPageAsync(page));
 
-    // ── Campus Events ─────────────────────────────────────────────────────────
+    // â”€â”€ Campus Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("campus")]
     public async Task<IActionResult> GetCampusEvents(
         [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] string? status)
@@ -142,22 +142,22 @@ public class BrandingController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Social Channels ───────────────────────────────────────────────────────
+    // â”€â”€ Social Channels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("social-channels")]
     public IActionResult GetSocialChannels()
     {
         var channels = new[]
         {
-            new { Name = "LinkedIn",   Icon = "💼", Color = "#0a66c2", Connected = true,  Applications = 142, Hires = 18, Spend = 45000, Cph = 2500 },
-            new { Name = "Naukri",     Icon = "🟠", Color = "#f97316", Connected = true,  Applications = 98,  Hires = 12, Spend = 18000, Cph = 1500 },
-            new { Name = "Indeed",     Icon = "🔵", Color = "#2564f4", Connected = true,  Applications = 76,  Hires = 8,  Spend = 12000, Cph = 1500 },
-            new { Name = "Monster",    Icon = "🟢", Color = "#5b2d8e", Connected = false, Applications = 34,  Hires = 3,  Spend = 8000,  Cph = 2667 },
-            new { Name = "Twitter/X",  Icon = "🐦", Color = "#000000", Connected = false, Applications = 18,  Hires = 1,  Spend = 5000,  Cph = 5000 },
+            new { Name = "LinkedIn",   Icon = "ðŸ’¼", Color = "#0a66c2", Connected = true,  Applications = 142, Hires = 18, Spend = 45000, Cph = 2500 },
+            new { Name = "Naukri",     Icon = "ðŸŸ ", Color = "#f97316", Connected = true,  Applications = 98,  Hires = 12, Spend = 18000, Cph = 1500 },
+            new { Name = "Indeed",     Icon = "ðŸ”µ", Color = "#2564f4", Connected = true,  Applications = 76,  Hires = 8,  Spend = 12000, Cph = 1500 },
+            new { Name = "Monster",    Icon = "ðŸŸ¢", Color = "#5b2d8e", Connected = false, Applications = 34,  Hires = 3,  Spend = 8000,  Cph = 2667 },
+            new { Name = "Twitter/X",  Icon = "ðŸ¦", Color = "#000000", Connected = false, Applications = 18,  Hires = 1,  Spend = 5000,  Cph = 5000 },
         };
         return Ok(channels);
     }
 
-    // ── Employee Advocacy ─────────────────────────────────────────────────────
+    // â”€â”€ Employee Advocacy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("advocacy")]
     public IActionResult GetAdvocacy()
     {
@@ -178,8 +178,9 @@ public class BrandingController(
     }
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// â”€â”€ Request DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public record RespondRequest(string Response);
 public record StatusRequest(string Status);
 public record CampusStatusRequest(string Status, int? HiresCount);
 public record TalentAlertRequest(List<string>? SkillTags, string? Location, string Message);
+

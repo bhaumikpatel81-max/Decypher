@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using iTextDocument = iTextSharp.text.Document;
 
 namespace Decypher.Web.Controllers
 {
@@ -359,7 +360,7 @@ namespace Decypher.Web.Controllers
             if (report == null) return NotFound();
 
             using var ms = new MemoryStream();
-            var doc = new Document(PageSize.A4, 36, 36, 54, 36);
+            var doc = new iTextDocument(PageSize.A4, 36, 36, 54, 36);
             var writer = PdfWriter.GetInstance(doc, ms);
             doc.Open();
 
@@ -370,10 +371,10 @@ namespace Decypher.Web.Controllers
 
             var fontH1 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 20, navy);
             var fontH2 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 13, navy);
-            var fontH3 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.WHITE);
-            var fontBody = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
+            var fontH3 = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.White);
+            var fontBody = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.Black);
             var fontSmall = FontFactory.GetFont(FontFactory.HELVETICA, 8, gray3);
-            var fontBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+            var fontBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.Black);
             var fontAmber = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, amber);
 
             // Cover header
@@ -550,8 +551,8 @@ namespace Decypher.Web.Controllers
 
         private static void AddSummaryCell(PdfPTable table, string value, string label, BaseColor color)
         {
-            var fontVal = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.WHITE);
-            var fontLbl = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.WHITE);
+            var fontVal = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.White);
+            var fontLbl = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.White);
             var cell = new PdfPCell();
             cell.BackgroundColor = color;
             cell.AddElement(new Paragraph(value, fontVal) { Alignment = Element.ALIGN_CENTER });

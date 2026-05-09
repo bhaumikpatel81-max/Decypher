@@ -281,7 +281,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetIssuedLettersAsync(Guid? employeeId, string tenantId)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.IssuedLetters.AsNoTracking()
+            IQueryable<IssuedLetter> q = _ctx.IssuedLetters.AsNoTracking()
                 .Include(il => il.Template)
                 .Include(il => il.Employee);
 
@@ -364,7 +364,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetAllAsync(string tenantId, string? status = null)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.ExitRequests.AsNoTracking().Include(e => e.Employee);
+            IQueryable<ExitRequest> q = _ctx.ExitRequests.AsNoTracking().Include(e => e.Employee);
             if (!string.IsNullOrEmpty(status)) q = q.Where(e => e.Status == status);
 
             return await q.OrderByDescending(e => e.ResignationDate)

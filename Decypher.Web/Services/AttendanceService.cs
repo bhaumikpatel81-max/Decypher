@@ -76,7 +76,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetLeaveRequestsAsync(string tenantId, Guid? employeeId, string? status)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.LeaveRequests.AsNoTracking()
+            IQueryable<LeaveRequest> q = _ctx.LeaveRequests.AsNoTracking()
                 .Include(r => r.Employee)
                 .Include(r => r.LeaveType);
 
@@ -225,7 +225,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetRecordsAsync(string tenantId, Guid? employeeId, DateTime? from, DateTime? to)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.AttendanceRecords.AsNoTracking().Include(r => r.Employee);
+            IQueryable<AttendanceRecord> q = _ctx.AttendanceRecords.AsNoTracking().Include(r => r.Employee);
             if (employeeId.HasValue) q = q.Where(r => r.EmployeeId == employeeId.Value);
             if (from.HasValue) q = q.Where(r => r.Date >= from.Value);
             if (to.HasValue) q = q.Where(r => r.Date <= to.Value);
@@ -434,7 +434,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetEmployeeShiftsAsync(string tenantId, Guid? employeeId)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.EmployeeShifts.AsNoTracking()
+            IQueryable<EmployeeShift> q = _ctx.EmployeeShifts.AsNoTracking()
                 .Include(es => es.Employee)
                 .Include(es => es.ShiftDefinition);
             if (employeeId.HasValue) q = q.Where(es => es.EmployeeId == employeeId.Value);
@@ -484,7 +484,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetEntriesAsync(string tenantId, Guid? employeeId, DateTime? from, DateTime? to, string? status)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.TimesheetEntries.AsNoTracking().Include(e => e.Employee);
+            IQueryable<TimesheetEntry> q = _ctx.TimesheetEntries.AsNoTracking().Include(e => e.Employee);
             if (employeeId.HasValue) q = q.Where(e => e.EmployeeId == employeeId.Value);
             if (from.HasValue) q = q.Where(e => e.Date >= from.Value);
             if (to.HasValue) q = q.Where(e => e.Date <= to.Value);
@@ -575,7 +575,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetRequestsAsync(string tenantId, Guid? employeeId, string? status)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.OvertimeRequests.AsNoTracking().Include(r => r.Employee);
+            IQueryable<OvertimeRequest> q = _ctx.OvertimeRequests.AsNoTracking().Include(r => r.Employee);
             if (employeeId.HasValue) q = q.Where(r => r.EmployeeId == employeeId.Value);
             if (!string.IsNullOrEmpty(status)) q = q.Where(r => r.Status == status);
 

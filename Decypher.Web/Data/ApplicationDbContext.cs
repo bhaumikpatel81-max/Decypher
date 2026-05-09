@@ -685,10 +685,10 @@ namespace Decypher.Web.Data
             builder.Entity<ContinuousFeedback>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => new { e.TenantId, e.ToEmployeeId });
+                entity.HasIndex(e => new { e.TenantId, e.RecipientEmployeeId });
                 entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
-                entity.HasOne(e => e.FromEmployee).WithMany().HasForeignKey(e => e.FromEmployeeId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(e => e.ToEmployee).WithMany().HasForeignKey(e => e.ToEmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.GiverEmployee).WithMany().HasForeignKey(e => e.GiverEmployeeId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.RecipientEmployee).WithMany().HasForeignKey(e => e.RecipientEmployeeId).OnDelete(DeleteBehavior.Restrict);
             });
 
             // ─── Learning ─────────────────────────────────────────────────────

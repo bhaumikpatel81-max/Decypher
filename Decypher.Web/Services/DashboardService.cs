@@ -190,12 +190,14 @@ namespace Decypher.Web.Services
 
             var hired = await _context.Candidates
                 .AsNoTracking()
-                .Where(c => c.Stage == "Joined" && !string.IsNullOrEmpty(c.JobTitle))
-                .Select(c => new { c.JobTitle, Days = (int)(DateTime.UtcNow - c.SubmittedDate).TotalDays })
+                .Include(c => c.Requirement)
+                .Where(c => c.Stage == "Joined")
+                .Select(c => new { JobTitle = c.Requirement.JobTitle, Days = (int)(DateTime.UtcNow - c.SubmittedDate).TotalDays })
                 .ToListAsync();
 
             const int target = 30;
             return hired
+                .Where(c => !string.IsNullOrEmpty(c.JobTitle))
                 .GroupBy(c => c.JobTitle)
                 .Select(g => new
                 {

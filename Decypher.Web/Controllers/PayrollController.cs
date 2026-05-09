@@ -1,5 +1,5 @@
-using Decypher.Web.Data;
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Data;
+using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ public class PayrollController(
     private string TenantId => User.FindFirst("tenantId")?.Value ?? string.Empty;
     private string UserId => User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-    // ── Salary Structure ──────────────────────────────────────────────────────
+    // â”€â”€ Salary Structure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("salary-components")]
     public async Task<IActionResult> GetComponents() => Ok(await salaryService.GetSalaryComponentsAsync(TenantId));
 
@@ -40,7 +40,7 @@ public class PayrollController(
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
-    // ── Payroll Runs ──────────────────────────────────────────────────────────
+    // â”€â”€ Payroll Runs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("runs")]
     public async Task<IActionResult> GetRuns()
         => Ok(await payrollRunService.GetRunsAsync(TenantId));
@@ -94,7 +94,7 @@ public class PayrollController(
         var ps = await db.Payslips.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         if (ps == null) return NotFound();
         var month = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(ps.Month);
-        var content = $"PAYSLIP — {month} {ps.Year}\n\n" +
+        var content = $"PAYSLIP â€” {month} {ps.Year}\n\n" +
                       $"Employee ID : {ps.EmployeeId}\n\n" +
                       $"EARNINGS\n" +
                       $"  Basic Salary       : {ps.BasicSalary:N2}\n" +
@@ -113,7 +113,7 @@ public class PayrollController(
         return File(bytes, "application/octet-stream", $"payslip_{month}_{ps.Year}.txt");
     }
 
-    // ── Expenses ──────────────────────────────────────────────────────────────
+    // â”€â”€ Expenses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("expenses")]
     public async Task<IActionResult> GetExpenses([FromQuery] Guid? employeeId, [FromQuery] string? status)
         => Ok(await expenseService.GetClaimsAsync(TenantId, employeeId, status));
@@ -129,7 +129,7 @@ public class PayrollController(
         return result == null ? NotFound() : Ok(result);
     }
 
-    // ── Compensation ──────────────────────────────────────────────────────────
+    // â”€â”€ Compensation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("compensation/reviews")]
     public async Task<IActionResult> GetCompReviews([FromQuery] Guid? employeeId)
         => Ok(await compensationService.GetCompensationReviewsAsync(TenantId, employeeId));
@@ -172,7 +172,7 @@ public class PayrollController(
     public async Task<IActionResult> CreateBenchmark([FromBody] SalaryBenchmark benchmark)
         => Created(string.Empty, await compensationService.CreateBenchmarkAsync(benchmark, TenantId, UserId));
 
-    // ── Tax & Statutory ───────────────────────────────────────────────────────
+    // â”€â”€ Tax & Statutory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("tax/declarations")]
     public async Task<IActionResult> GetDeclarations([FromQuery] Guid? employeeId, [FromQuery] string? fiscalYear)
         => Ok(await taxService.GetDeclarationsAsync(TenantId, employeeId, fiscalYear));
@@ -197,8 +197,9 @@ public class PayrollController(
     }
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// â”€â”€ Request DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public record ProcessPayrollRequest(int Month, int Year);
 public record ExpenseStatusRequest(string Status, Guid? ApprovedBy, string? Remarks);
 public record EnrollBenefitRequest(Guid EmployeeId, Guid BenefitPlanId);
 public record FilingStatusRequest(string Status, string? AcknowledgmentNumber);
+

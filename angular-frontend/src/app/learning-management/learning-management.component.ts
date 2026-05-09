@@ -185,6 +185,10 @@ export class LearningManagementComponent implements OnInit {
     });
   }
 
+  get totalHours(): number { return this.stats?.totalHours ?? 0; }
+  get completedCourses(): number { return this.stats?.completedCourses ?? 0; }
+  get passRate(): number { return this.stats?.passRate ?? 0; }
+
   enrollMsg = '';
 
   enrollCourse(c: Course) {

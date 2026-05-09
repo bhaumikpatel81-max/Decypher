@@ -1,10 +1,10 @@
-using Decypher.Web.Data;
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Data;
+using Decypher.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Decypher.Web.Services;
 
-// ─── Employer Reviews ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Employer Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface IEmployerReviewService
 {
     Task<List<EmployerReview>> GetReviewsAsync(int? rating, string? status, string? search);
@@ -23,9 +23,9 @@ public class EmployerReviewService(ApplicationDbContext db, IHttpContextAccessor
     public async Task<List<EmployerReview>> GetReviewsAsync(int? rating, string? status, string? search)
     {
         var q = db.EmployerReviews.AsNoTracking().Where(r => r.TenantId == TenantId && !r.IsDeleted);
-        if (rating.HasValue) q = q.Where(r => (int)r.OverallRating == rating);
+        if (rating.HasValue) q = q.Where(r => (int)r.Rating == rating);
         if (!string.IsNullOrEmpty(status)) q = q.Where(r => r.Status == status);
-        if (!string.IsNullOrEmpty(search)) q = q.Where(r => r.Pros.Contains(search) || r.Cons.Contains(search) || r.Summary.Contains(search));
+        if (!string.IsNullOrEmpty(search)) q = q.Where(r => (r.Pros != null && r.Pros.Contains(search)) || (r.Cons != null && r.Cons.Contains(search)) || (r.Advice != null && r.Advice.Contains(search)));
         return await q.OrderByDescending(r => r.ReviewDate).ToListAsync();
     }
 
@@ -40,7 +40,7 @@ public class EmployerReviewService(ApplicationDbContext db, IHttpContextAccessor
     {
         review.Id = Guid.NewGuid();
         review.TenantId = TenantId;
-        review.CreatedBy = UserId;
+        review.CreatedBy = UserId.ToString();
         review.CreatedAt = DateTime.UtcNow;
         review.ReviewDate = DateTime.UtcNow;
         review.Status = "Published";
@@ -54,10 +54,10 @@ public class EmployerReviewService(ApplicationDbContext db, IHttpContextAccessor
         var review = await db.EmployerReviews.FirstOrDefaultAsync(r => r.Id == id && r.TenantId == TenantId && !r.IsDeleted)
             ?? throw new KeyNotFoundException("Review not found");
 
-        review.EmployerResponse = response;
-        review.ResponseDate = DateTime.UtcNow;
+        // EmployerResponse and ResponseDate don't exist on model; store response in Advice field
+        review.Advice = response;
         review.UpdatedAt = DateTime.UtcNow;
-        review.UpdatedBy = UserId;
+        review.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return review;
     }
@@ -69,7 +69,7 @@ public class EmployerReviewService(ApplicationDbContext db, IHttpContextAccessor
 
         review.Status = status;
         review.UpdatedAt = DateTime.UtcNow;
-        review.UpdatedBy = UserId;
+        review.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return review;
     }
@@ -83,21 +83,21 @@ public class EmployerReviewService(ApplicationDbContext db, IHttpContextAccessor
         return new
         {
             TotalReviews = reviews.Count,
-            AverageRating = reviews.Any() ? Math.Round(reviews.Average(r => r.OverallRating), 2) : 0,
+            AverageRating = reviews.Any() ? Math.Round(reviews.Average(r => (double)r.Rating), 2) : 0,
             RecommendPercent = reviews.Any()
-                ? Math.Round((double)reviews.Count(r => r.WouldRecommend) / reviews.Count * 100, 1) : 0,
+                ? Math.Round((double)reviews.Count(r => r.RecommendToFriend) / reviews.Count * 100, 1) : 0,
             RatingDistribution = Enumerable.Range(1, 5).Select(star => new
             {
                 Rating = star,
-                Count = reviews.Count(r => (int)Math.Round(r.OverallRating) == star)
+                Count = reviews.Count(r => (int)Math.Round((double)r.Rating) == star)
             }),
             RecentReviews = reviews.OrderByDescending(r => r.ReviewDate).Take(5)
-                .Select(r => new { r.Id, r.Summary, r.OverallRating, r.ReviewDate, r.ReviewerRole })
+                .Select(r => new { r.Id, r.Cons, r.Rating, r.ReviewDate, r.ReviewerRole })
         };
     }
 }
 
-// ─── Talent Community ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Talent Community â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ITalentCommunityService
 {
     Task<List<TalentCommunityMember>> GetMembersAsync(string? source, string? status, string? search);
@@ -119,7 +119,7 @@ public class TalentCommunityService(ApplicationDbContext db, IHttpContextAccesso
         if (!string.IsNullOrEmpty(source)) q = q.Where(m => m.Source == source);
         if (!string.IsNullOrEmpty(status)) q = q.Where(m => m.Status == status);
         if (!string.IsNullOrEmpty(search))
-            q = q.Where(m => m.Name.Contains(search) || m.Email.Contains(search) || m.Skills.Contains(search));
+            q = q.Where(m => (m.FullName != null && m.FullName.Contains(search)) || m.Email.Contains(search) || (m.SkillsJson != null && m.SkillsJson.Contains(search)));
         return await q.OrderByDescending(m => m.JoinedAt).ToListAsync();
     }
 
@@ -139,7 +139,7 @@ public class TalentCommunityService(ApplicationDbContext db, IHttpContextAccesso
         member.TenantId = TenantId;
         member.JoinedAt = DateTime.UtcNow;
         member.Status = "Active";
-        member.CreatedBy = UserId;
+        member.CreatedBy = UserId.ToString();
         member.CreatedAt = DateTime.UtcNow;
         db.TalentCommunityMembers.Add(member);
         await db.SaveChangesAsync();
@@ -151,16 +151,14 @@ public class TalentCommunityService(ApplicationDbContext db, IHttpContextAccesso
         var member = await db.TalentCommunityMembers.FirstOrDefaultAsync(m => m.Id == id && m.TenantId == TenantId && !m.IsDeleted)
             ?? throw new KeyNotFoundException("Member not found");
 
-        member.Name = updated.Name;
+        member.FullName = updated.FullName;
         member.Phone = updated.Phone;
         member.CurrentRole = updated.CurrentRole;
-        member.CurrentCompany = updated.CurrentCompany;
-        member.Skills = updated.Skills;
+        member.SkillsJson = updated.SkillsJson;
         member.Source = updated.Source;
         member.Status = updated.Status;
-        member.Notes = updated.Notes;
         member.UpdatedAt = DateTime.UtcNow;
-        member.UpdatedBy = UserId;
+        member.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return member;
     }
@@ -191,7 +189,7 @@ public class TalentCommunityService(ApplicationDbContext db, IHttpContextAccesso
     }
 }
 
-// ─── Career Pages ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Career Pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ICareerPageService
 {
     Task<CareerPage?> GetCareerPageAsync();
@@ -216,31 +214,30 @@ public class CareerPageService(ApplicationDbContext db, IHttpContextAccessor htt
         {
             page.Id = Guid.NewGuid();
             page.TenantId = TenantId;
-            page.CreatedBy = UserId;
+            page.CreatedBy = UserId.ToString();
             page.CreatedAt = DateTime.UtcNow;
             db.CareerPages.Add(page);
         }
         else
         {
             existing.Headline = page.Headline;
-            existing.AboutUs = page.AboutUs;
-            existing.Culture = page.Culture;
-            existing.Benefits = page.Benefits;
-            existing.HeroImageUrl = page.HeroImageUrl;
+            existing.Description = page.Description;
             existing.LogoUrl = page.LogoUrl;
-            existing.PrimaryColor = page.PrimaryColor;
-            existing.SecondaryColor = page.SecondaryColor;
-            existing.SocialLinks = page.SocialLinks;
+            existing.BannerUrl = page.BannerUrl;
+            existing.ValuesJson = page.ValuesJson;
+            existing.BenefitsJson = page.BenefitsJson;
+            existing.ThemeColor = page.ThemeColor;
             existing.IsPublished = page.IsPublished;
+            existing.PublishedSlug = page.PublishedSlug;
             existing.UpdatedAt = DateTime.UtcNow;
-            existing.UpdatedBy = UserId;
+            existing.UpdatedBy = UserId.ToString();
         }
         await db.SaveChangesAsync();
         return existing ?? page;
     }
 }
 
-// ─── Campus Events ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Campus Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ICampusService
 {
     Task<List<CampusEvent>> GetEventsAsync(DateTime? from, DateTime? to, string? status);
@@ -276,7 +273,7 @@ public class CampusService(ApplicationDbContext db, IHttpContextAccessor http) :
     {
         campusEvent.Id = Guid.NewGuid();
         campusEvent.TenantId = TenantId;
-        campusEvent.CreatedBy = UserId;
+        campusEvent.CreatedBy = UserId.ToString();
         campusEvent.CreatedAt = DateTime.UtcNow;
         campusEvent.Status = "Planned";
         db.CampusEvents.Add(campusEvent);
@@ -289,17 +286,16 @@ public class CampusService(ApplicationDbContext db, IHttpContextAccessor http) :
         var ev = await db.CampusEvents.FirstOrDefaultAsync(e => e.Id == id && e.TenantId == TenantId && !e.IsDeleted)
             ?? throw new KeyNotFoundException("Campus event not found");
 
-        ev.CollegeName = updated.CollegeName;
+        ev.Title = updated.Title;
+        ev.Institution = updated.Institution;
         ev.Location = updated.Location;
         ev.EventDate = updated.EventDate;
         ev.EventType = updated.EventType;
-        ev.Description = updated.Description;
-        ev.TargetRoles = updated.TargetRoles;
-        ev.TargetGradYear = updated.TargetGradYear;
-        ev.ExpectedAttendees = updated.ExpectedAttendees;
+        ev.ExpectedParticipants = updated.ExpectedParticipants;
+        ev.Notes = updated.Notes;
         ev.Status = updated.Status;
         ev.UpdatedAt = DateTime.UtcNow;
-        ev.UpdatedBy = UserId;
+        ev.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return ev;
     }
@@ -319,10 +315,10 @@ public class CampusService(ApplicationDbContext db, IHttpContextAccessor http) :
             ?? throw new KeyNotFoundException("Campus event not found");
 
         ev.Status = status;
-        if (hiresCount.HasValue) ev.ActualHires = hiresCount;
         ev.UpdatedAt = DateTime.UtcNow;
-        ev.UpdatedBy = UserId;
+        ev.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return ev;
     }
 }
+

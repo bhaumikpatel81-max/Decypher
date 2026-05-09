@@ -1,4 +1,4 @@
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +13,7 @@ public class LearningController(
     ITrainingService trainingService,
     ISkillService skillService) : ControllerBase
 {
-    // ── Courses / LMS ─────────────────────────────────────────────────────────
+    // â”€â”€ Courses / LMS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("courses")]
     public async Task<IActionResult> GetCourses(
         [FromQuery] string? category, [FromQuery] string? status, [FromQuery] string? search)
@@ -47,7 +47,7 @@ public class LearningController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Enrollments ───────────────────────────────────────────────────────────
+    // â”€â”€ Enrollments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("enrollments")]
     public async Task<IActionResult> GetEnrollments(
         [FromQuery] Guid? employeeId, [FromQuery] Guid? courseId, [FromQuery] string? status)
@@ -74,7 +74,7 @@ public class LearningController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Training Events ───────────────────────────────────────────────────────
+    // â”€â”€ Training Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("training")]
     public async Task<IActionResult> GetTrainingEvents(
         [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] string? mode)
@@ -123,7 +123,7 @@ public class LearningController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Skills ────────────────────────────────────────────────────────────────
+    // â”€â”€ Skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("skills")]
     public async Task<IActionResult> GetSkillAssessments(
         [FromQuery] Guid? employeeId, [FromQuery] string? skill, [FromQuery] string? department)
@@ -137,7 +137,7 @@ public class LearningController(
     public async Task<IActionResult> GetSkillGapAnalysis([FromQuery] string? department, [FromQuery] string? role)
         => Ok(await skillService.GetSkillGapAnalysisAsync(department, role));
 
-    // ── Certifications ────────────────────────────────────────────────────────
+    // â”€â”€ Certifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("certifications")]
     public async Task<IActionResult> GetCertifications([FromQuery] Guid? employeeId, [FromQuery] bool? expiringSoon)
         => Ok(await skillService.GetCertificationsAsync(employeeId, expiringSoon));
@@ -161,8 +161,9 @@ public class LearningController(
     }
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// â”€â”€ Request DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public record EnrollRequest(Guid EmployeeId);
 public record ProgressRequest(int ProgressPercent, string? LastModule);
 public record CompleteRequest(decimal? Score);
 public record AttendanceRequest(bool Attended, decimal? Score);
+

@@ -1,10 +1,10 @@
-using Decypher.Web.Data;
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Data;
+using Decypher.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Decypher.Web.Services;
 
-// ─── Policy Management ────────────────────────────────────────────────────────
+// â”€â”€â”€ Policy Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface IPolicyService
 {
     Task<List<Policy>> GetPoliciesAsync(string? category, string? status, string? search);
@@ -27,9 +27,9 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
     {
         var q = db.Policies.AsNoTracking().Where(p => p.TenantId == TenantId && !p.IsDeleted);
         if (!string.IsNullOrEmpty(category)) q = q.Where(p => p.Category == category);
-        if (!string.IsNullOrEmpty(status)) q = q.Where(p => p.Status == status);
-        if (!string.IsNullOrEmpty(search)) q = q.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
-        return await q.OrderByDescending(p => p.PublishedAt ?? p.CreatedAt).ToListAsync();
+        if (!string.IsNullOrEmpty(status)) q = q.Where(p => status == "Published" ? p.IsActive : !p.IsActive);
+        if (!string.IsNullOrEmpty(search)) q = q.Where(p => p.Title.Contains(search) || p.Content.Contains(search));
+        return await q.OrderByDescending(p => p.EffectiveDate ?? p.CreatedAt).ToListAsync();
     }
 
     public async Task<Policy> GetPolicyByIdAsync(Guid id)
@@ -43,9 +43,9 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
     {
         policy.Id = Guid.NewGuid();
         policy.TenantId = TenantId;
-        policy.CreatedBy = UserId;
+        policy.CreatedBy = UserId.ToString();
         policy.CreatedAt = DateTime.UtcNow;
-        policy.Status = "Draft";
+        policy.IsActive = false;
         policy.Version = 1;
         db.Policies.Add(policy);
         await db.SaveChangesAsync();
@@ -57,20 +57,18 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
         var policy = await db.Policies.FirstOrDefaultAsync(p => p.Id == id && p.TenantId == TenantId && !p.IsDeleted)
             ?? throw new KeyNotFoundException("Policy not found");
 
-        if (policy.Status == "Published")
+        if (policy.IsActive)
         {
             policy.Version++;
-            policy.Status = "Draft";
+            policy.IsActive = false;
         }
 
         policy.Title = updated.Title;
         policy.Category = updated.Category;
-        policy.Description = updated.Description;
         policy.Content = updated.Content;
-        policy.ApplicableTo = updated.ApplicableTo;
         policy.RequiresAcknowledgment = updated.RequiresAcknowledgment;
         policy.UpdatedAt = DateTime.UtcNow;
-        policy.UpdatedBy = UserId;
+        policy.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return policy;
     }
@@ -89,10 +87,10 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
         var policy = await db.Policies.FirstOrDefaultAsync(p => p.Id == id && p.TenantId == TenantId && !p.IsDeleted)
             ?? throw new KeyNotFoundException("Policy not found");
 
-        policy.Status = "Published";
-        policy.PublishedAt = DateTime.UtcNow;
+        policy.IsActive = true;
+        policy.EffectiveDate = DateTime.UtcNow;
         policy.UpdatedAt = DateTime.UtcNow;
-        policy.UpdatedBy = UserId;
+        policy.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return policy;
     }
@@ -103,7 +101,7 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
             ?? throw new KeyNotFoundException("Policy not found");
 
         var existing = await db.PolicyAcknowledgments.FirstOrDefaultAsync(a =>
-            a.PolicyId == policyId && a.EmployeeId == employeeId && a.PolicyVersion == policy.Version && !a.IsDeleted);
+            a.PolicyId == policyId && a.EmployeeId == employeeId && !a.IsDeleted);
 
         if (existing != null) return existing;
 
@@ -113,10 +111,9 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
             TenantId = TenantId,
             PolicyId = policyId,
             EmployeeId = employeeId,
-            PolicyVersion = policy.Version,
             AcknowledgedAt = DateTime.UtcNow,
             IpAddress = ipAddress,
-            CreatedBy = UserId,
+            CreatedBy = UserId.ToString(),
             CreatedAt = DateTime.UtcNow
         };
         db.PolicyAcknowledgments.Add(ack);
@@ -141,7 +138,7 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
             .CountAsync(e => e.TenantId == TenantId && e.Status == "Active" && !e.IsDeleted);
 
         var acknowledged = await db.PolicyAcknowledgments.AsNoTracking()
-            .CountAsync(a => a.PolicyId == policyId && a.PolicyVersion == policy.Version && a.TenantId == TenantId && !a.IsDeleted);
+            .CountAsync(a => a.PolicyId == policyId && a.TenantId == TenantId && !a.IsDeleted);
 
         return new
         {
@@ -155,7 +152,7 @@ public class PolicyService(ApplicationDbContext db, IHttpContextAccessor http) :
     }
 }
 
-// ─── Statutory Compliance ─────────────────────────────────────────────────────
+// â”€â”€â”€ Statutory Compliance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface IStatutoryService
 {
     Task<List<StatutoryFiling>> GetFilingsAsync(string? filingType, string? status, int? year);
@@ -191,7 +188,7 @@ public class StatutoryService(ApplicationDbContext db, IHttpContextAccessor http
     {
         filing.Id = Guid.NewGuid();
         filing.TenantId = TenantId;
-        filing.CreatedBy = UserId;
+        filing.CreatedBy = UserId.ToString();
         filing.CreatedAt = DateTime.UtcNow;
         filing.Status = "Pending";
         db.StatutoryFilings.Add(filing);
@@ -205,10 +202,10 @@ public class StatutoryService(ApplicationDbContext db, IHttpContextAccessor http
             ?? throw new KeyNotFoundException("Filing not found");
 
         filing.Status = status;
-        if (filedOn.HasValue) filing.FiledOn = filedOn;
-        if (!string.IsNullOrEmpty(acknowledgmentNumber)) filing.AcknowledgmentNumber = acknowledgmentNumber;
+        if (filedOn.HasValue) filing.FiledDate = filedOn;
+        if (!string.IsNullOrEmpty(acknowledgmentNumber)) filing.AcknowledgementNo = acknowledgmentNumber;
         filing.UpdatedAt = DateTime.UtcNow;
-        filing.UpdatedBy = UserId;
+        filing.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return filing;
     }
@@ -245,7 +242,7 @@ public class StatutoryService(ApplicationDbContext db, IHttpContextAccessor http
     }
 }
 
-// ─── Integrations Hub ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Integrations Hub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface IIntegrationService
 {
     Task<List<Integration>> GetIntegrationsAsync(string? category, string? status);
@@ -281,7 +278,7 @@ public class IntegrationService(ApplicationDbContext db, IHttpContextAccessor ht
     {
         integration.Id = Guid.NewGuid();
         integration.TenantId = TenantId;
-        integration.CreatedBy = UserId;
+        integration.CreatedBy = UserId.ToString();
         integration.CreatedAt = DateTime.UtcNow;
         integration.Status = "Inactive";
         db.Integrations.Add(integration);
@@ -297,13 +294,11 @@ public class IntegrationService(ApplicationDbContext db, IHttpContextAccessor ht
         integration.Name = updated.Name;
         integration.Category = updated.Category;
         integration.Description = updated.Description;
-        integration.Provider = updated.Provider;
-        // Note: do not overwrite ApiKey if blank — preserve existing secret
-        if (!string.IsNullOrWhiteSpace(updated.ApiKey)) integration.ApiKey = updated.ApiKey;
-        integration.WebhookUrl = updated.WebhookUrl;
-        integration.Config = updated.Config;
+        integration.Status = updated.Status;
+        if (!string.IsNullOrWhiteSpace(updated.ConfigJson)) integration.ConfigJson = updated.ConfigJson;
+        integration.LogoUrl = updated.LogoUrl;
         integration.UpdatedAt = DateTime.UtcNow;
-        integration.UpdatedBy = UserId;
+        integration.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return integration;
     }
@@ -324,7 +319,7 @@ public class IntegrationService(ApplicationDbContext db, IHttpContextAccessor ht
 
         integration.Status = enabled ? "Active" : "Inactive";
         integration.UpdatedAt = DateTime.UtcNow;
-        integration.UpdatedBy = UserId;
+        integration.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return integration;
     }
@@ -334,10 +329,11 @@ public class IntegrationService(ApplicationDbContext db, IHttpContextAccessor ht
         var integration = await db.Integrations.FirstOrDefaultAsync(i => i.Id == id && i.TenantId == TenantId && !i.IsDeleted)
             ?? throw new KeyNotFoundException("Integration not found");
 
-        integration.LastSyncedAt = DateTime.UtcNow;
+        integration.LastSyncAt = DateTime.UtcNow;
         integration.UpdatedAt = DateTime.UtcNow;
-        integration.UpdatedBy = UserId;
+        integration.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return integration;
     }
 }
+

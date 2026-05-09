@@ -1,4 +1,4 @@
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ public class PerformanceController(
     IPerformanceReviewService performanceReviewService,
     IFeedbackService feedbackService) : ControllerBase
 {
-    // ── Goals & OKRs ──────────────────────────────────────────────────────────
+    // â”€â”€ Goals & OKRs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("goals")]
     public async Task<IActionResult> GetGoals(
         [FromQuery] Guid? employeeId, [FromQuery] string? status, [FromQuery] int? year, [FromQuery] int? quarter)
@@ -70,7 +70,7 @@ public class PerformanceController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Review Cycles ─────────────────────────────────────────────────────────
+    // â”€â”€ Review Cycles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("cycles")]
     public async Task<IActionResult> GetCycles([FromQuery] bool activeOnly = false)
         => Ok(await reviewCycleService.GetCyclesAsync(activeOnly));
@@ -114,7 +114,7 @@ public class PerformanceController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Performance Reviews ───────────────────────────────────────────────────
+    // â”€â”€ Performance Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("reviews")]
     public async Task<IActionResult> GetReviews(
         [FromQuery] Guid? cycleId, [FromQuery] Guid? revieweeId, [FromQuery] Guid? reviewerId, [FromQuery] string? status)
@@ -149,7 +149,7 @@ public class PerformanceController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── 360° Feedback ─────────────────────────────────────────────────────────
+    // â”€â”€ 360Â° Feedback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("feedback/requests")]
     public async Task<IActionResult> GetFeedbackRequests(
         [FromQuery] Guid? requesteeId, [FromQuery] Guid? reviewerId, [FromQuery] string? status)
@@ -170,7 +170,7 @@ public class PerformanceController(
     public async Task<IActionResult> GetFeedbackSummary(Guid employeeId)
         => Ok(await feedbackService.GetFeedbackSummaryAsync(employeeId));
 
-    // ── Continuous Feedback ───────────────────────────────────────────────────
+    // â”€â”€ Continuous Feedback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("continuous-feedback/{employeeId:guid}")]
     public async Task<IActionResult> GetContinuousFeedback(Guid employeeId)
         => Ok(await feedbackService.GetContinuousFeedbackAsync(employeeId));
@@ -179,7 +179,7 @@ public class PerformanceController(
     public async Task<IActionResult> SendContinuousFeedback([FromBody] ContinuousFeedback feedback)
         => Created(string.Empty, await feedbackService.SendContinuousFeedbackAsync(feedback));
 
-    // ── 1:1 Meetings ─────────────────────────────────────────────────────────
+    // â”€â”€ 1:1 Meetings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("continuous-feedback/{employeeId:guid}/meetings")]
     public async Task<IActionResult> GetMeetings(Guid employeeId)
         => Ok(await feedbackService.GetMeetingsAsync(employeeId));
@@ -188,7 +188,7 @@ public class PerformanceController(
     public async Task<IActionResult> CreateMeeting(Guid employeeId, [FromBody] OneOnOneMeeting meeting)
         => Created(string.Empty, await feedbackService.CreateMeetingAsync(employeeId, meeting));
 
-    // ── Mood Check-ins ────────────────────────────────────────────────────────
+    // â”€â”€ Mood Check-ins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("continuous-feedback/{employeeId:guid}/moods")]
     public async Task<IActionResult> GetMoodCheckins(Guid employeeId, [FromQuery] DateTime? date)
         => Ok(await feedbackService.GetMoodCheckinsAsync(employeeId, date));
@@ -198,6 +198,7 @@ public class PerformanceController(
         => Created(string.Empty, await feedbackService.CreateMoodCheckinAsync(employeeId, checkin));
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// â”€â”€ Request DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public record KeyResultProgressRequest(decimal Progress, string? Notes);
 public record AcknowledgeRequest(string? Comments);
+

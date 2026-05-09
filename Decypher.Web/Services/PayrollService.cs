@@ -265,7 +265,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetPayslipsAsync(string tenantId, Guid? employeeId, int? month, int? year)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.Payslips.AsNoTracking().Include(p => p.Employee);
+            IQueryable<Payslip> q = _ctx.Payslips.AsNoTracking().Include(p => p.Employee);
             if (employeeId.HasValue) q = q.Where(p => p.EmployeeId == employeeId.Value);
             if (month.HasValue) q = q.Where(p => p.Month == month.Value);
             if (year.HasValue) q = q.Where(p => p.Year == year.Value);
@@ -303,7 +303,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetClaimsAsync(string tenantId, Guid? employeeId, string? status)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.ExpenseClaims.AsNoTracking().Include(c => c.Employee);
+            IQueryable<ExpenseClaim> q = _ctx.ExpenseClaims.AsNoTracking().Include(c => c.Employee);
             if (employeeId.HasValue) q = q.Where(c => c.EmployeeId == employeeId.Value);
             if (!string.IsNullOrEmpty(status)) q = q.Where(c => c.Status == status);
 
@@ -366,7 +366,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetCompensationReviewsAsync(string tenantId, Guid? employeeId)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.CompensationReviews.AsNoTracking().Include(r => r.Employee);
+            IQueryable<CompensationReview> q = _ctx.CompensationReviews.AsNoTracking().Include(r => r.Employee);
             if (employeeId.HasValue) q = q.Where(r => r.EmployeeId == employeeId.Value);
 
             return await q.OrderByDescending(r => r.ReviewDate).Select(r => (object)new
@@ -443,7 +443,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetBonusRecordsAsync(string tenantId, Guid? employeeId, int? year)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.BonusRecords.AsNoTracking().Include(b => b.Employee);
+            IQueryable<BonusRecord> q = _ctx.BonusRecords.AsNoTracking().Include(b => b.Employee);
             if (employeeId.HasValue) q = q.Where(b => b.EmployeeId == employeeId.Value);
             if (year.HasValue) q = q.Where(b => b.Year == year.Value);
 
@@ -515,7 +515,7 @@ namespace Decypher.Web.Services
         public async Task<IEnumerable<object>> GetDeclarationsAsync(string tenantId, Guid? employeeId, string? fy)
         {
             _ctx.SetTenantId(tenantId);
-            var q = _ctx.TaxDeclarations.AsNoTracking().Include(d => d.Employee);
+            IQueryable<TaxDeclaration> q = _ctx.TaxDeclarations.AsNoTracking().Include(d => d.Employee);
             if (employeeId.HasValue) q = q.Where(d => d.EmployeeId == employeeId.Value);
             if (!string.IsNullOrEmpty(fy)) q = q.Where(d => d.FinancialYear == fy);
 

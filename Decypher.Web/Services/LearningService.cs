@@ -1,10 +1,10 @@
-using Decypher.Web.Data;
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Data;
+using Decypher.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Decypher.Web.Services;
 
-// ─── Learning Management System ───────────────────────────────────────────────
+// â”€â”€â”€ Learning Management System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ILearningService
 {
     Task<List<Course>> GetCoursesAsync(string? category, string? status, string? search);
@@ -28,7 +28,7 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
     {
         var q = db.Courses.AsNoTracking().Where(c => c.TenantId == TenantId && !c.IsDeleted);
         if (!string.IsNullOrEmpty(category)) q = q.Where(c => c.Category == category);
-        if (!string.IsNullOrEmpty(status)) q = q.Where(c => c.Status == status);
+        if (!string.IsNullOrEmpty(status)) q = q.Where(c => status == "Published" ? c.IsActive : !c.IsActive);
         if (!string.IsNullOrEmpty(search))
             q = q.Where(c => c.Title.Contains(search) || c.Description.Contains(search));
         return await q.OrderByDescending(c => c.CreatedAt).ToListAsync();
@@ -45,9 +45,9 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
     {
         course.Id = Guid.NewGuid();
         course.TenantId = TenantId;
-        course.CreatedBy = UserId;
+        course.CreatedBy = UserId.ToString();
         course.CreatedAt = DateTime.UtcNow;
-        course.Status = "Draft";
+        course.IsActive = false;
         db.Courses.Add(course);
         await db.SaveChangesAsync();
         return course;
@@ -63,13 +63,12 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
         course.Category = updated.Category;
         course.Provider = updated.Provider;
         course.DurationHours = updated.DurationHours;
-        course.Mode = updated.Mode;
-        course.Status = updated.Status;
+        course.Format = updated.Format;
+        course.IsActive = updated.IsActive;
         course.ThumbnailUrl = updated.ThumbnailUrl;
         course.ContentUrl = updated.ContentUrl;
-        course.Tags = updated.Tags;
         course.UpdatedAt = DateTime.UtcNow;
-        course.UpdatedBy = UserId;
+        course.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return course;
     }
@@ -100,7 +99,7 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
             Status = "Enrolled",
             EnrolledAt = DateTime.UtcNow,
             ProgressPercent = 0,
-            CreatedBy = UserId,
+            CreatedBy = UserId.ToString(),
             CreatedAt = DateTime.UtcNow
         };
         db.CourseEnrollments.Add(enrollment);
@@ -114,10 +113,9 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
             ?? throw new KeyNotFoundException("Enrollment not found");
 
         enrollment.ProgressPercent = Math.Clamp(progressPercent, 0, 100);
-        enrollment.LastModule = lastModule ?? enrollment.LastModule;
         enrollment.Status = enrollment.ProgressPercent > 0 ? "InProgress" : enrollment.Status;
         enrollment.UpdatedAt = DateTime.UtcNow;
-        enrollment.UpdatedBy = UserId;
+        enrollment.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return enrollment;
     }
@@ -132,7 +130,7 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
         enrollment.Score = score;
         enrollment.CompletedAt = DateTime.UtcNow;
         enrollment.UpdatedAt = DateTime.UtcNow;
-        enrollment.UpdatedBy = UserId;
+        enrollment.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return enrollment;
     }
@@ -157,7 +155,7 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
         return new
         {
             TotalCourses = courses.Count,
-            ActiveCourses = courses.Count(c => c.Status == "Published"),
+            ActiveCourses = courses.Count(c => c.IsActive),
             TotalEnrollments = enrollments.Count,
             Completed = enrollments.Count(e => e.Status == "Completed"),
             InProgress = enrollments.Count(e => e.Status == "InProgress"),
@@ -171,7 +169,7 @@ public class LearningService(ApplicationDbContext db, IHttpContextAccessor http)
     }
 }
 
-// ─── Training Events ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Training Events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ITrainingService
 {
     Task<List<TrainingEvent>> GetEventsAsync(DateTime? from, DateTime? to, string? mode);
@@ -194,7 +192,7 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
         var q = db.TrainingEvents.AsNoTracking().Where(e => e.TenantId == TenantId && !e.IsDeleted);
         if (from.HasValue) q = q.Where(e => e.StartDate >= from.Value);
         if (to.HasValue) q = q.Where(e => e.StartDate <= to.Value);
-        if (!string.IsNullOrEmpty(mode)) q = q.Where(e => e.Mode == mode);
+        if (!string.IsNullOrEmpty(mode)) q = q.Where(e => e.Location == mode);
         return await q.OrderBy(e => e.StartDate).ToListAsync();
     }
 
@@ -209,7 +207,7 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
     {
         trainingEvent.Id = Guid.NewGuid();
         trainingEvent.TenantId = TenantId;
-        trainingEvent.CreatedBy = UserId;
+        trainingEvent.CreatedBy = UserId.ToString();
         trainingEvent.CreatedAt = DateTime.UtcNow;
         trainingEvent.Status = "Scheduled";
         db.TrainingEvents.Add(trainingEvent);
@@ -224,15 +222,14 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
 
         ev.Title = updated.Title;
         ev.Description = updated.Description;
-        ev.Trainer = updated.Trainer;
-        ev.Mode = updated.Mode;
+        ev.TrainerName = updated.TrainerName;
         ev.StartDate = updated.StartDate;
         ev.EndDate = updated.EndDate;
-        ev.Venue = updated.Venue;
+        ev.Location = updated.Location;
         ev.MaxParticipants = updated.MaxParticipants;
         ev.Status = updated.Status;
         ev.UpdatedAt = DateTime.UtcNow;
-        ev.UpdatedBy = UserId;
+        ev.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return ev;
     }
@@ -255,7 +252,7 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
             throw new InvalidOperationException("Already registered for this training");
 
         var currentCount = await db.TrainingRegistrations.CountAsync(r => r.TrainingEventId == eventId && !r.IsDeleted);
-        if (ev.MaxParticipants.HasValue && currentCount >= ev.MaxParticipants.Value)
+        if (ev.MaxParticipants > 0 && currentCount >= ev.MaxParticipants)
             throw new InvalidOperationException("Training event is full");
 
         var reg = new TrainingRegistration
@@ -265,8 +262,7 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
             TrainingEventId = eventId,
             EmployeeId = employeeId,
             Status = "Registered",
-            RegisteredAt = DateTime.UtcNow,
-            CreatedBy = UserId,
+            CreatedBy = UserId.ToString(),
             CreatedAt = DateTime.UtcNow
         };
         db.TrainingRegistrations.Add(reg);
@@ -279,11 +275,10 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
         var reg = await db.TrainingRegistrations.FirstOrDefaultAsync(r => r.Id == registrationId && r.TenantId == TenantId && !r.IsDeleted)
             ?? throw new KeyNotFoundException("Registration not found");
 
-        reg.Attended = attended;
-        reg.Score = score;
         reg.Status = attended ? "Attended" : "Absent";
+        reg.FeedbackScore = score;
         reg.UpdatedAt = DateTime.UtcNow;
-        reg.UpdatedBy = UserId;
+        reg.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return reg;
     }
@@ -294,11 +289,11 @@ public class TrainingService(ApplicationDbContext db, IHttpContextAccessor http)
             .Where(r => r.TenantId == TenantId && !r.IsDeleted);
         if (eventId.HasValue) q = q.Where(r => r.TrainingEventId == eventId);
         if (employeeId.HasValue) q = q.Where(r => r.EmployeeId == employeeId);
-        return await q.OrderByDescending(r => r.RegisteredAt).ToListAsync();
+        return await q.OrderByDescending(r => r.CreatedAt).ToListAsync();
     }
 }
 
-// ─── Skill Gap & Certifications ───────────────────────────────────────────────
+// â”€â”€â”€ Skill Gap & Certifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public interface ISkillService
 {
     Task<List<SkillAssessment>> GetAssessmentsAsync(Guid? employeeId, string? skill, string? department);
@@ -339,19 +334,18 @@ public class SkillService(ApplicationDbContext db, IHttpContextAccessor http) : 
         if (existing != null)
         {
             existing.CurrentLevel = assessment.CurrentLevel;
-            existing.TargetLevel = assessment.TargetLevel;
-            existing.AssessedBy = assessment.AssessedBy;
-            existing.AssessedDate = assessment.AssessedDate;
+            existing.RequiredLevel = assessment.RequiredLevel;
+            existing.AssessedOn = assessment.AssessedOn;
             existing.Notes = assessment.Notes;
             existing.UpdatedAt = DateTime.UtcNow;
-            existing.UpdatedBy = UserId;
+            existing.UpdatedBy = UserId.ToString();
             await db.SaveChangesAsync();
             return existing;
         }
 
         assessment.Id = Guid.NewGuid();
         assessment.TenantId = TenantId;
-        assessment.CreatedBy = UserId;
+        assessment.CreatedBy = UserId.ToString();
         assessment.CreatedAt = DateTime.UtcNow;
         db.SkillAssessments.Add(assessment);
         await db.SaveChangesAsync();
@@ -374,13 +368,13 @@ public class SkillService(ApplicationDbContext db, IHttpContextAccessor http) : 
         {
             TotalAssessed = assessments.Select(a => a.EmployeeId).Distinct().Count(),
             SkillGaps = assessments
-                .Where(a => a.CurrentLevel < a.TargetLevel)
+                .Where(a => a.CurrentLevel < a.RequiredLevel)
                 .GroupBy(a => a.SkillName)
                 .Select(g => new
                 {
                     Skill = g.Key,
                     EmployeesWithGap = g.Count(),
-                    AverageGap = Math.Round(g.Average(a => (double)(a.TargetLevel - a.CurrentLevel)), 1)
+                    AverageGap = Math.Round(g.Average(a => (double)(a.RequiredLevel - a.CurrentLevel)), 1)
                 })
                 .OrderByDescending(x => x.AverageGap)
                 .Take(10),
@@ -399,14 +393,14 @@ public class SkillService(ApplicationDbContext db, IHttpContextAccessor http) : 
             var threshold = DateTime.UtcNow.AddDays(30);
             q = q.Where(c => c.ExpiryDate.HasValue && c.ExpiryDate.Value <= threshold && c.ExpiryDate.Value >= DateTime.UtcNow);
         }
-        return await q.OrderByDescending(c => c.IssuedDate).ToListAsync();
+        return await q.OrderByDescending(c => c.IssueDate).ToListAsync();
     }
 
     public async Task<CertificationRecord> AddCertificationAsync(CertificationRecord cert)
     {
         cert.Id = Guid.NewGuid();
         cert.TenantId = TenantId;
-        cert.CreatedBy = UserId;
+        cert.CreatedBy = UserId.ToString();
         cert.CreatedAt = DateTime.UtcNow;
         cert.Status = "Active";
         db.CertificationRecords.Add(cert);
@@ -419,15 +413,15 @@ public class SkillService(ApplicationDbContext db, IHttpContextAccessor http) : 
         var cert = await db.CertificationRecords.FirstOrDefaultAsync(c => c.Id == id && c.TenantId == TenantId && !c.IsDeleted)
             ?? throw new KeyNotFoundException("Certification not found");
 
-        cert.Name = updated.Name;
+        cert.CertificationName = updated.CertificationName;
         cert.IssuingBody = updated.IssuingBody;
-        cert.CertificateNumber = updated.CertificateNumber;
-        cert.IssuedDate = updated.IssuedDate;
+        cert.CertificateId = updated.CertificateId;
+        cert.IssueDate = updated.IssueDate;
         cert.ExpiryDate = updated.ExpiryDate;
         cert.Status = updated.Status;
-        cert.DocumentUrl = updated.DocumentUrl;
+        cert.CertificateUrl = updated.CertificateUrl;
         cert.UpdatedAt = DateTime.UtcNow;
-        cert.UpdatedBy = UserId;
+        cert.UpdatedBy = UserId.ToString();
         await db.SaveChangesAsync();
         return cert;
     }
@@ -441,3 +435,4 @@ public class SkillService(ApplicationDbContext db, IHttpContextAccessor http) : 
         await db.SaveChangesAsync();
     }
 }
+

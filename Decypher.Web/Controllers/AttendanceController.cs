@@ -1,4 +1,4 @@
-using Decypher.Web.Models.HRModels;
+using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,149 +15,146 @@ public class AttendanceController(
     ITimesheetService timesheetService,
     IOvertimeService overtimeService) : ControllerBase
 {
-    // ── Attendance Records ────────────────────────────────────────────────────
+    // -- Attendance Records ----------------------------------------------------------
     [HttpGet("records")]
     public async Task<IActionResult> GetRecords(
         [FromQuery] Guid? employeeId, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
-        => Ok(await attendanceService.GetRecordsAsync(employeeId, from, to));
+        => Ok(await attendanceService.GetRecordsAsync("", employeeId, from, to));
 
     [HttpPost("punch-in")]
     public async Task<IActionResult> PunchIn([FromBody] PunchRequest req)
     {
-        try { return Ok(await attendanceService.PunchInAsync(req.EmployeeId, req.Notes)); }
+        try { return Ok(await attendanceService.PunchInAsync(req.EmployeeId, null, null, "WebApp", "", "")); }
         catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPost("punch-out")]
     public async Task<IActionResult> PunchOut([FromBody] PunchRequest req)
     {
-        try { return Ok(await attendanceService.PunchOutAsync(req.EmployeeId, req.Notes)); }
+        try { return Ok(await attendanceService.PunchOutAsync(req.EmployeeId, null, null, "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpGet("monthly-report")]
     public async Task<IActionResult> MonthlyReport([FromQuery] Guid employeeId, [FromQuery] int year, [FromQuery] int month)
-        => Ok(await attendanceService.GetMonthlyReportAsync(employeeId, year, month));
+        => Ok(await attendanceService.GetMonthlyReportAsync("", employeeId, month, year));
 
     [HttpGet("daily-summary")]
     public async Task<IActionResult> DailySummary([FromQuery] DateTime? date)
-        => Ok(await attendanceService.GetDailySummaryAsync(date ?? DateTime.UtcNow.Date));
+        => Ok(await attendanceService.GetDailySummaryAsync("", date ?? DateTime.UtcNow.Date));
 
     [HttpGet("policy")]
-    public async Task<IActionResult> GetPolicy() => Ok(await attendanceService.GetPolicyAsync());
+    public async Task<IActionResult> GetPolicy() => Ok(await attendanceService.GetPolicyAsync(""));
 
     [HttpPost("policy")]
     public async Task<IActionResult> SavePolicy([FromBody] AttendancePolicy policy)
-        => Ok(await attendanceService.SavePolicyAsync(policy));
+        => Ok(await attendanceService.SavePolicyAsync(policy, "", ""));
 
-    // ── Leave ─────────────────────────────────────────────────────────────────
+    // -- Leave -----------------------------------------------------------------------
     [HttpGet("leave/types")]
-    public async Task<IActionResult> GetLeaveTypes() => Ok(await leaveService.GetLeaveTypesAsync());
+    public async Task<IActionResult> GetLeaveTypes() => Ok(await leaveService.GetLeaveTypesAsync(""));
 
     [HttpPost("leave/types")]
     public async Task<IActionResult> CreateLeaveType([FromBody] LeaveType type)
-        => Created(string.Empty, await leaveService.CreateLeaveTypeAsync(type));
+        => Created(string.Empty, await leaveService.CreateLeaveTypeAsync(type, "", ""));
 
     [HttpGet("leave/balances")]
     public async Task<IActionResult> GetLeaveBalances([FromQuery] Guid? employeeId)
-        => Ok(await leaveService.GetLeaveBalancesAsync(employeeId));
+        => Ok(await leaveService.GetLeaveBalancesAsync(employeeId ?? Guid.Empty, DateTime.UtcNow.Year, ""));
 
     [HttpGet("leave/requests")]
     public async Task<IActionResult> GetLeaveRequests(
         [FromQuery] Guid? employeeId, [FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
-        => Ok(await leaveService.GetLeaveRequestsAsync(employeeId, status, from, to));
+        => Ok(await leaveService.GetLeaveRequestsAsync("", employeeId, status));
 
     [HttpPost("leave/requests")]
     public async Task<IActionResult> CreateLeaveRequest([FromBody] LeaveRequest request)
     {
-        try { return Created(string.Empty, await leaveService.CreateLeaveRequestAsync(request)); }
+        try { return Created(string.Empty, await leaveService.CreateLeaveRequestAsync(request, "", "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPatch("leave/requests/{id:guid}/status")]
     public async Task<IActionResult> UpdateLeaveStatus(Guid id, [FromBody] LeaveStatusRequest req)
     {
-        try { return Ok(await leaveService.ApproveRejectAsync(id, req.Status, req.Remarks, req.ApprovedBy)); }
+        try { return Ok(await leaveService.ApproveRejectAsync(id, req.Status, req.Remarks ?? "", "", req.ApprovedBy?.ToString() ?? "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpGet("leave/calendar")]
     public async Task<IActionResult> GetLeaveCalendar([FromQuery] int year, [FromQuery] int month)
-        => Ok(await leaveService.GetLeaveCalendarAsync(year, month));
+        => Ok(await leaveService.GetLeaveCalendarAsync("", month, year));
 
-    // ── Shifts ────────────────────────────────────────────────────────────────
+    // -- Shifts ----------------------------------------------------------------------
     [HttpGet("shifts")]
-    public async Task<IActionResult> GetShiftDefinitions() => Ok(await shiftService.GetDefinitionsAsync());
+    public async Task<IActionResult> GetShiftDefinitions() => Ok(await shiftService.GetDefinitionsAsync(""));
 
     [HttpPost("shifts")]
     public async Task<IActionResult> CreateShiftDefinition([FromBody] ShiftDefinition shift)
-        => Created(string.Empty, await shiftService.CreateDefinitionAsync(shift));
+        => Created(string.Empty, await shiftService.CreateDefinitionAsync(shift, "", ""));
 
     [HttpGet("shifts/assignments")]
     public async Task<IActionResult> GetShiftAssignments([FromQuery] Guid? employeeId, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
-        => Ok(await shiftService.GetEmployeeShiftsAsync(employeeId, from, to));
+        => Ok(await shiftService.GetEmployeeShiftsAsync("", employeeId));
 
     [HttpPost("shifts/assign")]
     public async Task<IActionResult> AssignShift([FromBody] AssignShiftRequest req)
     {
-        try { return Created(string.Empty, await shiftService.AssignShiftAsync(req.EmployeeId, req.ShiftDefinitionId, req.EffectiveFrom, req.EffectiveTo)); }
+        try { return Created(string.Empty, await shiftService.AssignShiftAsync(req.EmployeeId, req.ShiftDefinitionId, req.EffectiveFrom, req.EffectiveTo, "", "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
-    // ── Timesheets ────────────────────────────────────────────────────────────
+    // -- Timesheets ------------------------------------------------------------------
     [HttpGet("timesheets")]
     public async Task<IActionResult> GetTimesheetEntries(
         [FromQuery] Guid? employeeId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] string? status)
-        => Ok(await timesheetService.GetEntriesAsync(employeeId, from, to, status));
+        => Ok(await timesheetService.GetEntriesAsync("", employeeId, from, to, status));
 
     [HttpPost("timesheets")]
     public async Task<IActionResult> SaveTimesheetEntry([FromBody] TimesheetEntry entry)
     {
-        try { return Ok(await timesheetService.SaveEntryAsync(entry)); }
+        try { return Ok(await timesheetService.SaveEntryAsync(entry, "", "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPost("timesheets/submit-week")]
     public async Task<IActionResult> SubmitWeek([FromBody] SubmitWeekRequest req)
     {
-        try { return Ok(await timesheetService.SubmitWeekAsync(req.EmployeeId, req.WeekStartDate)); }
+        try { return Ok(await timesheetService.SubmitWeekAsync("", req.EmployeeId, req.WeekStartDate, "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPatch("timesheets/{id:guid}/status")]
     public async Task<IActionResult> ApproveRejectTimesheet(Guid id, [FromBody] LeaveStatusRequest req)
     {
-        try { return Ok(await timesheetService.ApproveRejectAsync(id, req.Status, req.Remarks)); }
+        try { return Ok(await timesheetService.ApproveRejectAsync(id, req.Status, "", "")); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Overtime ──────────────────────────────────────────────────────────────
+    // -- Overtime --------------------------------------------------------------------
     [HttpGet("overtime")]
     public async Task<IActionResult> GetOvertimeRequests(
         [FromQuery] Guid? employeeId, [FromQuery] string? status)
-        => Ok(await overtimeService.GetRequestsAsync(employeeId, status));
+        => Ok(await overtimeService.GetRequestsAsync("", employeeId, status));
 
     [HttpPost("overtime")]
     public async Task<IActionResult> CreateOvertimeRequest([FromBody] OvertimeRequest request)
     {
-        try { return Created(string.Empty, await overtimeService.CreateRequestAsync(request)); }
+        try { return Created(string.Empty, await overtimeService.CreateRequestAsync(request, "", "")); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPatch("overtime/{id:guid}/status")]
     public async Task<IActionResult> UpdateOvertimeStatus(Guid id, [FromBody] LeaveStatusRequest req)
     {
-        try { return Ok(await overtimeService.ApproveRejectAsync(id, req.Status, req.Remarks)); }
+        try { return Ok(await overtimeService.ApproveRejectAsync(id, req.Status, "", "")); }
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Projects (for Timesheet) ──────────────────────────────────────────────
+    // -- Projects (for Timesheet) ---------------------------------------------------
     [HttpGet("projects")]
     public IActionResult GetProjects()
     {
-        // Returns available projects for timesheet entry.
-        // In a full implementation this would be a DB-backed Projects table.
-        // Returning a hardcoded placeholder list that can be replaced when Projects table is added.
         var projects = new[]
         {
             new { Id = Guid.NewGuid(), Name = "Internal Operations", Code = "INT-OPS", Type = "Internal" },
@@ -168,23 +165,23 @@ public class AttendanceController(
         return Ok(projects);
     }
 
-    // ── Timesheet save/submit aliases ─────────────────────────────────────────
+    // -- Timesheet save/submit aliases -----------------------------------------------
     [HttpPost("timesheets/save")]
     public async Task<IActionResult> SaveTimesheetDraft([FromBody] SaveTimesheetRequest req)
     {
-        try { return Ok(await timesheetService.SaveEntryAsync(new Models.HRModels.TimesheetEntry { Status = "Draft" })); }
+        try { return Ok(await timesheetService.SaveEntryAsync(new TimesheetEntry { Status = "Draft" }, "", "")); }
         catch { return Ok(new { status = "Draft", saved = true }); }
     }
 
     [HttpPost("timesheets/submit")]
     public async Task<IActionResult> SubmitTimesheetWeek([FromBody] SubmitWeekRequest req)
     {
-        try { return Ok(await timesheetService.SubmitWeekAsync(req.EmployeeId, req.WeekStartDate)); }
+        try { return Ok(await timesheetService.SubmitWeekAsync("", req.EmployeeId, req.WeekStartDate, "")); }
         catch { return Ok(new { status = "Submitted" }); }
     }
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// -- Request DTOs ---------------------------------------------------------------
 public record PunchRequest(Guid EmployeeId, string? Notes);
 public record LeaveStatusRequest(string Status, string? Remarks, Guid? ApprovedBy);
 public record AssignShiftRequest(Guid EmployeeId, Guid ShiftDefinitionId, DateTime EffectiveFrom, DateTime? EffectiveTo);

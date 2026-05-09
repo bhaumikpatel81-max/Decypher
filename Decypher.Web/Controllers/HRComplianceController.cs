@@ -1,4 +1,4 @@
-using Decypher.Web.Models.HRModels;
+﻿using Decypher.Web.Models;
 using Decypher.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +13,7 @@ public class HRComplianceController(
     IStatutoryService statutoryService,
     IIntegrationService integrationService) : ControllerBase
 {
-    // ── Policies ──────────────────────────────────────────────────────────────
+    // â”€â”€ Policies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("policies")]
     public async Task<IActionResult> GetPolicies(
         [FromQuery] string? category, [FromQuery] string? status, [FromQuery] string? search)
@@ -70,7 +70,7 @@ public class HRComplianceController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Statutory Filings ─────────────────────────────────────────────────────
+    // â”€â”€ Statutory Filings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("statutory")]
     public async Task<IActionResult> GetFilings(
         [FromQuery] string? filingType, [FromQuery] string? status, [FromQuery] int? year)
@@ -105,7 +105,7 @@ public class HRComplianceController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
-    // ── Integrations ──────────────────────────────────────────────────────────
+    // â”€â”€ Integrations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     [HttpGet("integrations")]
     public async Task<IActionResult> GetIntegrations([FromQuery] string? category, [FromQuery] string? status)
         => Ok(await integrationService.GetIntegrationsAsync(category, status));
@@ -150,7 +150,8 @@ public class HRComplianceController(
     }
 }
 
-// ── Request DTOs ──────────────────────────────────────────────────────────────
+// â”€â”€ Request DTOs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 public record AcknowledgePolicyRequest(Guid EmployeeId);
 public record FilingUpdateRequest(string Status, DateTime? FiledOn, string? AcknowledgmentNumber);
 public record ToggleRequest(bool Enabled);
+
