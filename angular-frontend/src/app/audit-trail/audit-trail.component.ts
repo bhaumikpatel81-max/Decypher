@@ -4,7 +4,7 @@ import { environment } from '../../environments/environment';
 @Component({ selector: 'app-audit-trail', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
-    <div><h1 class="page-title">Audit Trail</h1><p style="color:var(--text-3);font-size:13px;">Complete activity log across all modules</p></div>
+    <div><h1 class="page-title">Activity Logs</h1><p style="color:var(--text-3);font-size:13px;">Complete activity log across all modules</p></div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span *ngIf="exportMsg" style="font-size:12px;color:#065f46;font-weight:600;">{{exportMsg}}</span>
       <button class="btn btn-ghost btn-sm" (click)="export()">Export CSV</button>

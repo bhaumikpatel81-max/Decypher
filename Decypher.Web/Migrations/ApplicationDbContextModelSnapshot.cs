@@ -2114,6 +2114,254 @@ namespace Decypher.Web.Migrations
                     b.ToTable("ModulePermissions");
                 });
 
+            modelBuilder.Entity("Decypher.Web.Models.AuditReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("DepartmentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasDefaultValue("Draft")
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("FinancialYear")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("AuditDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string?>("AuditedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("ReviewedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("ApprovedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("ExecutiveSummary")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalObservations")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HighRiskCount")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MediumRiskCount")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LowRiskCount")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClosedCount")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "DepartmentType");
+
+                    b.HasIndex("TenantId", "FinancialYear");
+
+                    b.ToTable("AuditReports");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditScopeArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId", "SortOrder");
+
+                    b.ToTable("AuditScopeAreas");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditOverviewStat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("Value")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string?>("Unit")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("AuditOverviewStats");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditObservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ObservationNumber")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("RiskLevel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasDefaultValue("Medium")
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasDefaultValue("Open")
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string?>("ProcessArea")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("Background")
+                        .HasColumnType("text");
+
+                    b.Property<string?>("DetailedObservation")
+                        .HasColumnType("text");
+
+                    b.Property<string?>("Risks")
+                        .HasColumnType("text");
+
+                    b.Property<string?>("Recommendations")
+                        .HasColumnType("text");
+
+                    b.Property<string?>("MgmtCause")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string?>("MgmtCorrectiveAction")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string?>("MgmtPreventiveAction")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("MgmtTargetDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string?>("MgmtResponsiblePerson")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string?>("MgmtResponsibleDesignation")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsAlreadyImplemented")
+                        .HasDefaultValue(false)
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProcessImprovement")
+                        .HasDefaultValue(false)
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("FinancialImpact")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId", "ObservationNumber");
+
+                    b.ToTable("AuditObservations");
+                });
+
             modelBuilder.Entity("Decypher.Web.Models.VideoInterview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2609,6 +2857,46 @@ namespace Decypher.Web.Migrations
             modelBuilder.Entity("Decypher.Web.Models.VideoInterview", b =>
                 {
                     b.Navigation("Responses");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditScopeArea", b =>
+                {
+                    b.HasOne("Decypher.Web.Models.AuditReport", "Report")
+                        .WithMany("ScopeAreas")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditOverviewStat", b =>
+                {
+                    b.HasOne("Decypher.Web.Models.AuditReport", "Report")
+                        .WithMany("OverviewStats")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditObservation", b =>
+                {
+                    b.HasOne("Decypher.Web.Models.AuditReport", "Report")
+                        .WithMany("Observations")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+                });
+
+            modelBuilder.Entity("Decypher.Web.Models.AuditReport", b =>
+                {
+                    b.Navigation("ScopeAreas");
+                    b.Navigation("OverviewStats");
+                    b.Navigation("Observations");
                 });
 #pragma warning restore 612, 618
         }

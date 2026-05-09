@@ -95,6 +95,7 @@ import { PolicyManagementComponent } from './policy-management/policy-management
 import { StatutoryComplianceComponent } from './statutory-compliance/statutory-compliance.component';
 import { ComplianceComponent } from './compliance/compliance.component';
 import { AuditTrailComponent } from './audit-trail/audit-trail.component';
+import { InternalAuditComponent } from './internal-audit/internal-audit.component';
 // Administration
 import { ImportCenterComponent } from './import-center/import-center.component';
 import { IntegrationsHubComponent } from './integrations-hub/integrations-hub.component';
@@ -134,7 +135,7 @@ import { PermissionGuard } from './guards/permission.guard';
     ResumeParserComponent, AIScorecardComponent, AIFeaturesComponent, JdGeneratorComponent,
     ReportsComponent, SlaDashboardComponent, BudgetComponent,
     PolicyManagementComponent, StatutoryComplianceComponent,
-    ComplianceComponent, AuditTrailComponent,
+    ComplianceComponent, AuditTrailComponent, InternalAuditComponent,
     ImportCenterComponent, IntegrationsHubComponent,
     HelpdeskComponent,
     AdminTravelComponent,
@@ -209,6 +210,7 @@ import { PermissionGuard } from './guards/permission.guard';
       { path: 'statutory-compliance',  component: StatutoryComplianceComponent },
       { path: 'compliance',            component: ComplianceComponent },
       { path: 'audit-trail',           component: AuditTrailComponent,         canActivate: [PermissionGuard], data: { permission: 'audit-trail' } },
+      { path: 'internal-audit',        component: InternalAuditComponent },
       { path: 'import-center',         component: ImportCenterComponent,        canActivate: [PermissionGuard], data: { permission: 'import-center' } },
       { path: 'integrations',          component: IntegrationsHubComponent },
       { path: 'helpdesk',              component: HelpdeskComponent },

@@ -608,7 +608,8 @@ export class AppComponent implements OnInit {
     { path: '/policy-management',      label: 'Policy Management',      shortLabel: 'Policies',          symbol: 'PM', color: '#374151', adminOnly: false },
     { path: '/statutory-compliance',   label: 'Statutory Compliance',   shortLabel: 'Statutory',         symbol: 'SC', color: '#dc2626', adminOnly: false },
     { path: '/compliance',             label: 'Compliance Tracker',     shortLabel: 'Compliance',        symbol: 'CO', color: '#5C5C99', adminOnly: false },
-    { path: '/audit-trail',            label: 'Audit Trail',            shortLabel: 'Audit',             symbol: 'AU', color: '#6b4df0', adminOnly: false },
+    { path: '/audit-trail',            label: 'Activity Logs',          shortLabel: 'Activity Logs',     symbol: 'AU', color: '#6b4df0', adminOnly: false },
+    { path: '/internal-audit',         label: 'Internal Audit',         shortLabel: 'Internal Audit',    symbol: 'IA', color: '#b45309', adminOnly: false },
     // Administration
     { path: '/users',                  label: 'User Management',        shortLabel: 'Users',             symbol: 'UA', color: '#343a48', adminOnly: true  },
     { path: '/import-center',          label: 'Import Center',          shortLabel: 'Import',            symbol: '📥', color: '#0891b2', adminOnly: false },
@@ -658,7 +659,7 @@ export class AppComponent implements OnInit {
     { id:'analytics',     label:'Analytics & Performance',  symbol:'AP', color:'#0f766e',
       paths:['/reports','/recruiters','/sla-dashboard','/budget'] },
     { id:'policies',      label:'Policies & Compliance',    symbol:'PC', color:'#374151',
-      paths:['/policy-management','/statutory-compliance','/compliance','/audit-trail'] },
+      paths:['/policy-management','/statutory-compliance','/compliance','/audit-trail','/internal-audit'] },
     { id:'helpdesk',      label:'Helpdesk',                 symbol:'🎫', color:'#ef4444',
       paths:['/helpdesk'] },
     { id:'travel',        label:'Admin & Travel',           symbol:'✈️', color:'#0891b2',
@@ -810,6 +811,8 @@ export class AppComponent implements OnInit {
       // Admin
       '/users':                 { title: 'User Management',       breadcrumb: 'Admin / User Management' },
       '/compliance':            { title: 'Compliance',            breadcrumb: 'Admin / Compliance' },
+      '/audit-trail':           { title: 'Activity Logs',         breadcrumb: 'Policies & Compliance / Activity Logs' },
+      '/internal-audit':        { title: 'Internal Audit',        breadcrumb: 'Policies & Compliance / Internal Audit' },
       '/permissions':           { title: 'Permissions Matrix',    breadcrumb: 'Admin / Permissions Matrix' },
     };
     const match = Object.keys(titles).find(key => this.router.url.startsWith(key));

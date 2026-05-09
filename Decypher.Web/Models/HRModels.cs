@@ -1770,6 +1770,138 @@ namespace Decypher.Web.Models
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // INTERNAL AUDIT MODULE
+    // ═══════════════════════════════════════════════════════════════
+
+    public class AuditReport : BaseEntity
+    {
+        [Required, MaxLength(300)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string DepartmentType { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Draft";
+
+        [MaxLength(20)]
+        public string FinancialYear { get; set; } = string.Empty;
+
+        public DateTime AuditDate { get; set; } = DateTime.UtcNow;
+
+        [MaxLength(200)]
+        public string? AuditedBy { get; set; }
+
+        [MaxLength(200)]
+        public string? ReviewedBy { get; set; }
+
+        [MaxLength(200)]
+        public string? ApprovedBy { get; set; }
+
+        public string? ExecutiveSummary { get; set; }
+
+        public int TotalObservations { get; set; } = 0;
+        public int HighRiskCount { get; set; } = 0;
+        public int MediumRiskCount { get; set; } = 0;
+        public int LowRiskCount { get; set; } = 0;
+        public int ClosedCount { get; set; } = 0;
+
+        public virtual ICollection<AuditScopeArea> ScopeAreas { get; set; } = new List<AuditScopeArea>();
+        public virtual ICollection<AuditObservation> Observations { get; set; } = new List<AuditObservation>();
+        public virtual ICollection<AuditOverviewStat> OverviewStats { get; set; } = new List<AuditOverviewStat>();
+    }
+
+    public class AuditScopeArea
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid ReportId { get; set; }
+        public Guid TenantId { get; set; }
+
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(1000)]
+        public string? Description { get; set; }
+
+        public int SortOrder { get; set; } = 0;
+
+        public virtual AuditReport Report { get; set; } = null!;
+    }
+
+    public class AuditOverviewStat
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid ReportId { get; set; }
+        public Guid TenantId { get; set; }
+
+        [Required, MaxLength(100)]
+        public string Category { get; set; } = string.Empty;
+
+        [Required, MaxLength(200)]
+        public string Label { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? Value { get; set; }
+
+        [MaxLength(50)]
+        public string? Unit { get; set; }
+
+        public virtual AuditReport Report { get; set; } = null!;
+    }
+
+    public class AuditObservation
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid ReportId { get; set; }
+        public Guid TenantId { get; set; }
+
+        public int ObservationNumber { get; set; } = 0;
+
+        [Required, MaxLength(300)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string RiskLevel { get; set; } = "Medium";
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Open";
+
+        [MaxLength(200)]
+        public string? ProcessArea { get; set; }
+
+        public string? Background { get; set; }
+        public string? DetailedObservation { get; set; }
+        public string? Risks { get; set; }
+        public string? Recommendations { get; set; }
+
+        [MaxLength(500)]
+        public string? MgmtCause { get; set; }
+
+        [MaxLength(1000)]
+        public string? MgmtCorrectiveAction { get; set; }
+
+        [MaxLength(1000)]
+        public string? MgmtPreventiveAction { get; set; }
+
+        public DateTime? MgmtTargetDate { get; set; }
+
+        [MaxLength(200)]
+        public string? MgmtResponsiblePerson { get; set; }
+
+        [MaxLength(200)]
+        public string? MgmtResponsibleDesignation { get; set; }
+
+        public bool IsAlreadyImplemented { get; set; } = false;
+        public bool IsProcessImprovement { get; set; } = false;
+        public decimal? FinancialImpact { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual AuditReport Report { get; set; } = null!;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // MODULE PERMISSIONS
     // ═══════════════════════════════════════════════════════════════
 

@@ -164,6 +164,12 @@ namespace Decypher.Web.Data
         public DbSet<WorkflowInstance> WorkflowInstances { get; set; }
         public DbSet<WorkflowStepHistory> WorkflowStepHistories { get; set; }
 
+        // Internal Audit
+        public DbSet<AuditReport> AuditReports { get; set; }
+        public DbSet<AuditScopeArea> AuditScopeAreas { get; set; }
+        public DbSet<AuditOverviewStat> AuditOverviewStats { get; set; }
+        public DbSet<AuditObservation> AuditObservations { get; set; }
+
         // Permissions
         public DbSet<ModulePermission> ModulePermissions { get; set; }
 
@@ -821,6 +827,35 @@ namespace Decypher.Web.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => new { e.TenantId, e.RoleName, e.ModuleKey }).IsUnique();
                 entity.HasIndex(e => new { e.TenantId, e.RoleName });
+            });
+
+            builder.Entity<AuditReport>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.DepartmentType });
+                entity.HasIndex(e => new { e.TenantId, e.FinancialYear });
+                entity.HasMany(e => e.ScopeAreas).WithOne(e => e.Report).HasForeignKey(e => e.ReportId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.Observations).WithOne(e => e.Report).HasForeignKey(e => e.ReportId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.OverviewStats).WithOne(e => e.Report).HasForeignKey(e => e.ReportId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<AuditScopeArea>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ReportId, e.SortOrder });
+            });
+
+            builder.Entity<AuditOverviewStat>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ReportId);
+            });
+
+            builder.Entity<AuditObservation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ReportId, e.ObservationNumber });
+                entity.Property(e => e.FinancialImpact).HasColumnType("decimal(18,2)");
             });
 
             // Seed data
