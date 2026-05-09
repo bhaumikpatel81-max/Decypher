@@ -14,32 +14,32 @@ import { environment } from '../../environments/environment';
 
             <div class="kpi-grid" style="margin-bottom:24px;">
               <article class="kpi-tile">
-                <div class="kpi-label">Total in Pool</div>
-                <div class="kpi-value">{{ entries.length }}</div>
-                <div class="kpi-meta">Passive candidates</div>
+                <div class="kpi-lbl">Total in Pool</div>
+                <div class="kpi-val">{{ entries.length }}</div>
+                <div class="kpi-sub">Passive candidates</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Active Nurturing</div>
-                <div class="kpi-value" style="color:#10b981;">{{ activeNurtureCount }}</div>
-                <div class="kpi-meta">Engaged this month</div>
+                <div class="kpi-lbl">Active Nurturing</div>
+                <div class="kpi-val" style="color:#10b981;">{{ activeNurtureCount }}</div>
+                <div class="kpi-sub">Engaged this month</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Duplicate Groups</div>
-                <div class="kpi-value" style="color:#f59e0b;">{{ dupGroups.length }}</div>
-                <div class="kpi-meta">Pending deduplication</div>
+                <div class="kpi-lbl">Duplicate Groups</div>
+                <div class="kpi-val" style="color:#f59e0b;">{{ dupGroups.length }}</div>
+                <div class="kpi-sub">Pending deduplication</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Unique Tags</div>
-                <div class="kpi-value" style="color:#7c3aed;">{{ uniqueTagCount }}</div>
-                <div class="kpi-meta">Skill categories</div>
+                <div class="kpi-lbl">Unique Tags</div>
+                <div class="kpi-val" style="color:#7c3aed;">{{ uniqueTagCount }}</div>
+                <div class="kpi-sub">Skill categories</div>
               </article>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
               <!-- Nurture Status Donut -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Nurture Status</h3>
+              <div class="c-card">
+                <div class="c-title">Nurture Status</div>
                 <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
                   <svg viewBox="0 0 120 120" width="140" height="140">
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
@@ -68,8 +68,8 @@ import { environment } from '../../environments/environment';
               </div>
 
               <!-- Top Tags Bar Chart -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Top Skills / Tags</h3>
+              <div class="c-card">
+                <div class="c-title">Top Skills / Tags</div>
                 <div *ngFor="let t of topTags" style="margin-bottom:14px;">
                   <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
                     <span class="chip chip-brand" style="padding:2px 8px;font-size:11px;">{{ t.tag }}</span>
@@ -86,9 +86,9 @@ import { environment } from '../../environments/environment';
             </div>
 
             <!-- Trend Line -->
-            <div class="card" style="padding:24px;">
+            <div class="c-card">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 style="margin:0;">Pool Growth Trend</h3>
+                <span style="font-size:14px;font-weight:700;">Pool Growth Trend</span>
                 <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
               </div>
               <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
@@ -254,6 +254,15 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
+    .kpi-tile  { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+    .kpi-val   { font-size:26px;font-weight:800;margin:4px 0; }
+    .kpi-lbl   { font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+    .kpi-sub   { font-size:11px;color:var(--text-3); }
+    .c-card    { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+    .c-title   { font-size:14px;font-weight:700;margin-bottom:14px; }
+    .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
+    .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
+    .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700; }
     .dup-badge {
       display:inline-flex; align-items:center; justify-content:center;
       min-width:18px; height:18px; border-radius:9px;

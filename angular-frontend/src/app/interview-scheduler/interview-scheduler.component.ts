@@ -13,68 +13,70 @@ import { environment } from '../../environments/environment';
         <mat-tab label="Analytics">
           <div style="padding-top:20px;">
 
-            <div class="kpi-grid" style="margin-bottom:24px;">
-              <article class="kpi-tile">
-                <div class="kpi-label">Total Scheduled</div>
-                <div class="kpi-value">{{ interviews.length }}</div>
-                <div class="kpi-meta">All interview slots</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Completed</div>
-                <div class="kpi-value" style="color:#10b981;">{{ completedCount }}</div>
-                <div class="kpi-meta">Interviews done</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Upcoming</div>
-                <div class="kpi-value" style="color:#7c3aed;">{{ scheduledCount }}</div>
-                <div class="kpi-meta">Still pending</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Completion Rate</div>
-                <div class="kpi-value" style="color:#06b6d4;">{{ completionRate }}%</div>
-                <div class="kpi-meta">Vs total booked</div>
-              </article>
+            <!-- KPI Strip -->
+            <div class="kpi-grid" style="margin-bottom:20px;">
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Total Scheduled</div>
+                <div class="kpi-val">{{ interviews.length }}</div>
+                <div class="kpi-sub">All interview slots</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Completed</div>
+                <div class="kpi-val" style="color:#10b981;">{{ completedCount }}</div>
+                <div class="kpi-sub">{{ completionRate }}% completion</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Upcoming</div>
+                <div class="kpi-val" style="color:#7c3aed;">{{ scheduledCount }}</div>
+                <div class="kpi-sub">Pending confirmation</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Cancelled</div>
+                <div class="kpi-val" style="color:#ef4444;">{{ cancelledCount }}</div>
+                <div class="kpi-sub">{{ cancellationRate }}% drop rate</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Completion Rate</div>
+                <div class="kpi-val" style="color:#06b6d4;">{{ completionRate }}%</div>
+                <div class="kpi-sub">Done vs total booked</div>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+            <!-- Row 2: Type + Status -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
 
-              <!-- Type Bar Chart -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">By Interview Type</h3>
-                <div style="margin-bottom:18px;">
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                    <span>📞 Phone</span><b>{{ phoneCount }}</b>
+              <div class="c-card">
+                <div class="c-title">By Interview Type</div>
+                <div style="margin-top:14px;display:flex;flex-direction:column;gap:14px;">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                      <span style="font-size:12px;color:var(--text-3);">📞 Phone</span>
+                      <b style="color:#7c3aed;">{{ phoneCount }}</b>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" [style.width.%]="phoneCount * 100 / maxType" style="background:#7c3aed;"></div></div>
                   </div>
-                  <div style="height:12px;background:#f1f5f9;border-radius:6px;overflow:hidden;">
-                    <div [style.width.%]="phoneCount * 100 / maxType" style="height:100%;background:#7c3aed;border-radius:6px;transition:width .4s;"></div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                      <span style="font-size:12px;color:var(--text-3);">📹 Video</span>
+                      <b style="color:#06b6d4;">{{ videoCount }}</b>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" [style.width.%]="videoCount * 100 / maxType" style="background:#06b6d4;"></div></div>
                   </div>
-                </div>
-                <div style="margin-bottom:18px;">
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                    <span>📹 Video</span><b>{{ videoCount }}</b>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                      <span style="font-size:12px;color:var(--text-3);">🏢 Onsite</span>
+                      <b style="color:#10b981;">{{ onsiteCount }}</b>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill" [style.width.%]="onsiteCount * 100 / maxType" style="background:#10b981;"></div></div>
                   </div>
-                  <div style="height:12px;background:#f1f5f9;border-radius:6px;overflow:hidden;">
-                    <div [style.width.%]="videoCount * 100 / maxType" style="height:100%;background:#06b6d4;border-radius:6px;transition:width .4s;"></div>
-                  </div>
-                </div>
-                <div>
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-                    <span>🏢 Onsite</span><b>{{ onsiteCount }}</b>
-                  </div>
-                  <div style="height:12px;background:#f1f5f9;border-radius:6px;overflow:hidden;">
-                    <div [style.width.%]="onsiteCount * 100 / maxType" style="height:100%;background:#10b981;border-radius:6px;transition:width .4s;"></div>
-                  </div>
-                </div>
-                <div *ngIf="!interviews.length" style="color:var(--text-3);text-align:center;padding:16px;">
-                  No interviews scheduled yet
+                  <div *ngIf="!interviews.length" style="color:var(--text-3);text-align:center;padding:12px;font-size:13px;">No interviews yet</div>
                 </div>
               </div>
 
-              <!-- Status Donut -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Status Breakdown</h3>
-                <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-                  <svg viewBox="0 0 120 120" width="140" height="140">
+              <div class="c-card">
+                <div class="c-title">Status Breakdown</div>
+                <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:12px;">
+                  <svg viewBox="0 0 120 120" width="130" height="130">
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#7c3aed" stroke-width="16"
                       [attr.stroke-dasharray]="scheduledDash + ' 283'"
@@ -91,25 +93,60 @@ import { environment } from '../../environments/environment';
                   <div style="display:flex;flex-direction:column;gap:10px;">
                     <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
                       <span style="width:10px;height:10px;border-radius:2px;background:#7c3aed;display:inline-block;flex-shrink:0;"></span>
-                      Scheduled <b style="margin-left:4px;">{{ scheduledCount }}</b>
+                      Scheduled <span class="num-chip" style="background:rgba(124,58,237,.1);color:#7c3aed;">{{ scheduledCount }}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
                       <span style="width:10px;height:10px;border-radius:2px;background:#10b981;display:inline-block;flex-shrink:0;"></span>
-                      Completed <b style="margin-left:4px;">{{ completedCount }}</b>
+                      Completed <span class="num-chip" style="background:#d1fae5;color:#065f46;">{{ completedCount }}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
                       <span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block;flex-shrink:0;"></span>
-                      Cancelled <b style="margin-left:4px;">{{ cancelledCount }}</b>
+                      Cancelled <span class="num-chip" style="background:#fee2e2;color:#991b1b;">{{ cancelledCount }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Volume Trend Line -->
-            <div class="card" style="padding:24px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 style="margin:0;">Interview Volume Trend</h3>
+            <!-- Interview Completion Funnel -->
+            <div class="c-card" style="margin-bottom:16px;">
+              <div class="c-title">Interview Completion Funnel</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:12px;color:var(--text-3);">Total Scheduled</span>
+                    <b style="color:#6b4df0;">{{ interviews.length }}</b>
+                  </div>
+                  <div class="bar-track"><div class="bar-fill" style="width:100%;background:#6b4df0;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:12px;color:var(--text-3);">Upcoming / Pending</span>
+                    <b style="color:#7c3aed;">{{ scheduledCount }}</b>
+                  </div>
+                  <div class="bar-track"><div class="bar-fill" [style.width.%]="interviews.length ? (scheduledCount/interviews.length)*100 : 0" style="background:#7c3aed;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:12px;color:var(--text-3);">Completed</span>
+                    <b style="color:#10b981;">{{ completedCount }}</b>
+                  </div>
+                  <div class="bar-track"><div class="bar-fill" [style.width.%]="interviews.length ? (completedCount/interviews.length)*100 : 0" style="background:#10b981;"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:12px;color:var(--text-3);">Cancelled / Dropped</span>
+                    <b style="color:#ef4444;">{{ cancelledCount }}</b>
+                  </div>
+                  <div class="bar-track"><div class="bar-fill" [style.width.%]="interviews.length ? (cancelledCount/interviews.length)*100 : 0" style="background:#ef4444;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Volume Trend -->
+            <div class="c-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="c-title">Interview Volume Trend</div>
                 <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
               </div>
               <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
@@ -124,6 +161,7 @@ import { environment } from '../../environments/environment';
                 <span *ngFor="let m of ivMonths" style="font-size:11px;color:var(--text-3);">{{ m }}</span>
               </div>
             </div>
+
           </div>
         </mat-tab>
 
@@ -169,6 +207,15 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
+    .kpi-tile  { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+    .kpi-val   { font-size:26px;font-weight:800;margin:4px 0; }
+    .kpi-lbl   { font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+    .kpi-sub   { font-size:11px;color:var(--text-3); }
+    .c-card    { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+    .c-title   { font-size:14px;font-weight:700; }
+    .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
+    .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
+    .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:4px; }
     .interview-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
     .interview-type-badge { background:var(--brand-bg); color:var(--brand); border-radius:6px; padding:4px 8px; font-size:11px; font-weight:700; }
     .interview-detail { flex:1; display:flex; flex-direction:column; gap:2px; }
@@ -237,6 +284,9 @@ export class InterviewSchedulerComponent implements OnInit {
   get maxType()        { return Math.max(this.phoneCount, this.videoCount, this.onsiteCount, 1); }
   get completionRate() {
     return this.interviews.length ? Math.round(this.completedCount / this.interviews.length * 100) : 0;
+  }
+  get cancellationRate() {
+    return this.interviews.length ? Math.round(this.cancelledCount / this.interviews.length * 100) : 0;
   }
 
   private dash(n: number) { return Math.round((n / (this.interviews.length || 1)) * 283); }

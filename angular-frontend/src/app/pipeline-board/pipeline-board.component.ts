@@ -13,65 +13,64 @@ import { environment } from '../../environments/environment';
         <mat-tab label="Analytics">
           <div style="padding-top:20px;">
 
-            <div class="kpi-grid" style="margin-bottom:24px;">
-              <article class="kpi-tile">
-                <div class="kpi-label">Total Candidates</div>
-                <div class="kpi-value">{{ totalCandidates }}</div>
-                <div class="kpi-meta">Across all stages</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Active Stages</div>
-                <div class="kpi-value" style="color:#7c3aed;">{{ board.length }}</div>
-                <div class="kpi-meta">Pipeline depth</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Avg per Stage</div>
-                <div class="kpi-value" style="color:#06b6d4;">{{ avgPerStage }}</div>
-                <div class="kpi-meta">Candidates / stage</div>
-              </article>
-              <article class="kpi-tile">
-                <div class="kpi-label">Top Stage</div>
-                <div class="kpi-value" style="font-size:18px;">{{ topStage }}</div>
-                <div class="kpi-meta">Most candidates</div>
-              </article>
+            <!-- KPI Strip -->
+            <div class="kpi-grid" style="margin-bottom:20px;">
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Total Candidates</div>
+                <div class="kpi-val">{{ totalCandidates }}</div>
+                <div class="kpi-sub">Across all stages</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Active Stages</div>
+                <div class="kpi-val" style="color:#7c3aed;">{{ board.length }}</div>
+                <div class="kpi-sub">Pipeline depth</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Avg per Stage</div>
+                <div class="kpi-val" style="color:#06b6d4;">{{ avgPerStage }}</div>
+                <div class="kpi-sub">Candidates / stage</div>
+              </div>
+              <div class="kpi-tile">
+                <div class="kpi-lbl">Top Stage</div>
+                <div class="kpi-val" style="font-size:18px;line-height:1.2;margin:6px 0;">{{ topStage }}</div>
+                <div class="kpi-sub">Most candidates</div>
+              </div>
             </div>
 
             <!-- Stage Funnel Bar Chart -->
-            <div class="card" style="padding:24px;margin-bottom:20px;">
-              <h3 style="margin:0 0 20px;">Candidates per Stage</h3>
-              <div *ngFor="let s of stageStats" style="margin-bottom:18px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="width:10px;height:10px;border-radius:50%;"
-                          [style.background]="s.colour || '#7c3aed'"
-                          style="display:inline-block;flex-shrink:0;"></span>
-                    <span style="font-size:13px;font-weight:600;">{{ s.name }}</span>
+            <div class="c-card" style="margin-bottom:16px;">
+              <div class="c-title">Candidates per Stage — Pipeline Funnel</div>
+              <div style="margin-top:14px;">
+                <div *ngFor="let s of stageStats; let i=index" style="margin-bottom:14px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span class="rank-badge" [style.background]="s.colour+'1a'" [style.color]="s.colour">{{i+1}}</span>
+                      <span style="font-size:13px;font-weight:600;">{{ s.name }}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-size:12px;color:var(--text-3);">{{ s.pct }}%</span>
+                      <span class="num-chip" [style.background]="s.colour+'1a'" [style.color]="s.colour">{{ s.count }}</span>
+                    </div>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <span style="font-size:12px;color:var(--text-3);">{{ s.pct }}%</span>
-                    <b style="font-size:14px;">{{ s.count }}</b>
+                  <div class="bar-track">
+                    <div class="bar-fill" [style.width.%]="s.pct" [style.background]="s.colour || '#7c3aed'"></div>
                   </div>
                 </div>
-                <div style="height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;">
-                  <div [style.width.%]="s.pct"
-                       [style.background]="s.colour || '#7c3aed'"
-                       style="height:100%;border-radius:7px;transition:width .4s;"></div>
+                <div *ngIf="!board.length" style="text-align:center;padding:40px;color:var(--text-3);">
+                  <div style="font-size:36px;margin-bottom:10px;">📊</div>
+                  <div style="font-weight:600;font-size:14px;">Load a board to see pipeline analytics</div>
+                  <div style="font-size:13px;margin-top:4px;color:var(--text-3);">Enter a Job ID in the Board tab</div>
                 </div>
-              </div>
-              <div *ngIf="!board.length" style="text-align:center;padding:40px;color:var(--text-3);">
-                <div style="font-size:36px;margin-bottom:10px;">📊</div>
-                <div style="font-weight:500;">Load a board to see analytics</div>
-                <div style="font-size:13px;margin-top:4px;">Enter a Job ID in the Board tab</div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <!-- Donut + Stage Health Pivot -->
+            <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
 
-              <!-- Stage Distribution Donut -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Stage Distribution</h3>
-                <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-                  <svg viewBox="0 0 120 120" width="140" height="140">
+              <div class="c-card">
+                <div class="c-title">Stage Distribution</div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:12px;">
+                  <svg viewBox="0 0 120 120" width="130" height="130">
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="18"/>
                     <ng-container *ngFor="let s of donutSegments">
                       <circle cx="60" cy="60" r="45" fill="none" stroke-width="18"
@@ -83,45 +82,60 @@ import { environment } from '../../environments/environment';
                     <text x="60" y="55" text-anchor="middle" font-size="18" font-weight="700" fill="#1e293b">{{ totalCandidates }}</text>
                     <text x="60" y="70" text-anchor="middle" font-size="9" fill="#94a3b8">TOTAL</text>
                   </svg>
-                  <div style="display:flex;flex-direction:column;gap:8px;">
-                    <div *ngFor="let s of stageStats"
-                         style="display:flex;align-items:center;gap:8px;font-size:12px;">
-                      <span [style.background]="s.colour || '#7c3aed'"
-                            style="width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;"></span>
-                      {{ s.name }} <b style="margin-left:4px;">{{ s.count }}</b>
+                  <div style="width:100%;display:flex;flex-direction:column;gap:7px;">
+                    <div *ngFor="let s of stageStats" style="display:flex;align-items:center;gap:8px;font-size:12px;">
+                      <span [style.background]="s.colour || '#7c3aed'" style="width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;"></span>
+                      <span style="flex:1;">{{ s.name }}</span>
+                      <b [style.color]="s.colour">{{ s.count }}</b>
                     </div>
-                    <div *ngIf="!board.length" style="color:var(--text-3);font-size:12px;">No board loaded</div>
+                    <div *ngIf="!board.length" style="color:var(--text-3);font-size:12px;text-align:center;">No board loaded</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Stage Health Table -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 16px;">Stage Health</h3>
-                <table class="table" *ngIf="board.length">
-                  <thead>
-                    <tr><th>Stage</th><th>Count</th><th>Share</th><th>Fill</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let s of stageStats">
-                      <td><b>{{ s.name }}</b></td>
-                      <td>{{ s.count }}</td>
-                      <td>{{ s.pct }}%</td>
-                      <td style="width:80px;">
-                        <div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;">
-                          <div [style.width.%]="s.pct"
-                               [style.background]="s.colour || '#7c3aed'"
-                               style="height:100%;border-radius:3px;"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div *ngIf="!board.length" style="color:var(--text-3);text-align:center;padding:20px;">
-                  Load a board first
+              <div class="c-card">
+                <div class="c-title">Stage Health Pivot</div>
+                <div style="overflow-x:auto;margin-top:12px;">
+                  <table style="width:100%;border-collapse:collapse;" *ngIf="board.length">
+                    <thead>
+                      <tr style="background:var(--surface-alt);">
+                        <th class="pth">Stage</th>
+                        <th class="pth r">Candidates</th>
+                        <th class="pth r">Share %</th>
+                        <th class="pth">Fill Bar</th>
+                        <th class="pth c">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let s of stageStats; let i=index" class="ptr">
+                        <td class="ptd">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="rank-badge" [style.background]="s.colour+'1a'" [style.color]="s.colour">{{i+1}}</span>
+                            <b>{{ s.name }}</b>
+                          </div>
+                        </td>
+                        <td class="ptd r"><b>{{ s.count }}</b></td>
+                        <td class="ptd r">
+                          <span class="num-chip" [style.background]="s.colour+'1a'" [style.color]="s.colour">{{ s.pct }}%</span>
+                        </td>
+                        <td class="ptd" style="min-width:120px;">
+                          <div class="bar-track" style="height:6px;">
+                            <div class="bar-fill" [style.width.%]="s.pct" [style.background]="s.colour || '#7c3aed'"></div>
+                          </div>
+                        </td>
+                        <td class="ptd c">
+                          <span class="num-chip" [style.background]="s.count>avgPerStage?'#d1fae5':'#fef3c7'" [style.color]="s.count>avgPerStage?'#065f46':'#92400e'">
+                            {{ s.count > avgPerStage ? 'Active' : 'Low' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div *ngIf="!board.length" style="color:var(--text-3);text-align:center;padding:24px;font-size:13px;">Load a board first</div>
                 </div>
               </div>
             </div>
+
           </div>
         </mat-tab>
 
@@ -161,6 +175,21 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
+    .kpi-tile  { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+    .kpi-val   { font-size:26px;font-weight:800;margin:4px 0; }
+    .kpi-lbl   { font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+    .kpi-sub   { font-size:11px;color:var(--text-3); }
+    .c-card    { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+    .c-title   { font-size:14px;font-weight:700; }
+    .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
+    .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
+    .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700; }
+    .rank-badge { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-weight:700;font-size:11px;flex-shrink:0; }
+    .pth { padding:8px 10px;text-align:left;font-size:11px;color:var(--text-3);font-weight:700;border-bottom:2px solid var(--border); }
+    .pth.r { text-align:right; } .pth.c { text-align:center; }
+    .ptd { padding:8px 10px;font-size:12px;border-bottom:1px solid var(--border); }
+    .ptd.r { text-align:right; } .ptd.c { text-align:center; }
+    .ptr:hover { background:var(--surface-alt); }
     .kanban-board { display:flex; gap:16px; overflow-x:auto; padding-bottom:8px; }
     .kanban-col { min-width:200px; background:var(--surface); border-radius:10px; padding:12px; }
     .kanban-col-header { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px; border-top:3px solid #6366f1; padding-top:8px; margin-bottom:12px; }

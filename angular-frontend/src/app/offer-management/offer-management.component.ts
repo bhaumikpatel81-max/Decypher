@@ -16,32 +16,32 @@ import { environment } from '../../environments/environment';
 
             <div class="kpi-grid" style="margin-bottom:24px;">
               <article class="kpi-tile">
-                <div class="kpi-label">Total Offers</div>
-                <div class="kpi-value">{{ pending.length }}</div>
-                <div class="kpi-meta">In pipeline</div>
+                <div class="kpi-lbl">Total Offers</div>
+                <div class="kpi-val">{{ pending.length }}</div>
+                <div class="kpi-sub">In pipeline</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Accepted</div>
-                <div class="kpi-value" style="color:#10b981;">{{ acceptedCount }}</div>
-                <div class="kpi-meta">Candidates joining</div>
+                <div class="kpi-lbl">Accepted</div>
+                <div class="kpi-val" style="color:#10b981;">{{ acceptedCount }}</div>
+                <div class="kpi-sub">Candidates joining</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Acceptance Rate</div>
-                <div class="kpi-value" style="color:#7c3aed;">{{ acceptanceRate }}%</div>
-                <div class="kpi-meta">Accepted vs decided</div>
+                <div class="kpi-lbl">Acceptance Rate</div>
+                <div class="kpi-val" style="color:#7c3aed;">{{ acceptanceRate }}%</div>
+                <div class="kpi-sub">Accepted vs decided</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Total Value</div>
-                <div class="kpi-value" style="font-size:22px;">{{ totalOfferValue | number:'1.0-0' }}</div>
-                <div class="kpi-meta">Combined salary (INR)</div>
+                <div class="kpi-lbl">Total Value</div>
+                <div class="kpi-val" style="font-size:22px;">{{ totalOfferValue | number:'1.0-0' }}</div>
+                <div class="kpi-sub">Combined salary (INR)</div>
               </article>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
               <!-- Status Donut -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Offer Status Mix</h3>
+              <div class="c-card">
+                <div class="c-title">Offer Status Mix</div>
                 <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
                   <svg viewBox="0 0 120 120" width="140" height="140">
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
@@ -82,8 +82,8 @@ import { environment } from '../../environments/environment';
               </div>
 
               <!-- Salary Buckets -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Salary Distribution</h3>
+              <div class="c-card">
+                <div class="c-title">Salary Distribution</div>
                 <div *ngFor="let bucket of salaryBuckets" style="margin-bottom:14px;">
                   <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
                     <span>{{ bucket.label }}</span><b>{{ bucket.count }}</b>
@@ -99,9 +99,9 @@ import { environment } from '../../environments/environment';
             </div>
 
             <!-- Trend Line -->
-            <div class="card" style="padding:24px;">
+            <div class="c-card">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 style="margin:0;">Offer Pipeline Trend</h3>
+                <span style="font-size:14px;font-weight:700;">Offer Pipeline Trend</span>
                 <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
               </div>
               <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
@@ -167,6 +167,15 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
+    .kpi-tile  { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+    .kpi-val   { font-size:26px;font-weight:800;margin:4px 0; }
+    .kpi-lbl   { font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+    .kpi-sub   { font-size:11px;color:var(--text-3); }
+    .c-card    { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+    .c-title   { font-size:14px;font-weight:700;margin-bottom:14px; }
+    .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
+    .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
+    .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700; }
     .offer-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
     .offer-info { flex:1; display:flex; flex-direction:column; gap:2px; }
   `]

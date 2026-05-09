@@ -14,32 +14,32 @@ import { environment } from '../../environments/environment';
 
             <div class="kpi-grid" style="margin-bottom:24px;">
               <article class="kpi-tile">
-                <div class="kpi-label">Total Requisitions</div>
-                <div class="kpi-value">{{ requisitions.length }}</div>
-                <div class="kpi-meta">All requests</div>
+                <div class="kpi-lbl">Total Requisitions</div>
+                <div class="kpi-val">{{ requisitions.length }}</div>
+                <div class="kpi-sub">All requests</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Pending Approval</div>
-                <div class="kpi-value" style="color:#f59e0b;">{{ pendingCount }}</div>
-                <div class="kpi-meta">Awaiting decision</div>
+                <div class="kpi-lbl">Pending Approval</div>
+                <div class="kpi-val" style="color:#f59e0b;">{{ pendingCount }}</div>
+                <div class="kpi-sub">Awaiting decision</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Approved</div>
-                <div class="kpi-value" style="color:#10b981;">{{ approvedCount }}</div>
-                <div class="kpi-meta">Ready to hire</div>
+                <div class="kpi-lbl">Approved</div>
+                <div class="kpi-val" style="color:#10b981;">{{ approvedCount }}</div>
+                <div class="kpi-sub">Ready to hire</div>
               </article>
               <article class="kpi-tile">
-                <div class="kpi-label">Filled</div>
-                <div class="kpi-value" style="color:#7c3aed;">{{ filledCount }}</div>
-                <div class="kpi-meta">Positions closed</div>
+                <div class="kpi-lbl">Filled</div>
+                <div class="kpi-val" style="color:#7c3aed;">{{ filledCount }}</div>
+                <div class="kpi-sub">Positions closed</div>
               </article>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
               <!-- Status Donut -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">Status Distribution</h3>
+              <div class="c-card">
+                <div class="c-title">Status Distribution</div>
                 <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
                   <svg viewBox="0 0 120 120" width="140" height="140">
                     <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="16"/>
@@ -77,8 +77,8 @@ import { environment } from '../../environments/environment';
               </div>
 
               <!-- Department Bar Chart -->
-              <div class="card" style="padding:24px;">
-                <h3 style="margin:0 0 20px;">By Department</h3>
+              <div class="c-card">
+                <div class="c-title">By Department</div>
                 <div *ngFor="let d of deptStats" style="margin-bottom:14px;">
                   <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
                     <span>{{ d.dept }}</span><b>{{ d.count }}</b>
@@ -94,9 +94,9 @@ import { environment } from '../../environments/environment';
             </div>
 
             <!-- Monthly Trend Line -->
-            <div class="card" style="padding:24px;margin-bottom:20px;">
+            <div class="c-card">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 style="margin:0;">Requisition Trend</h3>
+                <span style="font-size:14px;font-weight:700;">Requisition Trend</span>
                 <span style="font-size:12px;color:var(--text-3);">Last 6 months</span>
               </div>
               <svg viewBox="0 0 500 100" width="100%" height="100" style="overflow:visible;">
@@ -113,8 +113,8 @@ import { environment } from '../../environments/environment';
             </div>
 
             <!-- Priority × Status Pivot -->
-            <div class="card" style="padding:24px;">
-              <h3 style="margin:0 0 16px;">Priority × Status Pivot</h3>
+            <div class="c-card">
+              <div class="c-title">Priority × Status Pivot</div>
               <table class="table">
                 <thead>
                   <tr>
@@ -209,6 +209,15 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
+    .kpi-tile  { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+    .kpi-val   { font-size:26px;font-weight:800;margin:4px 0; }
+    .kpi-lbl   { font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+    .kpi-sub   { font-size:11px;color:var(--text-3); }
+    .c-card    { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+    .c-title   { font-size:14px;font-weight:700;margin-bottom:14px; }
+    .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
+    .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
+    .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700; }
     .req-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
     .req-info { flex:1; display:flex; flex-direction:column; gap:2px; }
     .btn.active { background:var(--brand); color:#fff; }
