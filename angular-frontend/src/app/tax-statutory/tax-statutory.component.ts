@@ -16,6 +16,7 @@ import { environment } from '../../environments/environment';
           <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='pf'" (click)="tab='pf'">PF</button>
           <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='esi'" (click)="tab='esi'">ESI</button>
           <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='tds'" (click)="tab='tds'">TDS/PT</button>
+          <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='declarations'" (click)="tab='declarations';loadDeclarations()">Declarations</button>
         </div>
       </div>
 
@@ -31,6 +32,8 @@ import { environment } from '../../environments/environment';
           <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;" (click)="downloadChallan(s.type)">Download Challan</button>
         </div>
       </div>
+
+      <div *ngIf="challanMsg" style="padding:10px 14px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;margin-bottom:12px;">{{challanMsg}}</div>
 
       <!-- OVERVIEW -->
       <div *ngIf="tab==='overview'">
@@ -168,6 +171,63 @@ import { environment } from '../../environments/environment';
           </div>
         </div>
       </div>
+
+      <!-- DECLARATIONS -->
+      <div *ngIf="tab==='declarations'">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <!-- Create Declaration -->
+          <div class="card">
+            <h3 style="font-weight:700;margin-bottom:16px;">New Tax Declaration</h3>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text-3);">Employee</label>
+                <select class="select" [(ngModel)]="declForm.empId" style="margin-top:4px;">
+                  <option value="">Select Employee</option>
+                  <option *ngFor="let e of declEmployees" [value]="e.empId">{{e.name}}</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-3);">Section</label>
+                  <select class="select" [(ngModel)]="declForm.section" style="margin-top:4px;">
+                    <option value="">Select</option>
+                    <option *ngFor="let s of taxSections">{{s}}</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-3);">Fiscal Year</label>
+                  <input class="input" [(ngModel)]="declForm.fiscalYear" style="margin-top:4px;" placeholder="2025-26">
+                </div>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text-3);">Amount (₹)</label>
+                <input class="input" type="number" [(ngModel)]="declForm.amount" style="margin-top:4px;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text-3);">Description</label>
+                <input class="input" [(ngModel)]="declForm.description" style="margin-top:4px;" placeholder="e.g. LIC Premium, PPF, ELSS">
+              </div>
+              <button class="btn btn-primary" (click)="saveDeclaration()">Submit Declaration</button>
+              <div *ngIf="declMsg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{declMsg}}</div>
+            </div>
+          </div>
+
+          <!-- Declarations List -->
+          <div>
+            <h3 style="font-weight:700;margin-bottom:16px;">Filed Declarations</h3>
+            <div *ngIf="!declarations.length" style="text-align:center;padding:32px;color:var(--text-3);">No declarations found</div>
+            <div *ngFor="let d of declarations" class="card" style="padding:14px;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-weight:700;font-size:13px;">{{d.employeeName}} — {{d.section}}</div>
+                  <div style="font-size:12px;color:var(--text-3);">{{d.description}} · FY {{d.fiscalYear}}</div>
+                </div>
+                <div style="font-size:18px;font-weight:800;color:#6b4df0;">₹{{d.amount | number}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -189,6 +249,13 @@ export class TaxStatutoryComponent implements OnInit {
   private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
   tab = 'overview';
+  challanMsg = '';
+  declMsg = '';
+
+  declarations: any[] = [];
+  declEmployees: { empId: string; name: string }[] = [];
+  declForm = { empId: '', section: '', fiscalYear: '2025-26', amount: 0, description: '' };
+  taxSections = ['80C', '80D', '80E', '80G', '80TTA', 'HRA', 'LTA', '24(b)', '80CCD(1B)', '80U'];
 
   statusCards = [
     { type: 'Provident Fund (PF)', status: 'Filed', amount: 84000, due: '15 May', period: 'Apr 2026' },
@@ -255,7 +322,30 @@ export class TaxStatutoryComponent implements OnInit {
     });
   }
 
-  downloadChallan(type: string) { alert(`Downloading ${type} challan PDF`); }
-  generateChallan(type: string) { alert(`${type} challan generated`); }
-  generateForm16() { alert('Form 16 generation triggered for all employees'); }
+  downloadChallan(type: string) { this.challanMsg = `${type} challan PDF downloading...`; setTimeout(() => this.challanMsg = '', 3000); }
+  generateChallan(type: string) { this.challanMsg = `${type} challan generated`; setTimeout(() => this.challanMsg = '', 3000); }
+  generateForm16() { this.challanMsg = 'Form 16 generation triggered for all employees'; setTimeout(() => this.challanMsg = '', 3000); }
+
+  loadDeclarations() {
+    this.http.get<any[]>(`${this.api}/tax/declarations`).subscribe(data => { this.declarations = data || []; });
+    if (!this.declEmployees.length) {
+      this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
+        this.declEmployees = (data || []).map(e => ({ empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim() }));
+      });
+    }
+  }
+
+  saveDeclaration() {
+    if (!this.declForm.empId || !this.declForm.section || !this.declForm.amount) { this.declMsg = 'Fill all required fields'; return; }
+    const emp = this.declEmployees.find(e => e.empId === this.declForm.empId);
+    const payload = { employeeId: this.declForm.empId, employeeName: emp?.name, section: this.declForm.section, fiscalYear: this.declForm.fiscalYear, amount: this.declForm.amount, description: this.declForm.description };
+    this.http.post<any>(`${this.api}/tax/declarations`, payload).subscribe({
+      next: res => {
+        this.declarations.unshift({ ...payload, id: res.id });
+        this.declMsg = `Declaration submitted for ${emp?.name}`; setTimeout(() => this.declMsg = '', 3000);
+        this.declForm = { empId: '', section: '', fiscalYear: '2025-26', amount: 0, description: '' };
+      },
+      error: err => { this.declMsg = err?.error?.message || 'Failed to save declaration'; setTimeout(() => this.declMsg = '', 3000); }
+    });
+  }
 }

@@ -182,7 +182,7 @@ import { environment } from '../../environments/environment';
                   <span class="chip" [style.color]="statusTextColour(r.status)">{{ r.status }}</span>
                   <div style="display:flex;gap:4px;" *ngIf="r.status==='Pending'">
                     <button class="btn btn-primary btn-sm" (click)="approve(r.id)">Approve</button>
-                    <button class="btn btn-ghost btn-sm" (click)="reject(r.id)">Reject</button>
+                    <button class="btn btn-ghost btn-sm" (click)="openReject(r.id)">Reject</button>
                   </div>
                 </div>
                 <div *ngIf="!requisitions.length" style="color:var(--text-3);text-align:center;padding:20px;">
@@ -194,6 +194,18 @@ import { environment } from '../../environments/environment';
         </mat-tab>
 
       </mat-tab-group>
+
+      <!-- Reject Dialog -->
+      <div *ngIf="showRejectDialog" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;">
+        <div style="background:var(--surface);border-radius:14px;padding:28px;max-width:400px;width:90%;">
+          <h3 style="font-weight:700;margin:0 0 16px;">Reject Requisition</h3>
+          <textarea class="textarea" placeholder="Reason for rejection (required)" [(ngModel)]="rejectReason" style="height:80px;margin-bottom:12px;"></textarea>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" (click)="confirmReject()" [disabled]="!rejectReason.trim()">Confirm Reject</button>
+            <button class="btn btn-ghost btn-sm" (click)="showRejectDialog=false">Cancel</button>
+          </div>
+        </div>
+      </div>
     </section>
   `,
   styles: [`
@@ -212,8 +224,19 @@ export class RequisitionsComponent implements OnInit {
   departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Operations'];
   form: any = { title: '', department: 'Engineering', headcount: 1, budgetMin: null, budgetMax: null, priority: 'Medium', justification: '' };
 
-  readonly reqMonths = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
-  readonly reqTrendData = [2, 5, 8, 12, 9, 14];
+  reqMonths: string[] = [];
+  reqTrendData: number[] = [0, 0, 0, 0, 0, 0];
+
+  private buildTrend(items: any[], dateField: string) {
+    const now = new Date(), months: string[] = [], counts: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toLocaleString('default', { month: 'short' }));
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
+    }
+    this.reqMonths = months; this.reqTrendData = counts;
+  }
   readonly pivotStatuses = ['Pending', 'Approved', 'Filled', 'Rejected'];
 
   constructor(private http: HttpClient) {}
@@ -223,7 +246,7 @@ export class RequisitionsComponent implements OnInit {
   load() {
     const q = this.statusFilter ? `?status=${this.statusFilter}` : '';
     this.http.get<any[]>(`${environment.apiUrl}/api/requisitions${q}`)
-      .subscribe({ next: d => this.requisitions = d, error: () => {} });
+      .subscribe({ next: d => { this.requisitions = d; this.buildTrend(d, 'createdAt'); }, error: () => {} });
   }
 
   create() {
@@ -240,11 +263,16 @@ export class RequisitionsComponent implements OnInit {
       .subscribe({ next: () => this.load(), error: () => {} });
   }
 
-  reject(id: string) {
-    const reason = prompt('Rejection reason:');
-    if (!reason) return;
-    this.http.put(`${environment.apiUrl}/api/requisitions/${id}/reject`, { reason })
-      .subscribe({ next: () => this.load(), error: () => {} });
+  rejectId = '';
+  rejectReason = '';
+  showRejectDialog = false;
+
+  openReject(id: string) { this.rejectId = id; this.rejectReason = ''; this.showRejectDialog = true; }
+
+  confirmReject() {
+    if (!this.rejectReason.trim()) return;
+    this.http.put(`${environment.apiUrl}/api/requisitions/${this.rejectId}/reject`, { reason: this.rejectReason })
+      .subscribe({ next: () => { this.showRejectDialog = false; this.load(); }, error: () => { this.showRejectDialog = false; } });
   }
 
   get pendingCount()  { return this.requisitions.filter(r => r.status === 'Pending').length; }

@@ -122,8 +122,10 @@ interface BenchmarkRole {
         <div class="card" style="margin-top:24px;max-width:420px;">
           <h4 style="font-weight:700;margin-bottom:12px;">Import Market Data</h4>
           <input class="input" [(ngModel)]="importSource" placeholder="Data source (e.g. Mercer, Korn Ferry, Naukri)" style="margin-bottom:12px;">
-          <div style="padding:24px;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-3);cursor:pointer;">📤 Upload market survey file (.csv / .xlsx)</div>
-          <button class="btn btn-primary" style="margin-top:12px;" (click)="importData()">Import Data</button>
+          <input #benchFile type="file" accept=".csv" style="display:none;" (change)="onBenchFile($event)">
+          <div style="padding:24px;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-3);cursor:pointer;" (click)="benchFile.click()">📤 Click to upload market survey CSV<br><small style="font-size:11px;">Columns: role, department, p25, p50, p75</small></div>
+          <button class="btn btn-primary" style="margin-top:12px;" (click)="importData()" *ngIf="importSource">Import from Source Name</button>
+          <div *ngIf="importMsg" style="margin-top:8px;padding:8px 12px;background:#d1fae5;border-radius:6px;color:#065f46;font-size:13px;font-weight:600;">{{importMsg}}</div>
         </div>
       </div>
     </div>
@@ -150,6 +152,7 @@ export class SalaryBenchmarkingComponent implements OnInit {
   filterDept = '';
   search = '';
   importSource = '';
+  importMsg = '';
   Math = Math;
 
   departments = ['Engineering', 'HR', 'Finance', 'Sales', 'Operations'];
@@ -193,8 +196,36 @@ export class SalaryBenchmarkingComponent implements OnInit {
   importData() {
     if (!this.importSource) return;
     this.http.post(`${this.api}/benchmarking/import`, { source: this.importSource }).subscribe({
-      next: () => { this.importSource = ''; this.loadBenchmarks(); },
+      next: () => { this.importMsg = 'Import triggered'; this.importSource = ''; this.loadBenchmarks(); setTimeout(() => this.importMsg = '', 3000); },
       error: () => {}
     });
+  }
+
+  onBenchFile(evt: Event) {
+    const file = (evt.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(l => l.trim());
+      const header = lines[0].toLowerCase().split(',');
+      const col = (name: string) => header.findIndex(h => h.includes(name));
+      const rows = lines.slice(1).map(l => {
+        const parts = l.split(',');
+        return {
+          role: parts[col('role')]?.trim() || parts[0]?.trim(),
+          department: parts[col('dept')]?.trim() || parts[col('dep')]?.trim() || '',
+          marketP25: +parts[col('p25')]?.trim() || 0,
+          marketP50: +parts[col('p50')]?.trim() || 0,
+          marketP75: +parts[col('p75')]?.trim() || 0,
+          source: file.name
+        };
+      }).filter(r => r.role && r.marketP50 > 0);
+      let done = 0;
+      rows.forEach(r => this.http.post(`${this.api}/benchmarks`, r).subscribe({ next: () => { if (++done === rows.length) { this.importMsg = `${done} benchmark rows imported`; setTimeout(() => this.importMsg = '', 4000); this.loadBenchmarks(); } } }));
+      if (!rows.length) { this.importMsg = 'No valid rows found in CSV'; setTimeout(() => this.importMsg = '', 3000); }
+    };
+    reader.readAsText(file);
+    (evt.target as HTMLInputElement).value = '';
   }
 }

@@ -16,6 +16,7 @@ import { AIService } from '../services/ai.service';
         <button (click)="analyzeJd()" class="btn btn-primary" [disabled]="isLoading">
           {{ isLoading ? 'Analyzing...' : 'Analyze JD' }}
         </button>
+        <div *ngIf="errorMsg" style="margin-top:8px;padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{errorMsg}}</div>
       </div>
 
       <div *ngIf="analysis" class="analysis-results">
@@ -63,14 +64,16 @@ export class JdCheckerComponent {
   jobDescription = '';
   analysis: any = null;
   isLoading = false;
+  errorMsg = '';
 
   constructor(private aiService: AIService) {}
 
   analyzeJd(): void {
     if (!this.jobDescription) {
-      alert('Please enter a job description');
+      this.errorMsg = 'Please enter a job description';
       return;
     }
+    this.errorMsg = '';
 
     this.isLoading = true;
     this.aiService.analyzeJobDescription(this.jobDescription).subscribe({

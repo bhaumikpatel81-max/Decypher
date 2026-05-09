@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface WorkflowStep {
@@ -52,7 +53,6 @@ interface WorkflowInstance {
             <!-- Editor -->
             <div *ngIf="editing" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;">
               <h3 style="margin:0 0 16px;font-size:15px;">{{draft.id ? 'Edit' : 'New'}} Workflow</h3>
-              <div *ngIf="saveMsg" style="color:#22c55e;font-size:13px;margin-bottom:12px;">{{saveMsg}}</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
                 <input class="input" placeholder="Workflow name*" [(ngModel)]="draft.name">
                 <select class="select" [(ngModel)]="draft.entityType">
@@ -181,14 +181,13 @@ export class WorkflowBuilderComponent implements OnInit {
 
   editing = false;
   draft: WorkflowDefinition & { steps: WorkflowStep[] } = this.emptyDraft();
-  saveMsg = '';
 
   instanceFilter = '';
   entityTypeFilter = '';
 
   private api = `${environment.apiUrl}/api/workflows`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
   ngOnInit() {
     this.loadDefinitions();
@@ -197,8 +196,9 @@ export class WorkflowBuilderComponent implements OnInit {
   }
 
   loadDefinitions() {
-    this.http.get<WorkflowDefinition[]>(`${this.api}/definitions`).subscribe(d => {
-      this.definitions = d.map(def => ({ ...def, steps: this.parseSteps(def.stepsJson) }));
+    this.http.get<WorkflowDefinition[]>(`${this.api}/definitions`).subscribe({
+      next: d => { this.definitions = [...d.map(def => ({ ...def, steps: this.parseSteps(def.stepsJson) }))]; },
+      error: () => this.snack.open('Failed to load workflow definitions', 'Close', { duration: 3000 })
     });
   }
 
@@ -206,23 +206,28 @@ export class WorkflowBuilderComponent implements OnInit {
     const params = new URLSearchParams();
     if (this.instanceFilter)   params.set('status', this.instanceFilter);
     if (this.entityTypeFilter) params.set('entityType', this.entityTypeFilter);
-    this.http.get<WorkflowInstance[]>(`${this.api}/instances?${params}`).subscribe(i => this.instances = i);
+    this.http.get<WorkflowInstance[]>(`${this.api}/instances?${params}`).subscribe({
+      next: i => { this.instances = [...i]; },
+      error: () => this.snack.open('Failed to load workflow instances', 'Close', { duration: 3000 })
+    });
   }
 
   loadSLABreaches() {
-    this.http.get<WorkflowInstance[]>(`${this.api}/sla-breaches`).subscribe(b => this.slaCount = b.length);
+    this.http.get<WorkflowInstance[]>(`${this.api}/sla-breaches`).subscribe({
+      next: b => { this.slaCount = b.length; },
+      error: () => {}
+    });
   }
 
-  startNew() { this.draft = this.emptyDraft(); this.editing = true; this.saveMsg = ''; }
+  startNew() { this.draft = this.emptyDraft(); this.editing = true; }
 
   editDefinition(def: WorkflowDefinition) {
     this.draft = { ...def, steps: this.parseSteps(def.stepsJson) };
     this.editing = true;
-    this.saveMsg = '';
   }
 
-  addStep() { this.draft.steps.push({ name: '', role: '', slaDays: 2 }); }
-  removeStep(i: number) { this.draft.steps.splice(i, 1); }
+  addStep() { this.draft.steps = [...this.draft.steps, { name: '', role: '', slaDays: 2 }]; }
+  removeStep(i: number) { this.draft.steps = this.draft.steps.filter((_, idx) => idx !== i); }
 
   saveDefinition() {
     const body: WorkflowDefinition = {
@@ -233,17 +238,23 @@ export class WorkflowBuilderComponent implements OnInit {
       ? this.http.put<WorkflowDefinition>(`${this.api}/definitions/${this.draft.id}`, body)
       : this.http.post<WorkflowDefinition>(`${this.api}/definitions`, body);
     req.subscribe({
-      next: () => { this.saveMsg = 'Saved.'; this.loadDefinitions(); setTimeout(() => { this.editing = false; this.saveMsg = ''; }, 1200); },
-      error: () => { this.saveMsg = 'Save failed.'; }
+      next: () => { this.snack.open('Workflow saved', '', { duration: 2000 }); this.loadDefinitions(); this.editing = false; },
+      error: () => this.snack.open('Failed to save workflow', 'Close', { duration: 3000 })
     });
   }
 
   approve(inst: WorkflowInstance) {
-    this.http.post(`${this.api}/instances/${inst.id}/approve`, { notes: null }).subscribe(() => this.loadInstances());
+    this.http.post(`${this.api}/instances/${inst.id}/approve`, { notes: null }).subscribe({
+      next: () => { this.snack.open('Step approved', '', { duration: 2000 }); this.loadInstances(); },
+      error: () => this.snack.open('Approval failed', 'Close', { duration: 3000 })
+    });
   }
 
   reject(inst: WorkflowInstance) {
-    this.http.post(`${this.api}/instances/${inst.id}/reject`, { notes: 'Rejected via console' }).subscribe(() => this.loadInstances());
+    this.http.post(`${this.api}/instances/${inst.id}/reject`, { notes: 'Rejected via console' }).subscribe({
+      next: () => { this.snack.open('Step rejected', '', { duration: 2000 }); this.loadInstances(); },
+      error: () => this.snack.open('Rejection failed', 'Close', { duration: 3000 })
+    });
   }
 
   stepsCount(def: WorkflowDefinition) {

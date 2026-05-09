@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -184,20 +185,23 @@ export class InterviewSchedulerComponent implements OnInit {
   ivMonths: string[] = [];
   ivTrend: number[] = [0, 0, 0, 0, 0, 0];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
   ngOnInit() { this.loadInterviews(); }
 
   loadInterviews() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/interviews`).subscribe(data => {
-      this.interviews = (data || []).map(i => ({
-        id: i.id, type: i.interviewType || i.type || 'Video',
-        scheduledAt: i.scheduledAt || i.scheduledDate || '',
-        candidateId: i.candidateId || '',
-        status: i.status || 'Scheduled',
-        meetingLink: i.meetingLink || ''
-      }));
-      this.buildTrend();
+    this.http.get<any[]>(`${environment.apiUrl}/api/interviews`).subscribe({
+      next: data => {
+        this.interviews = [...(data || []).map(i => ({
+          id: i.id, type: i.interviewType || i.type || 'Video',
+          scheduledAt: i.scheduledAt || i.scheduledDate || '',
+          candidateId: i.candidateId || '',
+          status: i.status || 'Scheduled',
+          meetingLink: i.meetingLink || ''
+        }))];
+        this.buildTrend();
+      },
+      error: () => this.snack.open('Failed to load interviews', 'Close', { duration: 3000 })
     });
   }
 

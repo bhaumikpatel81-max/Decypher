@@ -46,9 +46,10 @@ import { environment } from '../../environments/environment';
             <option>Active</option><option>On Leave</option><option>Inactive</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
           <button class="btn btn-primary" (click)="addEmployee()">Save Employee</button>
           <button class="btn btn-ghost" (click)="showForm=false">Cancel</button>
+          <span *ngIf="saveError" style="font-size:13px;color:#991b1b;font-weight:600;">{{saveError}}</span>
         </div>
       </div>
 
@@ -168,6 +169,7 @@ export class EmployeeDirectoryComponent implements OnInit {
   private api = `${environment.apiUrl}/api/employees`;
   view: 'grid' | 'list' = 'grid';
   showForm = false;
+  saveError = '';
   loading = false;
   search = ''; filterDept = ''; filterStatus = ''; filterLocation = '';
   selected: any = null;
@@ -236,7 +238,7 @@ export class EmployeeDirectoryComponent implements OnInit {
         this.draft = { firstName:'', lastName:'', email:'', phone:'', employeeCode:'', designation:'', department:'', location:'', doj:'', employmentType:'Full-Time', status:'Active' };
         this.showForm = false;
       },
-      error: err => alert(err?.error?.message || 'Failed to save employee')
+      error: err => { this.saveError = err?.error?.message || 'Failed to save employee'; setTimeout(() => this.saveError = '', 4000); }
     });
   }
 

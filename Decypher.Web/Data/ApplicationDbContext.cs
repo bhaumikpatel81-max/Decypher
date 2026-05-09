@@ -164,6 +164,9 @@ namespace Decypher.Web.Data
         public DbSet<WorkflowInstance> WorkflowInstances { get; set; }
         public DbSet<WorkflowStepHistory> WorkflowStepHistories { get; set; }
 
+        // Permissions
+        public DbSet<ModulePermission> ModulePermissions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -812,6 +815,14 @@ namespace Decypher.Web.Data
                 entity.HasQueryFilter(e => e.TenantId == _currentTenantId);
             });
 
+            // ─── Module Permissions ───────────────────────────────────────────
+            builder.Entity<ModulePermission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.TenantId, e.RoleName, e.ModuleKey }).IsUnique();
+                entity.HasIndex(e => new { e.TenantId, e.RoleName });
+            });
+
             // Seed data
             SeedData(builder);
         }
@@ -846,6 +857,7 @@ namespace Decypher.Web.Data
                 IsActive = true,
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
+
         }
 
         public override int SaveChanges()

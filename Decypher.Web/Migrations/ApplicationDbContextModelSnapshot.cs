@@ -2067,6 +2067,53 @@ namespace Decypher.Web.Migrations
                     b.ToTable("Vendors");
                 });
 
+            modelBuilder.Entity("Decypher.Web.Models.ModulePermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("CanDelete")
+                        .HasDefaultValue(false)
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanRead")
+                        .HasDefaultValue(true)
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanWrite")
+                        .HasDefaultValue(false)
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "RoleName");
+
+                    b.HasIndex("TenantId", "RoleName", "ModuleKey")
+                        .IsUnique();
+
+                    b.ToTable("ModulePermissions");
+                });
+
             modelBuilder.Entity("Decypher.Web.Models.VideoInterview", b =>
                 {
                     b.Property<Guid>("Id")

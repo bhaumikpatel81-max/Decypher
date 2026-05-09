@@ -185,10 +185,12 @@ export class LearningManagementComponent implements OnInit {
     });
   }
 
+  enrollMsg = '';
+
   enrollCourse(c: Course) {
     this.http.post<any>(`${this.api}/courses/${c.id}/enroll`, { employeeId: null }).subscribe({
-      next: () => { alert(`Enrolled in ${c.title}`); this.loadMyEnrollments(); this.loadCourses(); },
-      error: err => alert(err?.error?.message || 'Enrollment failed')
+      next: () => { this.enrollMsg = `Enrolled in ${c.title}`; setTimeout(() => this.enrollMsg = '', 3000); this.loadMyEnrollments(); this.loadCourses(); },
+      error: err => { this.enrollMsg = err?.error?.message || 'Enrollment failed'; setTimeout(() => this.enrollMsg = '', 3000); }
     });
   }
 

@@ -155,10 +155,42 @@ public class AuthController : ControllerBase
         var accessMap = new Dictionary<UserRole, string[]>
         {
             [UserRole.SuperAdmin]  = ["*"],
-            [UserRole.TenantAdmin] = ["dashboard", "candidates", "requirements", "vendors", "analytics", "settings", "budget"],
-            [UserRole.TeamLead]    = ["dashboard", "candidates", "requirements", "vendors", "analytics"],
-            [UserRole.Recruiter]   = ["dashboard", "candidates", "requirements"],
-            [UserRole.Viewer]      = ["dashboard"]
+            [UserRole.TenantAdmin] = [
+                "dashboard", "employee-directory", "org-chart", "document-management",
+                "letters-certificates", "exit-management", "internal-job-postings",
+                "attendance", "leave-management", "shift-management", "timesheet", "overtime",
+                "payroll", "salary-structure", "tax-statutory", "expense-management", "payslip-portal",
+                "compensation-planning", "benefits-admin", "salary-benchmarking", "bonus-incentives",
+                "goals-okr", "performance-reviews", "feedback-360", "continuous-feedback",
+                "learning-management", "training-calendar", "skill-gap", "certification-tracker",
+                "onboarding", "communications",
+                "candidates", "requirements", "vendors", "pipeline-board", "candidate-portal",
+                "interview-scheduler", "offer-management", "source-tracking", "job-broadcasting",
+                "video-interviews", "resume-parser", "ai-scorecard", "ai-features", "jd-generator",
+                "careers-builder", "talent-community", "social-recruiting", "campus-connect",
+                "employee-advocacy", "employer-reviews",
+                "reports", "sla-dashboard", "budget", "analytics",
+                "policy-management", "statutory-compliance", "compliance", "audit-trail",
+                "import-center", "integrations", "settings",
+                "helpdesk", "admin-travel", "portal", "workflow-builder"
+            ],
+            [UserRole.TeamLead]    = [
+                "dashboard", "employee-directory", "org-chart", "attendance", "leave-management",
+                "timesheet", "overtime", "payslip-portal",
+                "goals-okr", "performance-reviews", "feedback-360", "continuous-feedback",
+                "learning-management", "skill-gap", "certification-tracker",
+                "candidates", "requirements", "pipeline-board", "interview-scheduler",
+                "offer-management", "resume-parser",
+                "helpdesk", "portal"
+            ],
+            [UserRole.Recruiter]   = [
+                "dashboard", "candidates", "requirements", "pipeline-board",
+                "candidate-portal", "interview-scheduler", "offer-management",
+                "source-tracking", "job-broadcasting", "resume-parser",
+                "talent-community", "campus-connect",
+                "helpdesk", "portal"
+            ],
+            [UserRole.Viewer]      = ["dashboard", "portal", "helpdesk"]
         };
 
         return new CurrentUserDto

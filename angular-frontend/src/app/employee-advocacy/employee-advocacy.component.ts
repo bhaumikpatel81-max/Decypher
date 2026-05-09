@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 @Component({ selector: 'app-employee-advocacy', template: `
 <div class="page-container page-enter">
@@ -47,7 +48,7 @@ import { environment } from '../../environments/environment';
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.rank-num{width:28px;height:28px;border-radius:50%;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}.rank-num.gold{background:#fef3c7;color:#92400e}.rank-num.silver{background:#f3f4f6;color:#374151}.rank-num.bronze{background:#fde68a;color:#78350f}.emp-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}`] })
 export class EmployeeAdvocacyComponent implements OnInit {
   private api = `${environment.apiUrl}/api`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   shareJob=''; shareMsg='';
   jobs: string[] = [];
   channels=[{name:'LinkedIn',icon:'💼',checked:true},{name:'Twitter',icon:'🐦',checked:false},{name:'WhatsApp',icon:'💬',checked:false}];
@@ -58,29 +59,37 @@ export class EmployeeAdvocacyComponent implements OnInit {
   ngOnInit() { this.loadAdvocacy(); this.loadJobs(); }
 
   loadAdvocacy() {
-    this.http.get<any>(`${this.api}/branding/advocacy`).subscribe(data => {
-      if (!data) return;
-      this.leaderboard = data.leaderboard || [];
-      this.activity = data.activity || [];
-      const avgCph = data.hiresViaAdvocacy ? Math.round((data.totalClicks * 50) / data.hiresViaAdvocacy) : 0;
-      this.kpis = [
-        { val: data.totalShares, lbl: 'Total Shares', color: '#6b4df0' },
-        { val: data.totalClicks, lbl: 'Total Clicks', color: '#2563eb' },
-        { val: data.hiresViaAdvocacy, lbl: 'Hires via Advocacy', color: '#10b981' },
-        { val: `₹${avgCph.toLocaleString()}`, lbl: 'Avg Cost per Hire', color: '#f59e0b' },
-      ];
+    this.http.get<any>(`${this.api}/branding/advocacy`).subscribe({
+      next: data => {
+        if (!data) return;
+        this.leaderboard = [...(data.leaderboard || [])];
+        this.activity = [...(data.activity || [])];
+        const avgCph = data.hiresViaAdvocacy ? Math.round((data.totalClicks * 50) / data.hiresViaAdvocacy) : 0;
+        this.kpis = [
+          { val: data.totalShares, lbl: 'Total Shares', color: '#6b4df0' },
+          { val: data.totalClicks, lbl: 'Total Clicks', color: '#2563eb' },
+          { val: data.hiresViaAdvocacy, lbl: 'Hires via Advocacy', color: '#10b981' },
+          { val: `₹${avgCph.toLocaleString()}`, lbl: 'Avg Cost per Hire', color: '#f59e0b' },
+        ];
+      },
+      error: () => this.snack.open('Failed to load advocacy data', 'Close', { duration: 3000 })
     });
   }
 
   loadJobs() {
-    this.http.get<any[]>(`${this.api}/jobs`).subscribe(data => { this.jobs = (data || []).map(j => j.title); });
+    this.http.get<any[]>(`${this.api}/jobs`).subscribe({
+      next: data => { this.jobs = [...(data || []).map(j => j.title)]; },
+      error: () => {}
+    });
   }
 
   share() {
     if (!this.shareJob) return;
     const ch = this.channels.filter(c => c.checked).map(c => c.name);
-    this.http.post(`${this.api}/branding/advocacy/share`, { job: this.shareJob, channels: ch, message: this.shareMsg }).subscribe();
-    if (this.leaderboard.length) this.leaderboard[0].shares++;
+    this.http.post(`${this.api}/branding/advocacy/share`, { job: this.shareJob, channels: ch, message: this.shareMsg }).subscribe({
+      next: () => { this.snack.open(`Shared "${this.shareJob}" on ${ch.join(', ')}`, '', { duration: 2000 }); this.loadAdvocacy(); },
+      error: () => this.snack.open('Failed to share', 'Close', { duration: 3000 })
+    });
     this.shareJob = ''; this.shareMsg = '';
   }
 }

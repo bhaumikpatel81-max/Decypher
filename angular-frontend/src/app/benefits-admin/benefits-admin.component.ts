@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -150,7 +151,7 @@ import { environment } from '../../environments/environment';
 })
 export class BenefitsAdminComponent implements OnInit {
   private api = `${environment.apiUrl}/api/payroll`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'catalogue';
   selectedEmpId = '';
 
@@ -160,41 +161,57 @@ export class BenefitsAdminComponent implements OnInit {
   claimsHistory: any[] = [];
 
   get totalBenefitCost() { return this.benefits.reduce((s, b) => s + (b.cost || 0) * (b.enrolled || 0), 0); }
-  get totalEnrolled() { return Object.values(this.enrollments).reduce((s, arr) => s + arr.length, 0); }
+  get totalEnrolled() { return Object.values(this.enrollments).reduce((s: number, arr: string[]) => s + arr.length, 0); }
   get filteredEmployees() { return this.selectedEmpId ? this.employees.filter(e => e.id === this.selectedEmpId) : this.employees; }
 
   isEnrolled(empId: string, benefitId: string): boolean { return (this.enrollments[empId] || []).includes(benefitId); }
 
-  ngOnInit() { this.loadBenefits(); this.loadEmployees(); }
+  ngOnInit() { this.loadBenefits(); this.loadEmployees(); this.loadClaims(); }
 
   loadBenefits() {
-    this.http.get<any[]>(`${this.api}/benefits`).subscribe(data => {
-      this.benefits = (data || []).map(b => ({
-        id: b.id?.toString(), name: b.name, category: b.category || '',
-        icon: b.icon || '🎁', description: b.description || '', cost: b.monthlyCost || 0, enrolled: b.enrolledCount || 0
-      }));
+    this.http.get<any[]>(`${this.api}/benefits`).subscribe({
+      next: data => {
+        this.benefits = [...(data || []).map(b => ({
+          id: b.id?.toString(), name: b.name, category: b.category || '',
+          icon: b.icon || '🎁', description: b.description || '', cost: b.monthlyCost || 0, enrolled: b.enrolledCount || 0
+        }))];
+      },
+      error: () => this.snack.open('Failed to load benefits', 'Close', { duration: 3000 })
     });
   }
 
   loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({
-        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
-        role: e.designation || '', pointsUsed: 0, flexAllocations: []
-      }));
-      this.loadEnrollments();
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({
+      next: data => {
+        this.employees = [...(data || []).map(e => ({
+          id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+          role: e.designation || '', pointsUsed: 0, flexAllocations: []
+        }))];
+        this.loadEnrollments();
+      },
+      error: () => {}
     });
   }
 
   loadEnrollments() {
     this.http.get<any[]>(`${this.api}/benefits/employee/all`).subscribe({
       next: data => {
+        const map: { [empId: string]: string[] } = {};
         (data || []).forEach(en => {
           const empId = en.employeeId?.toString();
-          if (!this.enrollments[empId]) this.enrollments[empId] = [];
-          this.enrollments[empId].push(en.benefitId?.toString());
+          if (!map[empId]) map[empId] = [];
+          map[empId].push(en.benefitId?.toString());
         });
-      }
+        this.enrollments = { ...map };
+      },
+      error: () => {}
+    });
+  }
+
+  loadClaims() {
+    this.http.get<any[]>(`${this.api}/benefits/claims`).subscribe({
+      next: data => { this.claimsHistory = [...(data || [])]; },
+      error: () => {}
     });
   }
 
@@ -202,13 +219,12 @@ export class BenefitsAdminComponent implements OnInit {
     const enrolled = this.isEnrolled(empId, benefitId);
     this.http.post(`${this.api}/benefits/enroll`, { employeeId: empId, benefitId, enroll: !enrolled }).subscribe({
       next: () => {
-        if (!this.enrollments[empId]) this.enrollments[empId] = [];
-        const idx = this.enrollments[empId].indexOf(benefitId);
-        if (enrolled && idx > -1) this.enrollments[empId].splice(idx, 1);
-        else if (!enrolled) this.enrollments[empId].push(benefitId);
-        const b = this.benefits.find(b => b.id === benefitId);
-        if (b) b.enrolled = this.employees.filter(e => this.isEnrolled(e.id, benefitId)).length;
-      }
+        const current = [...(this.enrollments[empId] || [])];
+        const updated = enrolled ? current.filter(id => id !== benefitId) : [...current, benefitId];
+        this.enrollments = { ...this.enrollments, [empId]: updated };
+        this.snack.open(enrolled ? 'Unenrolled' : 'Enrolled', '', { duration: 1500 });
+      },
+      error: () => this.snack.open('Failed to update enrollment', 'Close', { duration: 3000 })
     });
   }
 }

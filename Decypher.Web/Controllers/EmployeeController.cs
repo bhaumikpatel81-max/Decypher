@@ -116,6 +116,18 @@ public class EmployeeController(
         catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
     }
 
+    [HttpGet("letters/{id:guid}/download")]
+    public async Task<IActionResult> DownloadLetter(Guid id)
+    {
+        var letter = await db.IssuedLetters
+            .Include(l => l.Template)
+            .FirstOrDefaultAsync(l => l.Id == id && !l.IsDeleted);
+        if (letter == null) return NotFound();
+        var content = $"OFFICIAL LETTER\n\nType: {letter.Template?.Name ?? "Letter"}\nEmployee ID: {letter.EmployeeId}\nIssued By: {letter.IssuedById ?? "HR"}\nDate: {letter.IssuedAt:dd MMMM yyyy}\n\n{letter.CustomContent ?? letter.Template?.Content ?? "(No content)"}";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        return File(bytes, "application/octet-stream", $"letter_{id}.txt");
+    }
+
     // ── Exit Management ───────────────────────────────────────────────────────
     [HttpGet("exits")]
     public async Task<IActionResult> GetExits([FromQuery] string? status)

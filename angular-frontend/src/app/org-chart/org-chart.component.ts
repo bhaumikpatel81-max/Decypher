@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -91,8 +92,7 @@ import { environment } from '../../environments/environment';
 })
 export class OrgChartComponent implements OnInit {
   private apiUrl = `${environment.apiUrl}/api/employees`;
-  search = ''; filterDept = '';
-  depts = ['Engineering','HR','Finance','Sales','Marketing','Product'];
+  search = ''; filterDept = ''; loading = false;
   colors = ['#6b4df0','#2563eb','#10b981','#f59e0b','#db2777','#0891b2','#7c3aed'];
   kpis = [
     { val: 0, lbl: 'Departments', color: '#6b4df0' },
@@ -100,16 +100,19 @@ export class OrgChartComponent implements OnInit {
     { val: 0, lbl: 'Managers', color: '#10b981' },
     { val: 0, lbl: 'Locations', color: '#f59e0b' },
   ];
+  depts: string[] = [];
   tree: any[] = [];
   filteredTree: any[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
   ngOnInit() { this.loadOrgChart(); }
 
   loadOrgChart() {
+    this.loading = true;
     this.http.get<any[]>(`${this.apiUrl}/org-chart`).subscribe({
       next: data => {
+        this.loading = false;
         const colorList = this.colors;
         const decorate = (nodes: any[], depth = 0): any[] => (nodes || []).map((n, i) => ({
           ...n,
@@ -121,15 +124,22 @@ export class OrgChartComponent implements OnInit {
           expanded: depth === 0,
           reports: decorate(n.directReports || [], depth + 1)
         }));
-        this.tree = decorate(data);
-        this.filteredTree = this.tree;
+        this.tree = [...decorate(data || [])];
+        this.filteredTree = [...this.tree];
         const allEmp: any[] = [];
         const flatten = (nodes: any[]) => nodes.forEach(n => { allEmp.push(n); flatten(n.reports || []); });
         flatten(this.tree);
-        this.kpis[0].val = [...new Set(allEmp.map(e => e.dept))].length;
-        this.kpis[1].val = allEmp.length;
-        this.kpis[2].val = allEmp.filter(e => (e.reports || []).length > 0).length;
-        this.kpis[3].val = [...new Set(allEmp.map(e => e.location))].filter(Boolean).length;
+        this.depts = [...new Set<string>(allEmp.map(e => e.dept).filter(Boolean))];
+        this.kpis = [
+          { val: this.depts.length, lbl: 'Departments', color: '#6b4df0' },
+          { val: allEmp.length, lbl: 'Total Employees', color: '#2563eb' },
+          { val: allEmp.filter(e => (e.reports || []).length > 0).length, lbl: 'Managers', color: '#10b981' },
+          { val: [...new Set<string>(allEmp.map(e => e.location).filter(Boolean))].length, lbl: 'Locations', color: '#f59e0b' },
+        ];
+      },
+      error: () => {
+        this.loading = false;
+        this.snack.open('Failed to load org chart', 'Close', { duration: 3000 });
       }
     });
   }

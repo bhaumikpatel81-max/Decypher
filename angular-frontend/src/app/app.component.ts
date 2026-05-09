@@ -185,6 +185,7 @@ import { AuthService, CurrentUser } from './services/auth.service';
               </div>
               <mat-divider></mat-divider>
               <button mat-menu-item routerLink="/users" *ngIf="canAccessAdmin">Users & Access</button>
+              <button mat-menu-item routerLink="/permissions" *ngIf="canAccessAdmin">Permissions Matrix</button>
               <button mat-menu-item (click)="logout()">Logout</button>
             </mat-menu>
           </div>
@@ -620,6 +621,8 @@ export class AppComponent implements OnInit {
     { path: '/portal',                 label: 'Employee Portal',        shortLabel: 'Portal',            symbol: '🏠', color: '#6366f1', adminOnly: false },
     // Workflow Engine
     { path: '/workflow-builder',       label: 'Workflow Engine',        shortLabel: 'Workflows',         symbol: '⚙️', color: '#7c3aed', adminOnly: true  },
+    // RBAC
+    { path: '/permissions',            label: 'Permissions Matrix',     shortLabel: 'Permissions',       symbol: '🔐', color: '#374151', adminOnly: true  },
   ];
 
   recentApps: any[] = [];
@@ -663,7 +666,7 @@ export class AppComponent implements OnInit {
     { id:'portal',        label:'Employee Self-Service',    symbol:'🏠', color:'#6366f1',
       paths:['/portal'] },
     { id:'admin',         label:'Settings',                 symbol:'AD', color:'#343a48',
-      paths:['/users','/import-center','/integrations','/workflow-builder'] },
+      paths:['/users','/import-center','/integrations','/workflow-builder','/permissions'] },
   ];
 
   expandedGroups = new Set<string>(['recruitment']);
@@ -807,6 +810,7 @@ export class AppComponent implements OnInit {
       // Admin
       '/users':                 { title: 'User Management',       breadcrumb: 'Admin / User Management' },
       '/compliance':            { title: 'Compliance',            breadcrumb: 'Admin / Compliance' },
+      '/permissions':           { title: 'Permissions Matrix',    breadcrumb: 'Admin / Permissions Matrix' },
     };
     const match = Object.keys(titles).find(key => this.router.url.startsWith(key));
     if (match) {

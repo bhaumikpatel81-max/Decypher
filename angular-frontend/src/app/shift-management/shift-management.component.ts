@@ -191,7 +191,7 @@ export class ShiftManagementComponent implements OnInit {
   }
 
   assignShift() {
-    if (!this.assignForm.empId || !this.assignForm.shift || !this.assignForm.selectedDays.length) { alert('Select employee, shift and days'); return; }
+    if (!this.assignForm.empId || !this.assignForm.shift || !this.assignForm.selectedDays.length) { this.assignMsg = 'Select employee, shift and days'; return; }
     const payload = { employeeId: this.assignForm.empId, shiftCode: this.assignForm.shift, weekStart: this.assignForm.week, days: this.assignForm.selectedDays };
     this.http.post(`${this.api}/shifts/assign`, payload).subscribe({
       next: () => {
@@ -200,7 +200,7 @@ export class ShiftManagementComponent implements OnInit {
         this.assignMsg = `Shift ${this.assignForm.shift} assigned for ${this.assignForm.selectedDays.join(', ')}`;
         setTimeout(() => this.assignMsg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to assign shift')
+      error: err => { this.assignMsg = err?.error?.message || 'Failed to assign shift'; }
     });
   }
 }

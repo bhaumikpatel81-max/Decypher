@@ -1768,4 +1768,26 @@ namespace Decypher.Web.Models
         [MaxLength(200)]
         public string? AuthorName { get; set; }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODULE PERMISSIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    public class ModulePermission
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid TenantId { get; set; }
+
+        [Required, MaxLength(100)]
+        public string RoleName { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string ModuleKey { get; set; } = string.Empty;
+
+        public bool CanRead { get; set; } = true;
+        public bool CanWrite { get; set; } = false;
+        public bool CanDelete { get; set; } = false;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
 }

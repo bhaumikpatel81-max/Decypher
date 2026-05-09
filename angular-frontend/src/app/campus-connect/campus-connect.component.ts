@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 @Component({ selector: 'app-campus-connect', template: `
 <div class="page-container page-enter">
@@ -49,39 +50,52 @@ import { environment } from '../../environments/environment';
         <div style="display:flex;justify-content:space-between;"><span>Offers Accepted</span><strong style="color:#10b981;">{{d.accepted}}</strong></div>
       </div>
       <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;" (click)="viewDrive(d)">View Details</button>
+      <div *ngIf="viewMsg===d.id" style="margin-top:8px;font-size:12px;color:var(--text-3);background:var(--surface-alt);border-radius:6px;padding:8px;">Registered: {{d.registered}} · Appeared: {{d.appeared}} · Selected: {{d.selected}} · Accepted: {{d.accepted}}</div>
     </div>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.drives-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}.drive-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}.status-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}.status-badge.active{background:#dbeafe;color:#1e40af}.status-badge.done{background:#d1fae5;color:#065f46}`] })
 export class CampusConnectComponent implements OnInit {
   private api = `${environment.apiUrl}/api/branding`;
-  constructor(private http: HttpClient) {}
-  showForm=false;draft:any={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'};
-  kpis=[{val:8,lbl:'Drives This Year',color:'#6b4df0'},{val:142,lbl:'Offers Made',color:'#2563eb'},{val:118,lbl:'Offers Accepted',color:'#10b981'},{val:'83%',lbl:'Acceptance Rate',color:'#f59e0b'}];
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
+  showForm=false;viewMsg:any=null;draft:any={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'};
+  kpis=[{val:0,lbl:'Drives This Year',color:'#6b4df0'},{val:0,lbl:'Offers Made',color:'#2563eb'},{val:0,lbl:'Offers Accepted',color:'#10b981'},{val:'0%',lbl:'Acceptance Rate',color:'#f59e0b'}];
   drives:any[]=[];
   ngOnInit(){ this.loadDrives(); }
   loadDrives() {
-    this.http.get<any[]>(`${this.api}/campus`).subscribe(data => {
-      this.drives = (data || []).map(d => ({
-        id: d.id, college: d.collegeName || d.college || '',
-        city: d.city || '', driveDate: d.driveDate?.slice(0, 10) || '',
-        pptDate: d.pptDate?.slice(0, 10) || '',
-        roles: d.roles || '', target: d.targetHires || d.target || 0,
-        mode: d.mode || 'Offline', status: d.status || 'Planning',
-        registered: d.registeredCount || 0, appeared: d.appearedCount || 0,
-        selected: d.selectedCount || 0, accepted: d.acceptedCount || 0
-      }));
-      this.kpis[0].val = this.drives.length;
-      this.kpis[1].val = this.drives.reduce((s, d) => s + d.selected, 0);
-      this.kpis[2].val = this.drives.reduce((s, d) => s + d.accepted, 0);
+    this.http.get<any[]>(`${this.api}/campus`).subscribe({
+      next: data => {
+        this.drives = [...(data || []).map(d => ({
+          id: d.id, college: d.collegeName || d.college || '',
+          city: d.city || '', driveDate: d.driveDate?.slice(0, 10) || '',
+          pptDate: d.pptDate?.slice(0, 10) || '',
+          roles: d.roles || '', target: d.targetHires || d.target || 0,
+          mode: d.mode || 'Offline', status: d.status || 'Planning',
+          registered: d.registeredCount || 0, appeared: d.appearedCount || 0,
+          selected: d.selectedCount || 0, accepted: d.acceptedCount || 0
+        }))];
+        const totalOffers = this.drives.reduce((s, d) => s + d.selected, 0);
+        const totalAccepted = this.drives.reduce((s, d) => s + d.accepted, 0);
+        this.kpis = [
+          { val: this.drives.length, lbl: 'Drives This Year', color: '#6b4df0' },
+          { val: totalOffers, lbl: 'Offers Made', color: '#2563eb' },
+          { val: totalAccepted, lbl: 'Offers Accepted', color: '#10b981' },
+          { val: totalOffers ? `${Math.round((totalAccepted / totalOffers) * 100)}%` : '0%', lbl: 'Acceptance Rate', color: '#f59e0b' },
+        ];
+      },
+      error: () => this.snack.open('Failed to load campus drives', 'Close', { duration: 3000 })
     });
   }
   addDrive() {
     if(!this.draft.college) return;
     const payload = { collegeName: this.draft.college, city: this.draft.city, driveDate: this.draft.driveDate, pptDate: this.draft.pptDate, roles: this.draft.roles, targetHires: +this.draft.target, mode: this.draft.mode, status: this.draft.status };
     this.http.post<any>(`${this.api}/campus`, payload).subscribe({
-      next: res => { this.drives.unshift({...this.draft, id: res.id, registered:0, appeared:0, selected:0, accepted:0}); this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'}; this.showForm=false; },
-      error: () => { this.drives.unshift({...this.draft, registered:0, appeared:0, selected:0, accepted:0}); this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'}; this.showForm=false; }
+      next: res => {
+        this.drives = [{ ...this.draft, id: res.id, registered:0, appeared:0, selected:0, accepted:0 }, ...this.drives];
+        this.snack.open(`Campus drive at ${this.draft.college} added`, '', { duration: 2000 });
+        this.draft={college:'',city:'',driveDate:'',pptDate:'',roles:'',target:10,mode:'Offline',status:'Planning'}; this.showForm=false;
+      },
+      error: () => this.snack.open('Failed to add campus drive', 'Close', { duration: 3000 })
     });
   }
-  viewDrive(d:any){alert(`Drive details: ${d.college}\nRegistered: ${d.registered}\nSelected: ${d.selected}\nAccepted: ${d.accepted}`);}
+  viewDrive(d:any){ this.viewMsg = this.viewMsg === d.id ? null : d.id; }
 }

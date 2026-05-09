@@ -206,6 +206,7 @@ interface AttendanceRecord {
               <div class="punch-success" *ngIf="lastPunch">
                 <span>{{lastPunch.type==='in'?'✅ Punched IN':'✅ Punched OUT'}} — {{lastPunch.time}} · {{lastPunch.method}} · {{lastPunch.geo}}</span>
               </div>
+              <div *ngIf="punchError" style="margin-top:8px;padding:8px 12px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;font-weight:600;">{{punchError}}</div>
             </div>
           </div>
         </div>
@@ -440,6 +441,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
 
   // Punch
   lastPunch: any = null;
+  punchError = '';
   recSearch = ''; recDate = ''; recStatus = '';
 
   kpis = [
@@ -542,7 +544,8 @@ export class AttendanceComponent implements OnInit, OnDestroy {
         this.cameraActive = true;
       }
     } catch {
-      alert('Camera access denied. Please allow camera permissions and try again.');
+      this.punchError = 'Camera access denied. Please allow camera permissions and try again.';
+      setTimeout(() => this.punchError = '', 5000);
     }
   }
 
@@ -636,13 +639,8 @@ export class AttendanceComponent implements OnInit, OnDestroy {
         this.reverseGeocode(this.currentLat, this.currentLng);
       },
       () => {
-        // Fallback: use office coords for demo
-        this.currentLat = this.fence.lat + (Math.random() - 0.5) * 0.002;
-        this.currentLng = this.fence.lng + (Math.random() - 0.5) * 0.002;
-        this.geoAccuracy = 15;
-        this.geoStatus = 'acquired';
-        this.checkFence();
-        this.currentAddress = 'Amnex Infotechnologies, IT Park, Gandhinagar';
+        this.geoStatus = 'error';
+        this.currentAddress = 'Location access denied — please enable GPS and try again.';
       }
     );
   }
@@ -684,7 +682,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   punch(type: 'in' | 'out') {
     if (!this.authPassed || !this.punchEmpId) return;
     const emp = this.employees.find(e => e.empId === this.punchEmpId);
-    if (!emp?.id) { alert('Employee not found in system'); return; }
+    if (!emp?.id) { this.punchError = 'Employee not found in system'; setTimeout(() => this.punchError = '', 4000); return; }
     const timeStr = new Date().toTimeString().slice(0, 5);
     const endpoint = type === 'in' ? 'punch-in' : 'punch-out';
     this.http.post<any>(`${this.api}/${endpoint}`, { employeeId: emp.id, notes: `Via ${this.methodLabel(this.selectedMethod)}` }).subscribe({
@@ -694,7 +692,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
         this.loadRecords();
         this.loadDailySummary();
       },
-      error: err => alert(err?.error?.message || `Punch ${type} failed`)
+      error: err => { this.punchError = err?.error?.message || `Punch ${type} failed`; setTimeout(() => this.punchError = '', 4000); }
     });
     this.authPassed = false;
     this.faceResult = 'idle';

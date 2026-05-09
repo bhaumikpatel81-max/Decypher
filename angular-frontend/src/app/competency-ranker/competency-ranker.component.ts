@@ -16,6 +16,7 @@ import { AIService } from '../services/ai.service';
         <button (click)="rankCompetencies()" class="btn btn-primary" [disabled]="isLoading">
           {{ isLoading ? 'Ranking...' : 'Rank by Competencies' }}
         </button>
+        <div *ngIf="parseError" style="margin-top:8px;padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{parseError}}</div>
       </div>
 
       <div *ngIf="rankedCandidates" class="results-card">
@@ -54,6 +55,7 @@ export class CompetencyRankerComponent {
   candidateData = '';
   rankedCandidates: any[] = [];
   isLoading = false;
+  parseError = '';
 
   constructor(private aiService: AIService) {}
 
@@ -72,7 +74,7 @@ export class CompetencyRankerComponent {
         }
       });
     } catch (e) {
-      alert('Invalid JSON format');
+      this.parseError = 'Invalid JSON format — paste a valid JSON array';
     }
   }
 }

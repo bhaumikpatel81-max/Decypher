@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 const CHART_ICONS: Record<string, string> = {
@@ -275,7 +276,7 @@ export class ReportsComponent implements OnInit {
   loading         = false;
   reportData: any = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
   ngOnInit() {
     const now = new Date();
@@ -301,10 +302,11 @@ export class ReportsComponent implements OnInit {
       params = `?groupBy=${encodeURIComponent(this.groupByLabel)}`;
 
     this.http.get<any>(`${this.api}/api/reports/${this.selected}${params}`).subscribe({
-      next: data => { this.reportData = data; this.loading = false; },
+      next: data => { this.reportData = { ...data, rows: [...(data.rows || [])], columns: [...(data.columns || [])], kpis: [...(data.kpis || [])] }; this.loading = false; },
       error: () => {
-        this.reportData = this.getMockData(this.selected);
+        this.reportData = null;
         this.loading = false;
+        this.snack.open('Failed to load report — check your date range and try again', 'Close', { duration: 4000 });
       }
     });
   }

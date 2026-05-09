@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface Expense {
@@ -84,7 +85,6 @@ interface Expense {
             </div>
           </div>
           <button class="btn btn-primary" (click)="submitClaim()">Submit Claim</button>
-          <div *ngIf="msg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{msg}}</div>
         </div>
       </div>
 
@@ -164,12 +164,11 @@ interface Expense {
 })
 export class ExpenseManagementComponent implements OnInit {
   private api = `${environment.apiUrl}/api/payroll`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'claim';
   search = '';
   filterCat = '';
   filterStatus = '';
-  msg = '';
 
   categories = ['Travel', 'Meal', 'Accommodation', 'Equipment', 'Other'];
 
@@ -203,13 +202,16 @@ export class ExpenseManagementComponent implements OnInit {
   ngOnInit() { this.loadExpenses(); this.loadEmployees(); }
 
   loadExpenses() {
-    this.http.get<any[]>(`${this.api}/expenses`).subscribe(data => {
-      this.expenses = (data || []).map(e => ({
-        id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
-        category: e.category, amount: e.amount, date: e.expenseDate?.slice(0, 10) || '',
-        description: e.description, status: e.status
-      }));
-      this.recomputeCategoryStats();
+    this.http.get<any[]>(`${this.api}/expenses`).subscribe({
+      next: data => {
+        this.expenses = [...(data || []).map(e => ({
+          id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
+          category: e.category, amount: e.amount, date: e.expenseDate?.slice(0, 10) || '',
+          description: e.description, status: e.status
+        }))];
+        this.recomputeCategoryStats();
+      },
+      error: () => this.snack.open('Failed to load expenses', 'Close', { duration: 3000 })
     });
   }
 
@@ -226,7 +228,7 @@ export class ExpenseManagementComponent implements OnInit {
   }
 
   submitClaim() {
-    if (!this.form.employee || !this.form.category || !this.form.amount) { alert('Fill all required fields'); return; }
+    if (!this.form.employee || !this.form.category || !this.form.amount) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const emp = this.employees.find(e => e.name === this.form.employee);
     const payload = {
       employeeName: this.form.employee, employeeCode: emp?.empId || '',
@@ -235,21 +237,26 @@ export class ExpenseManagementComponent implements OnInit {
     };
     this.http.post<any>(`${this.api}/expenses`, payload).subscribe({
       next: res => {
-        this.expenses.unshift({ id: res.id, employee: this.form.employee, empId: emp?.empId || '', category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' });
+        this.expenses = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' }, ...this.expenses];
         this.recomputeCategoryStats();
-        this.msg = `Expense claim of ₹${this.form.amount} submitted`;
+        this.snack.open(`Expense claim of ₹${this.form.amount} submitted`, '', { duration: 2000 });
         this.form = { employee: '', category: '', amount: 0, date: '', description: '' };
-        setTimeout(() => this.msg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to submit claim')
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit claim', 'Close', { duration: 3000 })
     });
   }
 
   approve(e: Expense) {
-    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Approved' }).subscribe({ next: () => { e.status = 'Approved'; } });
+    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Approved' }).subscribe({
+      next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Approved' } : x); this.snack.open('Approved', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to approve', 'Close', { duration: 3000 })
+    });
   }
   reject(e: Expense) {
-    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Rejected' }).subscribe({ next: () => { e.status = 'Rejected'; } });
+    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Rejected' }).subscribe({
+      next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Rejected' } : x); this.snack.open('Rejected', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to reject', 'Close', { duration: 3000 })
+    });
   }
-  uploadReceipt() { alert('Receipt upload triggered'); }
+  uploadReceipt() { this.snack.open('Use the file input to upload a receipt', '', { duration: 2500 }); }
 }

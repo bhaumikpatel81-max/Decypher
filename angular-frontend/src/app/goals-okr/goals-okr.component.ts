@@ -132,6 +132,7 @@ interface OKR {
             </div>
             <button class="btn btn-ghost btn-sm" style="margin-top:8px;" (click)="addKR()">+ Add Key Result</button>
           </div>
+          <div *ngIf="createError" style="padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{createError}}</div>
           <button class="btn btn-primary" (click)="createOKR()">Create OKR</button>
         </div>
       </div>
@@ -228,8 +229,11 @@ export class GoalsOkrComponent implements OnInit {
     this.http.get<any>(`${this.api}/goals/summary`).subscribe(s => { this.summary = s || {}; });
   }
 
+  createError = '';
+
   createOKR() {
-    if (!this.newOKR.objective) { alert('Fill objective'); return; }
+    if (!this.newOKR.objective) { this.createError = 'Objective is required.'; return; }
+    this.createError = '';
     const quarterNum = parseInt((this.newOKR.quarter || 'Q2').replace('Q', ''));
     const payload = {
       title: this.newOKR.objective, type: this.newOKR.dept || 'Individual',

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -134,7 +135,7 @@ import { environment } from '../../environments/environment';
 })
 export class SkillGapComponent implements OnInit {
   private api = `${environment.apiUrl}/api/learning`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'matrix';
   filterRole = '';
   filterDept = '';
@@ -185,7 +186,9 @@ export class SkillGapComponent implements OnInit {
   ngOnInit() { this.loadGapAnalysis(); }
 
   loadGapAnalysis() {
-    this.http.get<any[]>(`${this.api}/skills/gap-analysis`).subscribe(data => {
+    this.http.get<any[]>(`${this.api}/skills/gap-analysis`).subscribe({
+     error: () => this.snack.open('Failed to load skill gap data', 'Close', { duration: 3000 }),
+     next: data => {
       if (!data || !data.length) return;
       const skillSet = new Set<string>();
       data.forEach(d => skillSet.add(d.skillName));
@@ -201,12 +204,16 @@ export class SkillGapComponent implements OnInit {
         }
         empMap[d.employeeName].skills[d.skillName] = d.currentLevel || 0;
       });
-      this.employees = Object.values(empMap);
+      this.employees = [...Object.values(empMap)];
+     }
     });
   }
 
   enrollInCourse(skill: string, emp: string) {
     const courseName = this.courseFor(skill);
-    this.http.post(`${this.api}/enrollments`, { employeeName: emp, skillName: skill, courseName }).subscribe();
+    this.http.post(`${this.api}/enrollments`, { employeeName: emp, skillName: skill, courseName }).subscribe({
+      next: () => this.snack.open(`Enrolled ${emp} in ${courseName}`, '', { duration: 2000 }),
+      error: err => this.snack.open(err?.status === 409 ? 'Already enrolled' : 'Enrollment failed', 'Close', { duration: 3000 })
+    });
   }
 }

@@ -36,11 +36,13 @@ import { environment } from '../../environments/environment';
           </select>
           <textarea class="textarea" placeholder="Exit reason / remarks" [(ngModel)]="draft.reason" style="grid-column:1/-1;height:70px;"></textarea>
         </div>
+        <div *ngIf="initiateError" style="margin-top:8px;padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{initiateError}}</div>
         <div style="display:flex;gap:8px;margin-top:12px;">
           <button class="btn btn-primary" (click)="initiateExit()">Initiate</button>
-          <button class="btn btn-ghost" (click)="showForm=false">Cancel</button>
+          <button class="btn btn-ghost" (click)="showForm=false;initiateError=''">Cancel</button>
         </div>
       </div>
+      <div *ngIf="reminderMsg" style="margin-bottom:12px;padding:10px 16px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{reminderMsg}}</div>
 
       <mat-tab-group>
         <mat-tab label="Active Exits ({{activeExits.length}})">
@@ -116,6 +118,8 @@ export class ExitManagementComponent implements OnInit {
   private api = `${environment.apiUrl}/api/employees`;
   constructor(private http: HttpClient) {}
   showForm = false;
+  initiateError = '';
+  reminderMsg = '';
   draft: any = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' };
   kpis = [
     { val:3, lbl:'Active Exits', color:'#f59e0b' },
@@ -164,7 +168,7 @@ export class ExitManagementComponent implements OnInit {
     };
     this.http.post<any>(`${this.api}/exits`, payload).subscribe({
       next: () => { this.loadExits(); this.draft = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' }; this.showForm = false; },
-      error: err => alert(err?.error?.message || 'Failed to initiate exit')
+      error: err => { this.initiateError = err?.error?.message || 'Failed to initiate exit'; }
     });
   }
 
@@ -182,5 +186,5 @@ export class ExitManagementComponent implements OnInit {
     });
   }
 
-  sendReminder(ex: any) { alert(`Reminder sent to all pending clearance departments for ${ex.employee}`); }
+  sendReminder(ex: any) { this.reminderMsg = `Reminder sent to pending departments for ${ex.employee}`; setTimeout(() => { this.reminderMsg = ''; }, 3000); }
 }

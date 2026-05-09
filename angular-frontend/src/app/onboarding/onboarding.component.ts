@@ -315,9 +315,21 @@ export class OnboardingComponent implements OnInit {
 
   readonly categories = ['ITSetup', 'Documents', 'Orientation', 'BackgroundCheck', 'ESignature'];
 
-  // Analytics
-  readonly obMonths    = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
-  readonly obTrendData = [2, 4, 7, 11, 8, 14];
+  obMonths: string[] = [];
+  obTrendData: number[] = [0, 0, 0, 0, 0, 0];
+
+  private buildTrend(items: any[], dateField: string) {
+    const now = new Date();
+    const months: string[] = [], counts: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toLocaleString('default', { month: 'short' }));
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
+    }
+    this.obMonths = months;
+    this.obTrendData = counts;
+  }
 
   get completedOnboarding()  { return this.records.filter(r => r.overallStatus === 'Completed').length; }
   get inProgressOnboarding() { return this.records.filter(r => r.overallStatus === 'InProgress').length; }
@@ -359,7 +371,7 @@ export class OnboardingComponent implements OnInit {
 
   load() {
     this.http.get<any[]>(`${environment.apiUrl}/api/onboarding`)
-      .subscribe({ next: d => { this.records = d; if (d.length && !this.selectedRecord) this.selectedRecord = d[0]; }, error: () => {} });
+      .subscribe({ next: d => { this.records = d; if (d.length && !this.selectedRecord) this.selectedRecord = d[0]; this.buildTrend(d, 'createdAt'); }, error: () => {} });
   }
 
   select(r: any) { this.selectedRecord = r; }

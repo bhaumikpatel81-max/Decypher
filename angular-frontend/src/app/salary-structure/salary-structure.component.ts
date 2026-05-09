@@ -240,19 +240,21 @@ export class SalaryStructureComponent implements OnInit {
       fixedAmount: c.fixed ? c.value : null
     }));
     this.http.post(`${this.api}/salary-components`, payload).subscribe({
-      next: () => alert('Salary structure saved'),
-      error: err => alert(err?.error?.message || 'Failed to save')
+      next: () => { this.ssMsg = 'Salary structure saved'; setTimeout(() => this.ssMsg = '', 3000); },
+      error: err => { this.ssMsg = err?.error?.message || 'Failed to save'; }
     });
   }
 
+  ssMsg = '';
+
   assignStructure() {
-    if (!this.assignForm.emp || !this.assignForm.grade) { alert('Fill all fields'); return; }
+    if (!this.assignForm.emp || !this.assignForm.grade) { this.ssMsg = 'Fill all fields'; return; }
     this.http.post(`${this.api}/employee-salary/assign`, {
       employeeName: this.assignForm.emp, grade: this.assignForm.grade,
       annualCtc: this.assignForm.ctc, effectiveDate: this.assignForm.date
     }).subscribe({
-      next: () => { alert(`Salary structure assigned to ${this.assignForm.emp}`); this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; },
-      error: err => alert(err?.error?.message || 'Failed to assign')
+      next: () => { this.ssMsg = `Salary structure assigned to ${this.assignForm.emp}`; this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; setTimeout(() => this.ssMsg = '', 3000); },
+      error: err => { this.ssMsg = err?.error?.message || 'Failed to assign'; }
     });
   }
 }

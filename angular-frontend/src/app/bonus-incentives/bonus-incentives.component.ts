@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface BonusRecord {
@@ -160,9 +161,8 @@ interface BonusRecord {
 })
 export class BonusIncentivesComponent implements OnInit {
   private api = `${environment.apiUrl}/api/payroll`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'add';
-  msg = '';
 
   employees: string[] = [];
 
@@ -187,19 +187,23 @@ export class BonusIncentivesComponent implements OnInit {
   ngOnInit() { this.loadBonuses(); this.loadEmployees(); }
 
   loadBonuses() {
-    this.http.get<any[]>(`${this.api}/bonuses`).subscribe(data => {
-      this.bonuses = (data || []).map(b => ({
-        id: b.id, employee: b.employeeName || '', empId: b.employeeCode || '',
-        type: b.bonusType || '', amount: b.amount || 0, reason: b.reason || '',
-        date: b.date?.slice(0, 10) || '', rating: b.performanceRating || 0, status: b.status || 'Pending'
-      }));
-      this.recomputeBonusTypes();
+    this.http.get<any[]>(`${this.api}/bonuses`).subscribe({
+      next: data => {
+        this.bonuses = [...(data || []).map(b => ({
+          id: b.id, employee: b.employeeName || '', empId: b.employeeCode || '',
+          type: b.bonusType || '', amount: b.amount || 0, reason: b.reason || '',
+          date: b.date?.slice(0, 10) || '', rating: b.performanceRating || 0, status: b.status || 'Pending'
+        }))];
+        this.recomputeBonusTypes();
+      },
+      error: () => this.snack.open('Failed to load bonus records', 'Close', { duration: 3000 })
     });
   }
 
   loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({
+      next: data => { this.employees = [...(data || []).map(e => `${e.firstName} ${e.lastName}`.trim())]; },
+      error: () => {}
     });
   }
 
@@ -212,16 +216,31 @@ export class BonusIncentivesComponent implements OnInit {
   }
 
   submitBonus() {
-    if (!this.form.employee || !this.form.type) { alert('Fill all required fields'); return; }
+    if (!this.form.employee || !this.form.type) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const payload = { employeeName: this.form.employee, bonusType: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, performanceRating: this.form.rating };
     this.http.post<any>(`${this.api}/bonuses`, payload).subscribe({
       next: res => {
-        this.bonuses.unshift({ id: res.id, employee: this.form.employee, empId: '', type: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, rating: this.form.rating, status: 'Pending' });
-        this.msg = `Bonus submitted for ${this.form.employee}`;
+        const newRecord: BonusRecord = { id: res.id, employee: this.form.employee, empId: '', type: this.form.type, amount: this.form.amount, reason: this.form.reason, date: this.form.date, rating: this.form.rating, status: 'Pending' };
+        this.bonuses = [newRecord, ...this.bonuses];
+        this.recomputeBonusTypes();
+        this.snack.open(`Bonus submitted for ${this.form.employee}`, '', { duration: 2000 });
         this.form = { employee: '', type: '', amount: 0, reason: '', date: '', rating: 0 };
-        setTimeout(() => this.msg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to submit bonus')
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit bonus', 'Close', { duration: 3000 })
+    });
+  }
+
+  approveBonus(b: BonusRecord) {
+    this.http.patch<any>(`${this.api}/bonuses/${b.id}/approve`, {}).subscribe({
+      next: () => { this.bonuses = this.bonuses.map(x => x.id === b.id ? { ...x, status: 'Approved' } : x); this.recomputeBonusTypes(); this.snack.open('Bonus approved', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to approve bonus', 'Close', { duration: 3000 })
+    });
+  }
+
+  rejectBonus(b: BonusRecord) {
+    this.http.patch<any>(`${this.api}/bonuses/${b.id}/reject`, {}).subscribe({
+      next: () => { this.bonuses = this.bonuses.map(x => x.id === b.id ? { ...x, status: 'Rejected' } : x); this.recomputeBonusTypes(); this.snack.open('Bonus rejected', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to reject bonus', 'Close', { duration: 3000 })
     });
   }
 }

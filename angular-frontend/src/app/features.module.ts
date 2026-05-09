@@ -106,6 +106,9 @@ import { AdminTravelComponent } from './admin-travel/admin-travel.component';
 import { EmployeePortalComponent } from './employee-portal/employee-portal.component';
 // Workflow Engine
 import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.component';
+// RBAC
+import { PermissionsMatrixComponent } from './permissions-matrix/permissions-matrix.component';
+import { PermissionGuard } from './guards/permission.guard';
 
 @NgModule({
   declarations: [
@@ -137,6 +140,7 @@ import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.co
     AdminTravelComponent,
     EmployeePortalComponent,
     WorkflowBuilderComponent,
+    PermissionsMatrixComponent,
   ],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, SharedModule,
@@ -168,15 +172,15 @@ import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.co
       { path: 'shift-management',      component: ShiftManagementComponent },
       { path: 'timesheet',             component: TimesheetComponent },
       { path: 'overtime',              component: OvertimeComponent },
-      { path: 'payroll',               component: PayrollComponent },
-      { path: 'salary-structure',      component: SalaryStructureComponent },
-      { path: 'tax-statutory',         component: TaxStatutoryComponent },
-      { path: 'expense-management',    component: ExpenseManagementComponent },
-      { path: 'payslip-portal',        component: PayslipPortalComponent },
-      { path: 'compensation-planning', component: CompensationPlanningComponent },
-      { path: 'benefits-admin',        component: BenefitsAdminComponent },
-      { path: 'salary-benchmarking',   component: SalaryBenchmarkingComponent },
-      { path: 'bonus-incentives',      component: BonusIncentivesComponent },
+      { path: 'payroll',               component: PayrollComponent,            canActivate: [PermissionGuard], data: { permission: 'payroll' } },
+      { path: 'salary-structure',      component: SalaryStructureComponent,    canActivate: [PermissionGuard], data: { permission: 'salary-structure' } },
+      { path: 'tax-statutory',         component: TaxStatutoryComponent,       canActivate: [PermissionGuard], data: { permission: 'tax-statutory' } },
+      { path: 'expense-management',    component: ExpenseManagementComponent,  canActivate: [PermissionGuard], data: { permission: 'expense-management' } },
+      { path: 'payslip-portal',        component: PayslipPortalComponent,      canActivate: [PermissionGuard], data: { permission: 'payslip-portal' } },
+      { path: 'compensation-planning', component: CompensationPlanningComponent, canActivate: [PermissionGuard], data: { permission: 'compensation-planning' } },
+      { path: 'benefits-admin',        component: BenefitsAdminComponent,      canActivate: [PermissionGuard], data: { permission: 'benefits-admin' } },
+      { path: 'salary-benchmarking',   component: SalaryBenchmarkingComponent, canActivate: [PermissionGuard], data: { permission: 'salary-benchmarking' } },
+      { path: 'bonus-incentives',      component: BonusIncentivesComponent,    canActivate: [PermissionGuard], data: { permission: 'bonus-incentives' } },
       { path: 'goals-okr',             component: GoalsOkrComponent },
       { path: 'performance-reviews',   component: PerformanceReviewsComponent },
       { path: 'feedback-360',          component: Feedback360Component },
@@ -204,13 +208,14 @@ import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.co
       { path: 'policy-management',     component: PolicyManagementComponent },
       { path: 'statutory-compliance',  component: StatutoryComplianceComponent },
       { path: 'compliance',            component: ComplianceComponent },
-      { path: 'audit-trail',           component: AuditTrailComponent },
-      { path: 'import-center',         component: ImportCenterComponent },
+      { path: 'audit-trail',           component: AuditTrailComponent,         canActivate: [PermissionGuard], data: { permission: 'audit-trail' } },
+      { path: 'import-center',         component: ImportCenterComponent,        canActivate: [PermissionGuard], data: { permission: 'import-center' } },
       { path: 'integrations',          component: IntegrationsHubComponent },
       { path: 'helpdesk',              component: HelpdeskComponent },
       { path: 'admin-travel',          component: AdminTravelComponent },
       { path: 'portal',                component: EmployeePortalComponent },
-      { path: 'workflow-builder',      component: WorkflowBuilderComponent },
+      { path: 'workflow-builder',      component: WorkflowBuilderComponent,     canActivate: [PermissionGuard], data: { permission: 'settings' } },
+      { path: 'permissions',           component: PermissionsMatrixComponent,   canActivate: [PermissionGuard], data: { permission: 'settings' } },
     ])
   ]
 })

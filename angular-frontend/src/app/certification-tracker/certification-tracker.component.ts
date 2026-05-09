@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface Certification {
@@ -113,8 +114,8 @@ interface Certification {
             <div style="margin-top:4px;padding:20px;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-3);cursor:pointer;" (click)="certFileInput.click()">📎 Upload certificate (PDF/PNG)</div>
             <input #certFileInput type="file" accept=".pdf,.png,.jpg" style="display:none" (change)="onFileUpload($event)">
           </div>
+          <div *ngIf="formError" style="padding:8px 12px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{formError}}</div>
           <button class="btn btn-primary" (click)="addCert()">Add Certification</button>
-          <div *ngIf="msg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{msg}}</div>
         </div>
       </div>
     </div>
@@ -135,11 +136,10 @@ interface Certification {
 })
 export class CertificationTrackerComponent implements OnInit {
   private api = `${environment.apiUrl}/api/learning`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'list';
   search = '';
   expiryFilter = 0;
-  msg = '';
 
   empList: { name: string; id: string }[] = [];
 
@@ -186,30 +186,31 @@ export class CertificationTrackerComponent implements OnInit {
     });
   }
 
+  formError = '';
+
   addCert() {
-    if (!this.form.employee || !this.form.name) { alert('Fill required fields'); return; }
+    if (!this.form.employee || !this.form.name) { this.formError = 'Employee and certification name are required.'; return; }
+    this.formError = '';
     const emp = this.empList.find(e => e.name === this.form.employee);
     const payload = { employeeName: this.form.employee, employeeCode: emp?.id || '', certificationName: this.form.name, issuingOrganization: this.form.issuer, obtainedDate: this.form.obtained, expiryDate: this.form.expiry, certificateId: this.form.certId };
     this.http.post<any>(`${this.api}/certifications`, payload).subscribe({
-      next: res => {
+      next: () => {
         this.loadCerts();
-        this.msg = `Certification added for ${this.form.employee}`;
+        this.snack.open(`Certification added for ${this.form.employee}`, '', { duration: 2000 });
         this.form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' };
-        setTimeout(() => this.msg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to add certification')
+      error: err => { this.formError = err?.error?.message || 'Failed to add certification'; }
     });
   }
 
   viewCert(c: Certification) {
-    this.msg = `Certificate: ${c.name} · Issued by ${c.issuer} · ID: ${c.certId}`;
-    setTimeout(() => this.msg = '', 4000);
+    this.snack.open(`${c.name} — ${c.issuer} · ID: ${c.certId}`, 'Close', { duration: 4000 });
   }
 
   renewCert(c: Certification) {
     this.http.patch(`${this.api}/certifications/${c.id}/renew`, {}).subscribe({
-      next: () => { this.msg = `Renewal initiated for ${c.name}`; setTimeout(() => this.msg = '', 3000); this.loadCerts(); },
-      error: () => { this.msg = `Renewal request sent for ${c.name}`; setTimeout(() => this.msg = '', 3000); }
+      next: () => { this.snack.open(`Renewal initiated for ${c.name}`, '', { duration: 2000 }); this.loadCerts(); },
+      error: () => { this.snack.open(`Renewal request sent for ${c.name}`, '', { duration: 2000 }); }
     });
   }
 
@@ -219,8 +220,8 @@ export class CertificationTrackerComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', file);
     this.http.post(`${this.api}/certifications/upload`, formData).subscribe({
-      next: () => { this.msg = `${file.name} uploaded`; setTimeout(() => this.msg = '', 3000); },
-      error: () => { this.msg = `${file.name} selected`; setTimeout(() => this.msg = '', 3000); }
+      next: () => { this.snack.open(`${file.name} uploaded successfully`, '', { duration: 2000 }); },
+      error: () => { this.snack.open(`${file.name} selected (upload pending)`, '', { duration: 2000 }); }
     });
     (event.target as HTMLInputElement).value = '';
   }

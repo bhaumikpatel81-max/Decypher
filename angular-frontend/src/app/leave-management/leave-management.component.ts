@@ -81,6 +81,7 @@ interface LeaveRequest {
             <button class="btn btn-primary" (click)="submitLeave()">Submit Request</button>
             <button class="btn btn-ghost" (click)="resetForm()">Clear</button>
           </div>
+          <div *ngIf="errorMsg" style="padding:10px 14px;background:#fee2e2;border-radius:8px;color:#991b1b;font-size:13px;">{{errorMsg}}</div>
           <div *ngIf="successMsg" style="padding:10px 14px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{successMsg}}</div>
         </div>
       </div>
@@ -188,6 +189,7 @@ export class LeaveManagementComponent implements OnInit {
   search = '';
   filterStatus = '';
   successMsg = '';
+  errorMsg = '';
   leaveTypes: any[] = [];
   employees: any[] = [];
   balances: any[] = [];
@@ -257,7 +259,7 @@ export class LeaveManagementComponent implements OnInit {
   }
 
   submitLeave() {
-    if (!this.form.employeeId || !this.form.type || !this.form.from || !this.form.to) { alert('Please fill all required fields'); return; }
+    if (!this.form.employeeId || !this.form.type || !this.form.from || !this.form.to) { this.errorMsg = 'Please fill all required fields'; return; }
     const leaveType = this.leaveTypes.find(t => t.name === this.form.type);
     const payload = {
       employeeId: this.form.employeeId,
@@ -274,7 +276,7 @@ export class LeaveManagementComponent implements OnInit {
         this.resetForm();
         setTimeout(() => this.successMsg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to submit leave request')
+      error: err => { this.errorMsg = err?.error?.message || 'Failed to submit leave request'; }
     });
   }
 

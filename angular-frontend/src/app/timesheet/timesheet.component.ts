@@ -183,6 +183,7 @@ export class TimesheetComponent implements OnInit {
   timesheetStatus = 'Draft';
   timesheetId: number | null = null;
   billableHours = 0;
+  tsMsg = '';
 
   weekDays = this.buildWeekDays();
 
@@ -246,7 +247,7 @@ export class TimesheetComponent implements OnInit {
   rowTotal(hrs: number[]) { return hrs.reduce((a, b) => a + b, 0); }
 
   addLog() {
-    if (!this.logForm.project || !this.logForm.task) { alert('Select project and task'); return; }
+    if (!this.logForm.project || !this.logForm.task) { this.tsMsg = 'Select project and task'; return; }
     const payload = { projectName: this.logForm.project, taskName: this.logForm.task, workDate: this.logForm.date, hoursLogged: this.logForm.hours, billable: this.logForm.billable, description: this.logForm.description };
     this.http.post<any>(`${this.api}/timesheets`, payload).subscribe({
       next: res => {
@@ -263,7 +264,7 @@ export class TimesheetComponent implements OnInit {
   saveTimesheet() {
     const payload = { entries: this.timesheetGrid, status: 'Draft' };
     this.http.post(`${this.api}/timesheets/save`, payload).subscribe({ error: () => {} });
-    alert('Timesheet saved as draft');
+    this.tsMsg = 'Timesheet saved as draft'; setTimeout(() => this.tsMsg = '', 3000);
   }
 
   submitTimesheet() {

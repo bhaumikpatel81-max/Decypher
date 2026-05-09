@@ -63,6 +63,7 @@ import {
       <span *ngIf="budgetImportResult.totalErrors === 0" style="color:#059669">✅ Import complete — {{budgetImportResult.fiscalYears?.imported + budgetImportResult.allocations?.imported + budgetImportResult.lineItems?.imported + budgetImportResult.actuals?.imported + (budgetImportResult.imported || 0)}} rows imported.</span>
       <span *ngIf="budgetImportResult.totalErrors > 0" style="color:#d97706">⚠️ Import complete with {{budgetImportResult.totalErrors}} error(s). Rows imported: {{(budgetImportResult.fiscalYears?.imported || 0) + (budgetImportResult.allocations?.imported || 0) + (budgetImportResult.imported || 0)}} | Updated: {{budgetImportResult.updated || 0}}</span>
     </div>
+    <div *ngIf="importErrMsg" style="padding:8px 14px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;font-weight:600;margin-top:4px;">{{importErrMsg}}</div>
   </div>
 
   <!-- Tab Bar -->
@@ -990,6 +991,7 @@ export class BudgetComponent implements OnInit {
   tenantConfig: TenantConfig | null = null;
   costCategories: CostCategory[] = [];
   budgetImportResult: any = null;
+  importErrMsg = '';
 
   tabs = [
     { key: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -1319,7 +1321,7 @@ export class BudgetComponent implements OnInit {
         this.loadFiscalYears();
       },
       error: err => {
-        alert('Import failed: ' + (err?.error?.error ?? 'Unknown error'));
+        this.importErrMsg = 'Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000);
       }
     });
     input.value = '';
@@ -1340,7 +1342,7 @@ export class BudgetComponent implements OnInit {
         this.loadFiscalYears();
       },
       error: err => {
-        alert('CSV Import failed: ' + (err?.error?.error ?? 'Unknown error'));
+        this.importErrMsg = 'CSV Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000);
       }
     });
     input.value = '';

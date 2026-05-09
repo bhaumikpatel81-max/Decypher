@@ -12,6 +12,13 @@ export interface CurrentUser {
   access: string[];
 }
 
+export interface ModulePerm {
+  moduleKey: string;
+  canRead: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/api/auth`;
@@ -19,18 +26,51 @@ export class AuthService {
 
   currentUser$ = this.currentUserSubject.asObservable();
 
+  private myPermissions: ModulePerm[] = [];
+  private isUnrestricted = false;
+
   constructor(private http: HttpClient) {}
 
   login(email: string, password: string): Observable<{ token: string; refreshToken?: string; user: CurrentUser }> {
     return this.http.post<{ token: string; refreshToken?: string; user: CurrentUser }>(`${this.apiUrl}/login`, { email, password }).pipe(
-      tap(result => this.setSession(result.token, result.user, result.refreshToken))
+      tap(result => {
+        this.setSession(result.token, result.user, result.refreshToken);
+        this.loadMyPermissions();
+      })
     );
   }
 
   guestLogin(): Observable<{ token: string; refreshToken?: string; user: CurrentUser }> {
     return this.http.post<{ token: string; refreshToken?: string; user: CurrentUser }>(`${this.apiUrl}/guest`, {}).pipe(
-      tap(result => this.setSession(result.token, result.user, result.refreshToken))
+      tap(result => {
+        this.setSession(result.token, result.user, result.refreshToken);
+        this.loadMyPermissions();
+      })
     );
+  }
+
+  loadMyPermissions(): void {
+    this.http.get<{ role: string; isUnrestricted: boolean; permissions: ModulePerm[] }>(
+      `${environment.apiUrl}/api/permissions/my-permissions`
+    ).subscribe({
+      next: res => {
+        this.isUnrestricted = res.isUnrestricted;
+        this.myPermissions = res.permissions ?? [];
+      },
+      error: () => {
+        this.isUnrestricted = false;
+        this.myPermissions = [];
+      }
+    });
+  }
+
+  hasPermission(moduleKey: string, action: 'read' | 'write' | 'delete' = 'read'): boolean {
+    if (this.isUnrestricted) return true;
+    const perm = this.myPermissions.find(p => p.moduleKey === moduleKey);
+    if (!perm) return false;
+    if (action === 'read') return perm.canRead;
+    if (action === 'write') return perm.canWrite;
+    return perm.canDelete;
   }
 
   getToken(): string | null {
@@ -54,6 +94,8 @@ export class AuthService {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('refresh_token');
+    this.myPermissions = [];
+    this.isUnrestricted = false;
     this.currentUserSubject.next(null);
   }
 

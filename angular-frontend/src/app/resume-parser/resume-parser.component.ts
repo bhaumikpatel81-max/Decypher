@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -102,7 +103,6 @@ import { environment } from '../../environments/environment';
         <div style="display:flex;gap:12px;margin-top:20px;align-items:center;">
           <button class="btn btn-primary" (click)="runScorecard()">Run AI Scorecard</button>
           <button class="btn btn-secondary" (click)="saveToDatabase()">Save to CV Database</button>
-          <span *ngIf="saveMsg" style="font-size:13px;color:#10b981;font-weight:600;">{{saveMsg}}</span>
         </div>
       </div>
     </section>
@@ -162,7 +162,7 @@ export class ResumeParserComponent {
   extractError = '';
   isDragOver = false;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private snack: MatSnackBar) {}
 
   get fileIcon(): string {
     const ext = this.selectedFile?.name.split('.').pop()?.toLowerCase() ?? '';
@@ -238,8 +238,6 @@ export class ResumeParserComponent {
     this.router.navigate(['/ai-scorecard'], { state: { resumeText: this.cvText } });
   }
 
-  saveMsg = '';
-
   saveToDatabase() {
     if (!this.result) return;
     const payload = {
@@ -249,8 +247,8 @@ export class ResumeParserComponent {
       cvText: this.cvText
     };
     this.http.post(`${environment.apiUrl}/api/cv-database`, payload).subscribe({
-      next: () => { this.saveMsg = 'Saved to CV Database'; setTimeout(() => this.saveMsg = '', 3000); },
-      error: () => { this.saveMsg = 'Save failed'; setTimeout(() => this.saveMsg = '', 3000); }
+      next: () => this.snack.open('Saved to CV Database', '', { duration: 2000 }),
+      error: () => this.snack.open('Failed to save to CV Database', 'Close', { duration: 3000 })
     });
   }
 }

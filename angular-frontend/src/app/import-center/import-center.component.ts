@@ -151,6 +151,7 @@ const FEATURE_NOTES: Record<string, string> = {
           <span *ngIf="validating">Parsing file…</span>
         </button>
       </div>
+      <div *ngIf="importErrMsg" style="margin-top:8px;padding:8px 14px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{importErrMsg}}</div>
     </div>
 
     <!-- STEP 2: Field Mapping ───────────────────────────────────────────────── -->
@@ -204,6 +205,7 @@ const FEATURE_NOTES: Record<string, string> = {
           <span *ngIf="importing">Importing…</span>
         </button>
       </div>
+      <div *ngIf="importErrMsg" style="margin-top:8px;padding:8px 14px;background:#fee2e2;border-radius:6px;color:#991b1b;font-size:13px;">{{importErrMsg}}</div>
     </div>
 
     <!-- STEP 3: Results ──────────────────────────────────────────────────────── -->
@@ -464,6 +466,7 @@ export class ImportCenterComponent implements OnInit {
   systemFields: string[] = [];
   fileToken = '';
   validating = false;
+  importErrMsg = '';
 
   // Step 3
   importing = false;
@@ -536,7 +539,7 @@ export class ImportCenterComponent implements OnInit {
       },
       error: err => {
         this.validating = false;
-        alert(err?.error?.error ?? 'Could not parse file. Please check format and try again.');
+        this.importErrMsg = err?.error?.error ?? 'Could not parse file. Please check format and try again.';
       }
     });
   }
@@ -567,7 +570,7 @@ export class ImportCenterComponent implements OnInit {
       },
       error: err => {
         this.importing = false;
-        alert(err?.error?.error ?? 'Import failed. Please try again.');
+        this.importErrMsg = err?.error?.error ?? 'Import failed. Please try again.';
       }
     });
   }

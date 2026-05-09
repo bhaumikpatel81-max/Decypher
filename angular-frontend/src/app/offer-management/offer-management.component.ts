@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -177,30 +178,47 @@ export class OfferManagementComponent implements OnInit {
   saveOk = false;
   form = { candidateId: '', jobId: '', salary: 0, currency: 'INR', startDate: '', expiryDate: '', benefits: [] as any[] };
 
-  readonly offerMonths = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
-  readonly offerTrend  = [3, 6, 4, 8, 10, 7];
+  offerMonths: string[] = [];
+  offerTrend: number[] = [0, 0, 0, 0, 0, 0];
 
-  constructor(private http: HttpClient, private router: Router) {}
+  private buildTrend(items: any[], dateField: string) {
+    const now = new Date(), months: string[] = [], counts: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d.toLocaleString('default', { month: 'short' }));
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
+    }
+    this.offerMonths = months; this.offerTrend = counts;
+  }
+
+  constructor(private http: HttpClient, private router: Router, private snack: MatSnackBar) {}
 
   ngOnInit() { this.loadPending(); }
 
   loadPending() {
     this.http.get<any[]>(`${environment.apiUrl}/api/offers/pending`)
-      .subscribe({ next: d => this.pending = d, error: () => {} });
+      .subscribe({
+        next: d => { this.pending = [...d]; this.buildTrend(d, 'createdAt'); },
+        error: () => this.snack.open('Failed to load offers', 'Close', { duration: 3000 })
+      });
   }
 
   createOffer() {
     this.saving = true;
     this.http.post<any>(`${environment.apiUrl}/api/offers`, this.form)
       .subscribe({
-        next: r => { this.pending = [...this.pending, r]; this.saving = false; this.saveOk = true; },
-        error: () => { this.saving = false; }
+        next: r => { this.pending = [...this.pending, r]; this.saving = false; this.saveOk = true; this.snack.open('Offer created', '', { duration: 2000 }); },
+        error: (err: any) => { this.saving = false; this.snack.open(err?.error?.message || 'Failed to create offer', 'Close', { duration: 3000 }); }
       });
   }
 
   sendOffer(id: string) {
     this.http.put(`${environment.apiUrl}/api/offers/${id}/send`, {})
-      .subscribe({ next: () => this.loadPending(), error: () => {} });
+      .subscribe({
+        next: () => { this.snack.open('Offer sent', '', { duration: 2000 }); this.loadPending(); },
+        error: () => this.snack.open('Failed to send offer', 'Close', { duration: 3000 })
+      });
   }
 
   initiateOnboarding(offer: any) {

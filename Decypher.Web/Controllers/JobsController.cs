@@ -19,7 +19,7 @@ public class JobsController(ApplicationDbContext db, IHttpContextAccessor http) 
         [FromQuery] string? location)
     {
         var q = db.Requisitions.AsNoTracking()
-            .Where(r => r.TenantId == TenantId && r.Status == "Approved");
+            .Where(r => r.TenantId == TenantId && (r.Status == "Open" || r.Status == "Approved"));
 
         if (!string.IsNullOrEmpty(department))
             q = q.Where(r => r.Department == department);

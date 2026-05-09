@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
+
 @Component({ selector: 'app-careers-builder', template: `
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
@@ -9,15 +11,16 @@ import { environment } from '../../environments/environment';
       <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='build'" (click)="tab='build'">Build</button>
       <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='preview'" (click)="tab='preview'">Preview</button>
       <button class="btn btn-ghost btn-sm" [class.btn-primary]="tab==='analytics'" (click)="tab='analytics'">Analytics</button>
-      <button class="btn btn-primary btn-sm" [style.background]="published?'#10b981':''" (click)="togglePublish()">{{published?'Published ✓':'Publish'}}</button>
+      <button class="btn btn-primary btn-sm" [style.background]="published?'#10b981':''" (click)="togglePublish()" [disabled]="saving">{{published?'Published ✓':'Publish'}}</button>
     </div>
   </div>
-  <div *ngIf="published" style="padding:10px 16px;background:#d1fae5;border-radius:8px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;">
+  <div *ngIf="loading" style="text-align:center;padding:40px;color:var(--text-3);">Loading careers page…</div>
+  <div *ngIf="published && !loading" style="padding:10px 16px;background:#d1fae5;border-radius:8px;margin-bottom:16px;font-size:13px;color:#065f46;font-weight:600;">
     🌐 Career page published · Slug: <strong>{{page.slug}}</strong> · Share your branded careers URL with candidates
   </div>
 
   <!-- BUILD TAB -->
-  <div *ngIf="tab==='build'" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+  <div *ngIf="tab==='build' && !loading" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div class="card">
         <h3 style="font-weight:700;margin-bottom:12px;">Company Info</h3>
@@ -53,7 +56,8 @@ import { environment } from '../../environments/environment';
     </div>
     <div class="card">
       <h3 style="font-weight:700;margin-bottom:12px;">Open Positions</h3>
-      <div *ngFor="let j of jobs" style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+      <div *ngIf="jobs.length===0" style="padding:24px;text-align:center;color:var(--text-3);">No open positions — add requisitions to display them here.</div>
+      <div *ngFor="let j of jobs;trackBy:trackById" style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
         <div style="flex:1;"><div style="font-weight:600;font-size:13px;">{{j.title}}</div><div style="font-size:12px;color:var(--text-3);">{{j.dept}} · {{j.location}} · {{j.type}}</div></div>
         <mat-slide-toggle [(ngModel)]="j.visible" title="Show on page"></mat-slide-toggle>
       </div>
@@ -61,26 +65,27 @@ import { environment } from '../../environments/environment';
   </div>
 
   <!-- PREVIEW TAB -->
-  <div *ngIf="tab==='preview'" class="careers-preview">
-    <div class="cp-hero" [style.background]="'linear-gradient(135deg,'+page.brandColor+'dd,'+page.brandColor+'88)'">
-      <h1>{{page.company}}</h1><p>{{page.tagline}}</p>
+  <div *ngIf="tab==='preview' && !loading" class="careers-preview">
+    <div class="cp-hero" [style.background]="'linear-gradient(135deg,'+(page.brandColor||'#292966')+'dd,'+(page.brandColor||'#292966')+'88)'">
+      <h1>{{page.company || 'Your Company'}}</h1><p>{{page.tagline || 'Build great things together'}}</p>
       <button class="btn" style="background:#fff;color:#292966;margin-top:12px;">View Open Roles</button>
     </div>
-    <div class="cp-section"><h2>About Us</h2><p>{{page.about}}</p></div>
-    <div class="cp-section"><h2>Our Values</h2>
+    <div class="cp-section"><h2>About Us</h2><p>{{page.about || 'Add your company description in the Build tab.'}}</p></div>
+    <div class="cp-section" *ngIf="page.values?.length"><h2>Our Values</h2>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
         <div *ngFor="let v of page.values" style="background:var(--surface-alt);border-radius:10px;padding:16px;">
           <div style="font-weight:700;">{{v.title}}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px;">{{v.desc}}</div>
         </div>
       </div>
     </div>
-    <div class="cp-section"><h2>Perks & Benefits</h2>
+    <div class="cp-section" *ngIf="page.perks?.length"><h2>Perks & Benefits</h2>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         <span *ngFor="let p of page.perks" style="padding:6px 14px;background:rgba(107,77,240,.1);color:#6b4df0;border-radius:20px;font-weight:600;font-size:13px;">{{p}}</span>
       </div>
     </div>
     <div class="cp-section"><h2>Open Positions</h2>
-      <div *ngFor="let j of visibleJobs" style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
+      <div *ngIf="visibleJobs.length===0" style="color:var(--text-3);font-size:13px;">No open positions right now — check back soon.</div>
+      <div *ngFor="let j of visibleJobs;trackBy:trackById" style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">
         <div><div style="font-weight:700;">{{j.title}}</div><div style="font-size:12px;color:var(--text-3);">{{j.dept}} · {{j.location}} · {{j.type}}</div></div>
         <button class="btn btn-primary btn-sm">Apply Now</button>
       </div>
@@ -88,49 +93,73 @@ import { environment } from '../../environments/environment';
   </div>
 
   <!-- ANALYTICS TAB -->
-  <div *ngIf="tab==='analytics'" class="kpi-row">
-    <div class="kpi-card" *ngFor="let k of analytics"><div class="kpi-val" [style.color]="k.color">{{k.val}}</div><div class="kpi-lbl">{{k.lbl}}</div></div>
+  <div *ngIf="tab==='analytics' && !loading">
+    <div *ngIf="analytics.length===0" style="padding:40px;text-align:center;color:var(--text-3);">Analytics will appear once the page is published and receives traffic.</div>
+    <div *ngIf="analytics.length>0" class="kpi-row">
+      <div class="kpi-card" *ngFor="let k of analytics"><div class="kpi-val" [style.color]="k.color">{{k.val}}</div><div class="kpi-lbl">{{k.lbl}}</div></div>
+    </div>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.careers-preview{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}.cp-hero{padding:48px 32px;text-align:center;color:#fff}.cp-hero h1{font-size:32px;font-weight:900;margin:0}.cp-hero p{margin:8px 0 0;font-size:16px;opacity:.9}.cp-section{padding:32px;border-bottom:1px solid var(--border)}.cp-section h2{font-size:20px;font-weight:700;margin:0 0 16px}`] })
 export class CareersBuilderComponent implements OnInit {
   private api = `${environment.apiUrl}/api/branding`;
-  constructor(private http: HttpClient) {}
-  tab:'build'|'preview'|'analytics'='build';published=false;newPerk='';
-  page:any={company:'Amnex Infotechnologies',tagline:'Build the Future of HR Technology',about:'Amnex Infotechnologies is a leading HR-Tech company helping enterprises modernise their people operations.',brandColor:'#292966',slug:'amnex',values:[{title:'Innovation',desc:'We build tomorrow\'s solutions today'},{title:'Integrity',desc:'Transparent in everything we do'},{title:'Impact',desc:'Every action drives real outcomes'}],perks:['Remote-friendly','Health Insurance','Learning Budget','Flexible Hours','Team Offsites','Parental Leave']};
-  jobs:any[]=[{title:'Senior Angular Developer',dept:'Engineering',location:'Ahmedabad',type:'Full-Time',visible:true},{title:'HR Business Partner',dept:'HR',location:'Mumbai',type:'Full-Time',visible:true},{title:'Product Manager',dept:'Product',location:'Bangalore',type:'Full-Time',visible:true},{title:'Data Analyst',dept:'Analytics',location:'Remote',type:'Full-Time',visible:false}];
-  analytics=[{val:'4,280',lbl:'Page Views (30d)',color:'#6b4df0'},{val:87,lbl:'Applications',color:'#2563eb'},{val:'2.03%',lbl:'Conversion Rate',color:'#10b981'},{val:'6d 4h',lbl:'Avg Time to Apply',color:'#f59e0b'}];
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
+  tab: 'build'|'preview'|'analytics' = 'build';
+  published = false; saving = false; loading = true; newPerk = '';
+  page: any = { company: '', tagline: '', about: '', brandColor: '#292966', slug: '', values: [], perks: [] };
+  jobs: any[] = [];
+  analytics: any[] = [];
+
   get visibleJobs() { return this.jobs.filter(j => j.visible); }
-  ngOnInit(){ this.loadCareerPage(); this.loadJobs(); }
+  trackById(_: number, item: any) { return item.id ?? item; }
+
+  ngOnInit() { this.loadCareerPage(); this.loadJobs(); }
+
   loadCareerPage() {
-    this.http.get<any>(`${this.api}/career-page`).subscribe(data => {
-      if (!data) return;
-      this.page = {
-        company: data.companyName || this.page.company,
-        tagline: data.tagline || this.page.tagline,
-        about: data.aboutUs || this.page.about,
-        brandColor: data.brandColor || this.page.brandColor,
-        slug: data.slug || this.page.slug,
-        values: data.values ? (Array.isArray(data.values) ? data.values : JSON.parse(data.values)) : this.page.values,
-        perks: data.perks ? (Array.isArray(data.perks) ? data.perks : data.perks.split(',').map((p: string) => p.trim())) : this.page.perks
-      };
-      this.published = data.published || false;
+    this.loading = true;
+    this.http.get<any>(`${this.api}/career-page`).subscribe({
+      next: data => {
+        if (data) {
+          this.page = {
+            company: data.companyName || '',
+            tagline: data.tagline || '',
+            about: data.aboutUs || '',
+            brandColor: data.brandColor || '#292966',
+            slug: data.slug || '',
+            values: Array.isArray(data.values) ? [...data.values] : (data.values ? JSON.parse(data.values) : []),
+            perks: Array.isArray(data.perks) ? [...data.perks] : (data.perks ? data.perks.split(',').map((p: string) => p.trim()) : [])
+          };
+          this.published = data.published || false;
+          this.analytics = [...(data.analytics || [])];
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.snack.open('Failed to load careers page', 'Close', { duration: 3000 });
+      }
     });
   }
+
   loadJobs() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/jobs`).subscribe(data => {
-      if (!data || !data.length) return;
-      this.jobs = (data || []).map(j => ({
-        id: j.id, title: j.title || j.jobTitle, dept: j.department || '',
-        location: j.location || '', type: j.employmentType || 'Full-Time', visible: true
-      }));
+    this.http.get<any[]>(`${environment.apiUrl}/api/jobs`).subscribe({
+      next: data => {
+        this.jobs = (data || []).map(j => ({
+          id: j.id, title: j.title || j.jobTitle, dept: j.department || '',
+          location: j.location || '', type: j.employmentType || 'Full-Time', visible: true
+        }));
+      },
+      error: () => { this.jobs = []; }
     });
   }
-  addPerk(){if(this.newPerk.trim()){this.page.perks.push(this.newPerk.trim());this.newPerk='';}}
-  togglePublish(){
+
+  addPerk() { if (this.newPerk.trim()) { this.page.perks = [...this.page.perks, this.newPerk.trim()]; this.newPerk = ''; } }
+
+  togglePublish() {
+    this.saving = true;
     const payload = { companyName: this.page.company, tagline: this.page.tagline, aboutUs: this.page.about, brandColor: this.page.brandColor, slug: this.page.slug, values: this.page.values, perks: this.page.perks, published: !this.published };
     this.http.post<any>(`${this.api}/career-page`, payload).subscribe({
-      next: () => { this.published = !this.published; },
-      error: () => { this.published = !this.published; }
+      next: () => { this.published = !this.published; this.saving = false; this.snack.open(this.published ? 'Page published' : 'Page unpublished', '', { duration: 2000 }); },
+      error: () => { this.saving = false; this.snack.open('Failed to save careers page', 'Close', { duration: 3000 }); }
     });
   }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface OTRecord {
@@ -75,7 +76,6 @@ interface OTRecord {
             <div style="font-size:13px;font-weight:600;color:#6b4df0;">Estimated OT: {{calcFormHours()}} hrs at 1.5x rate</div>
           </div>
           <button class="btn btn-primary" (click)="submitOT()">Submit OT Request</button>
-          <div *ngIf="msg" style="padding:10px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{msg}}</div>
         </div>
       </div>
 
@@ -150,12 +150,11 @@ interface OTRecord {
 })
 export class OvertimeComponent implements OnInit {
   private api = `${environment.apiUrl}/api/attendance`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'request';
   autoCalc = true;
   search = '';
   filterStatus = '';
-  msg = '';
 
   employees: any[] = [];
 
@@ -183,13 +182,16 @@ export class OvertimeComponent implements OnInit {
   ngOnInit() { this.loadOvertimeRecords(); this.loadEmployees(); }
 
   loadOvertimeRecords() {
-    this.http.get<any[]>(`${this.api}/overtime`).subscribe(data => {
-      this.records = (data || []).map(r => ({
-        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
-        date: r.date?.slice(0, 10) || '', from: r.fromTime || '', to: r.toTime || '',
-        hours: r.hours || 0, reason: r.reason || '', status: r.status || 'Pending',
-        rate: r.rate || 0, pay: r.overtimePay || 0
-      }));
+    this.http.get<any[]>(`${this.api}/overtime`).subscribe({
+      next: data => {
+        this.records = [...(data || []).map(r => ({
+          id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+          date: r.date?.slice(0, 10) || '', from: r.fromTime || '', to: r.toTime || '',
+          hours: r.hours || 0, reason: r.reason || '', status: r.status || 'Pending',
+          rate: r.rate || 0, pay: r.overtimePay || 0
+        }))];
+      },
+      error: () => this.snack.open('Failed to load overtime records', 'Close', { duration: 3000 })
     });
   }
 
@@ -209,18 +211,17 @@ export class OvertimeComponent implements OnInit {
   }
 
   submitOT() {
-    if (!this.form.employee || !this.form.date) { alert('Fill all fields'); return; }
+    if (!this.form.employee || !this.form.date) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const emp = this.employees.find(e => e.name === this.form.employee);
     const hrs = this.calcFormHours();
     const payload = { employeeName: this.form.employee, employeeCode: emp?.empId || '', date: this.form.date, fromTime: this.form.from, toTime: this.form.to, hours: hrs, reason: this.form.reason };
     this.http.post<any>(`${this.api}/overtime`, payload).subscribe({
       next: res => {
-        this.records.unshift({ id: res.id, employee: this.form.employee, empId: emp?.empId || '', date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: (emp?.hourlyRate || 0) * 1.5, pay: Math.round(hrs * (emp?.hourlyRate || 0) * 1.5) });
-        this.msg = `OT request submitted for ${this.form.employee}`;
+        this.records = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: (emp?.hourlyRate || 0) * 1.5, pay: Math.round(hrs * (emp?.hourlyRate || 0) * 1.5) }, ...this.records];
+        this.snack.open(`OT request submitted for ${this.form.employee}`, '', { duration: 2000 });
         this.form = { employee: '', date: '', from: '', to: '', reason: '' };
-        setTimeout(() => this.msg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to submit OT')
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit OT', 'Close', { duration: 3000 })
     });
   }
 }

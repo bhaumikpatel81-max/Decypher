@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 interface Policy {
@@ -148,12 +149,11 @@ interface Policy {
 })
 export class PolicyManagementComponent implements OnInit {
   private api = `${environment.apiUrl}/api/hr-compliance`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'library';
   search = '';
   filterCat = '';
   filterStatus = '';
-  msg = '';
 
   categories = ['HR', 'IT', 'Finance', 'Legal', 'Safety'];
 
@@ -207,32 +207,31 @@ export class PolicyManagementComponent implements OnInit {
       const map: { [empId: string]: boolean } = {};
       (acks || []).forEach((a: any) => { map[a.employeeCode || a.employeeId] = true; });
       this.ackData = { ...this.ackData, ...Object.fromEntries(Object.entries(map).map(([k, v]) => [k, { [p.id]: v }])) };
-      alert(`Viewing policy: ${p.title} v${p.version}`);
+      this.snack.open(`Viewing: ${p.title} v${p.version}`, '', { duration: 2500 });
     });
   }
 
-  sendAck(p: Policy) { alert(`Reminder sent to employees who haven't acknowledged "${p.title}"`); }
+  sendAck(p: Policy) { this.snack.open(`Reminder sent for "${p.title}"`, '', { duration: 2500 }); }
 
   sendForAck(p: Policy) {
     this.http.post(`${this.api}/policies/${p.id}/publish`, {}).subscribe({
-      next: () => { p.status = 'Active'; alert(`"${p.title}" published and sent for acknowledgement`); },
-      error: err => alert(err?.error?.message || 'Failed to publish')
+      next: () => { p.status = 'Active'; this.snack.open(`"${p.title}" published and sent for acknowledgement`, '', { duration: 3000 }); },
+      error: err => this.snack.open(err?.error?.message || 'Failed to publish', 'Close', { duration: 3000 })
     });
   }
 
-  uploadPolicy() { alert('Policy upload triggered'); }
+  uploadPolicy() { this.snack.open('Use the file input to upload a policy document', '', { duration: 2500 }); }
 
   addPolicy(status: string) {
-    if (!this.form.title || !this.form.category) { alert('Fill required fields'); return; }
+    if (!this.form.title || !this.form.category) { this.snack.open('Fill required fields', 'Close', { duration: 3000 }); return; }
     const payload = { title: this.form.title, category: this.form.category, version: this.form.version, effectiveDate: this.form.effectiveDate, status };
     this.http.post<any>(`${this.api}/policies`, payload).subscribe({
       next: res => {
-        this.policies.unshift({ id: res.id, ...this.form, status, acknowledged: 0, total: 0 });
-        this.msg = `Policy "${this.form.title}" ${status === 'Draft' ? 'saved as draft' : 'published'}`;
+        this.policies = [{ id: res.id, ...this.form, status, acknowledged: 0, total: 0 }, ...this.policies];
+        this.snack.open(`Policy "${this.form.title}" ${status === 'Draft' ? 'saved as draft' : 'published'}`, '', { duration: 3000 });
         this.form = { title: '', category: '', version: '1.0', effectiveDate: '' };
-        setTimeout(() => this.msg = '', 3000);
       },
-      error: err => alert(err?.error?.message || 'Failed to save policy')
+      error: err => this.snack.open(err?.error?.message || 'Failed to save policy', 'Close', { duration: 3000 })
     });
   }
 }

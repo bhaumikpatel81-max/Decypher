@@ -5,7 +5,10 @@ import { environment } from '../../environments/environment';
 <div class="page-container page-enter">
   <div class="flex justify-between items-center mb-6">
     <div><h1 class="page-title">Audit Trail</h1><p style="color:var(--text-3);font-size:13px;">Complete activity log across all modules</p></div>
-    <button class="btn btn-ghost btn-sm" (click)="export()">Export CSV</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span *ngIf="exportMsg" style="font-size:12px;color:#065f46;font-weight:600;">{{exportMsg}}</span>
+      <button class="btn btn-ghost btn-sm" (click)="export()">Export CSV</button>
+    </div>
   </div>
   <div class="kpi-row mb-6">
     <div class="kpi-card" *ngFor="let k of kpis"><div class="kpi-val" [style.color]="k.color">{{k.val}}</div><div class="kpi-lbl">{{k.lbl}}</div></div>
@@ -46,7 +49,7 @@ import { environment } from '../../environments/environment';
 export class AuditTrailComponent implements OnInit {
   private api = `${environment.apiUrl}/api`;
   constructor(private http: HttpClient) {}
-  search='';filterModule='';filterSeverity='';fromDate='';toDate='';
+  search='';filterModule='';filterSeverity='';fromDate='';toDate='';exportMsg='';
   modules=['Employee Directory','Payroll','Attendance','Compliance','User Management','Leave','Performance','Recruitment'];
   kpis=[{val:0,lbl:'Actions Today',color:'#6b4df0'},{val:0,lbl:'Critical Events',color:'#ef4444'},{val:0,lbl:'Unique Users',color:'#10b981'},{val:0,lbl:'Failed Logins',color:'#f59e0b'}];
   logs:any[]=[];
@@ -77,5 +80,5 @@ export class AuditTrailComponent implements OnInit {
     const qs=this.search.toLowerCase();
     return(!qs||l.user.toLowerCase().includes(qs)||l.action.toLowerCase().includes(qs)||l.details.toLowerCase().includes(qs))&&(!this.filterModule||l.module===this.filterModule)&&(!this.filterSeverity||l.severity===this.filterSeverity);
   });}
-  export(){alert('Audit log exported as audit_trail_'+new Date().toISOString().slice(0,10)+'.csv');}
+  export(){ this.exportMsg='Audit log exported as audit_trail_'+new Date().toISOString().slice(0,10)+'.csv'; setTimeout(()=>this.exportMsg='',3000); }
 }
