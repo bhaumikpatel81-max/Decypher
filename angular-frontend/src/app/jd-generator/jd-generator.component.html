@@ -5,7 +5,7 @@
       <h1 class="page-title">AI Job Description Generator</h1>
       <p class="text-sm" style="color:var(--text-3)">Generate professional, bias-free JDs with AI</p>
     </div>
-    <button class="btn btn-secondary" *ngIf="result" (click)="reset()">New JD</button>
+    <button type="button" class="btn btn-secondary" *ngIf="result" (click)="reset()">New JD</button>
   </div>
 
   <!-- Error Banner -->
@@ -33,17 +33,17 @@
       </div>
       <div>
         <label class="label">Employment Type</label>
-        <select class="select" [(ngModel)]="form.employmentType">
+        <select class="select" title="Employment Type" [(ngModel)]="form.employmentType">
           <option *ngFor="let t of employmentTypes" [value]="t">{{ t }}</option>
         </select>
       </div>
       <div>
         <label class="label">Min Years Experience</label>
-        <input class="input" type="number" [(ngModel)]="form.minYearsExperience" min="0" max="20">
+        <input class="input" type="number" title="Minimum Years Experience" [(ngModel)]="form.minYearsExperience" min="0" max="20">
       </div>
       <div>
         <label class="label">Max Years Experience</label>
-        <input class="input" type="number" [(ngModel)]="form.maxYearsExperience" min="0" max="30">
+        <input class="input" type="number" title="Maximum Years Experience" [(ngModel)]="form.maxYearsExperience" min="0" max="30">
       </div>
     </div>
     <div class="mt-4">
@@ -52,7 +52,7 @@
         placeholder="e.g. Remote-first team, startup environment, fintech domain..."></textarea>
     </div>
     <div class="mt-4">
-      <button class="btn btn-primary" (click)="generate()" [disabled]="isGenerating || !form.jobTitle">
+      <button type="button" class="btn btn-primary" (click)="generate()" [disabled]="isGenerating || !form.jobTitle">
         <span *ngIf="!isGenerating">✨ Generate JD</span>
         <span *ngIf="isGenerating">🔄 Generating...</span>
       </button>
@@ -65,7 +65,7 @@
       <h2 style="font-size:22px;font-weight:700;color:var(--moonlight-dark)">
         {{ result.data.title }}
       </h2>
-      <button class="btn btn-secondary" (click)="copyToClipboard()">Copy as Markdown</button>
+      <button type="button" class="btn btn-secondary" (click)="copyToClipboard()">Copy as Markdown</button>
     </div>
 
     <!-- Overview -->

@@ -19,7 +19,16 @@ interface SlaTrack {
 
 @Component({
   selector: 'app-sla-dashboard',
-  templateUrl: './sla-dashboard.component.html'
+  templateUrl: './sla-dashboard.component.html',
+  styles: [`
+    .sla-text-muted { color: var(--text-3); }
+    .sla-error-override { border-color: var(--sla-overdue) !important; background: rgba(239,68,68,0.08) !important; color: var(--sla-overdue) !important; }
+    .sla-score-on-track { color: var(--sla-on-track); }
+    .sla-score-warning { color: var(--sla-warning); }
+    .sla-score-overdue { color: var(--sla-overdue); }
+    .sla-empty-text { color: var(--text-3); padding: 40px 0; display: block; }
+    .sla-progress-col { min-width: 120px; }
+  `]
 })
 export class SlaDashboardComponent implements OnInit {
   tracks: SlaTrack[] = [];

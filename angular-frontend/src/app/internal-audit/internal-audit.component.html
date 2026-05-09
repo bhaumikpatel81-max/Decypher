@@ -15,9 +15,9 @@
       </p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-ghost btn-sm" *ngIf="activeTab === 'detail'" (click)="backToList()">← Back to List</button>
-      <button class="btn btn-primary btn-sm" *ngIf="activeTab === 'detail' && selectedReport" (click)="exportPdf()">Export PDF</button>
-      <button class="btn btn-primary btn-sm" *ngIf="activeTab !== 'detail' && isSuperAdmin" (click)="showCreateForm=!showCreateForm">
+      <button type="button" class="btn btn-ghost btn-sm" *ngIf="activeTab === 'detail'" (click)="backToList()">← Back to List</button>
+      <button type="button" class="btn btn-primary btn-sm" *ngIf="activeTab === 'detail' && selectedReport" (click)="exportPdf()">Export PDF</button>
+      <button type="button" class="btn btn-primary btn-sm" *ngIf="activeTab !== 'detail' && isSuperAdmin" (click)="showCreateForm=!showCreateForm">
         {{ showCreateForm ? 'Cancel' : '+ New Report' }}
       </button>
     </div>
@@ -48,7 +48,7 @@
       </div>
       <h2 class="empty-title">No Audit Reports Yet</h2>
       <p class="empty-desc">Create your first internal audit report to start tracking compliance observations and findings across departments.</p>
-      <button class="btn btn-primary" *ngIf="isSuperAdmin" (click)="setTab('create');showCreateForm=true">+ Create First Report</button>
+      <button type="button" class="btn btn-primary" *ngIf="isSuperAdmin" (click)="setTab('create');showCreateForm=true">+ Create First Report</button>
       <p *ngIf="!isSuperAdmin" class="empty-hint">Contact your admin to create the first audit report.</p>
       <div class="empty-features">
         <div class="empty-feature"><span class="ef-dot" style="background:#6b4df0"></span>Track audits across all departments</div>
@@ -184,7 +184,7 @@
         <div class="card">
           <div class="card-head">
             <span class="card-title">Recent Reports</span>
-            <button class="btn btn-ghost btn-sm" (click)="setTab('reports')">View All →</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="setTab('reports')">View All →</button>
           </div>
           <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
             <div *ngFor="let r of recentReports" class="recent-report-row" (click)="viewReport(r)">
@@ -215,7 +215,7 @@
         </div>
         <div class="form-row">
           <label class="form-label">Department Type *</label>
-          <select class="select" [(ngModel)]="createForm.departmentType">
+          <select class="select" title="Department Type" [(ngModel)]="createForm.departmentType">
             <option *ngFor="let d of deptTypes" [value]="d">{{ d }}</option>
           </select>
         </div>
@@ -225,7 +225,7 @@
         </div>
         <div class="form-row">
           <label class="form-label">Audit Date</label>
-          <input class="input" type="date" [(ngModel)]="createForm.auditDate">
+          <input class="input" type="date" title="Audit Date" [(ngModel)]="createForm.auditDate">
         </div>
         <div class="form-row">
           <label class="form-label">Audited By</label>
@@ -241,15 +241,15 @@
         </div>
         <div class="form-row" style="grid-column:span 2;">
           <label class="form-label">Executive Summary</label>
-          <textarea class="textarea" [(ngModel)]="createForm.executiveSummary" rows="3"
+          <textarea class="textarea" title="Executive Summary" [(ngModel)]="createForm.executiveSummary" rows="3"
             placeholder="Brief overview of audit scope, methodology, and key outcomes..."></textarea>
         </div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;">
-        <button class="btn btn-primary" (click)="createReport()" [disabled]="loading || !createForm.title || !createForm.financialYear">
+        <button type="button" class="btn btn-primary" (click)="createReport()" [disabled]="loading || !createForm.title || !createForm.financialYear">
           {{ loading ? 'Creating...' : 'Create Report' }}
         </button>
-        <button class="btn btn-ghost" (click)="showCreateForm=false">Cancel</button>
+        <button type="button" class="btn btn-ghost" (click)="showCreateForm=false">Cancel</button>
       </div>
     </div>
   </ng-container>
@@ -258,11 +258,11 @@
   <ng-container *ngIf="activeTab === 'reports'">
     <!-- Filters -->
     <div class="card mb-4" style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;">
-      <select class="select" style="max-width:160px;" [(ngModel)]="filterDept" (change)="loadReports()">
+      <select class="select" title="Filter by Department" style="max-width:160px;" [(ngModel)]="filterDept" (change)="loadReports()">
         <option value="">All Departments</option>
         <option *ngFor="let d of deptTypes" [value]="d">{{ d }}</option>
       </select>
-      <select class="select" style="max-width:140px;" [(ngModel)]="filterStatus" (change)="loadReports()">
+      <select class="select" title="Filter by Status" style="max-width:140px;" [(ngModel)]="filterStatus" (change)="loadReports()">
         <option value="">All Statuses</option>
         <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
       </select>
@@ -293,8 +293,8 @@
               <td style="color:#10b981;font-weight:700;">{{ r.closedCount }}</td>
               <td>
                 <div style="display:flex;gap:6px;">
-                  <button class="btn btn-ghost btn-sm" (click)="viewReport(r)">View</button>
-                  <button class="btn btn-danger btn-sm" *ngIf="isSuperAdmin" (click)="deleteReport(r)">Delete</button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="viewReport(r)">View</button>
+                  <button type="button" class="btn btn-danger btn-sm" *ngIf="isSuperAdmin" (click)="deleteReport(r)">Delete</button>
                 </div>
               </td>
             </tr>
@@ -339,7 +339,7 @@
         <div style="margin-bottom:4px;">
           <span [class]="badgeClass(selectedReport.status)" style="font-size:14px;">{{ selectedReport.status }}</span>
         </div>
-        <select class="select" style="font-size:11px;padding:3px 6px;" *ngIf="isSuperAdmin"
+        <select class="select" title="Report Status" style="font-size:11px;padding:3px 6px;" *ngIf="isSuperAdmin"
           [(ngModel)]="selectedReport.status" (change)="updateStatus(selectedReport, selectedReport.status)">
           <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
         </select>
@@ -400,7 +400,7 @@
     <div class="card">
       <div class="flex-between mb-4">
         <span class="section-header" style="margin:0;">Audit Observations ({{ selectedReport.observations.length }})</span>
-        <button class="btn btn-primary btn-sm" (click)="openObsForm()">+ Add Observation</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="openObsForm()">+ Add Observation</button>
       </div>
 
       <!-- Add/Edit Observation form -->
@@ -413,13 +413,13 @@
           </div>
           <div class="form-row">
             <label class="form-label">Risk Level</label>
-            <select class="select" [(ngModel)]="obsForm.riskLevel">
+            <select class="select" title="Risk Level" [(ngModel)]="obsForm.riskLevel">
               <option *ngFor="let r of riskLevels" [value]="r">{{ r }}</option>
             </select>
           </div>
           <div class="form-row">
             <label class="form-label">Status</label>
-            <select class="select" [(ngModel)]="obsForm.status">
+            <select class="select" title="Observation Status" [(ngModel)]="obsForm.status">
               <option *ngFor="let s of obsStatuses" [value]="s">{{ s }}</option>
             </select>
           </div>
@@ -429,50 +429,50 @@
           </div>
           <div class="form-row">
             <label class="form-label">Financial Impact (₹)</label>
-            <input class="input" type="number" [(ngModel)]="obsForm.financialImpact">
+            <input class="input" type="number" title="Financial Impact" placeholder="0" [(ngModel)]="obsForm.financialImpact">
           </div>
           <div class="form-row" style="grid-column:span 2;">
             <label class="form-label">Background</label>
-            <textarea class="textarea" [(ngModel)]="obsForm.background" rows="2"></textarea>
+            <textarea class="textarea" title="Background" [(ngModel)]="obsForm.background" rows="2"></textarea>
           </div>
           <div class="form-row" style="grid-column:span 2;">
             <label class="form-label">Detailed Observation</label>
-            <textarea class="textarea" [(ngModel)]="obsForm.detailedObservation" rows="3"></textarea>
+            <textarea class="textarea" title="Detailed Observation" [(ngModel)]="obsForm.detailedObservation" rows="3"></textarea>
           </div>
           <div class="form-row">
             <label class="form-label">Risks (one per line)</label>
-            <textarea class="textarea" [(ngModel)]="risksInput" rows="3" placeholder="Risk 1&#10;Risk 2&#10;Risk 3"></textarea>
+            <textarea class="textarea" title="Risks" [(ngModel)]="risksInput" rows="3" placeholder="Risk 1&#10;Risk 2&#10;Risk 3"></textarea>
           </div>
           <div class="form-row">
             <label class="form-label">Recommendations (one per line)</label>
-            <textarea class="textarea" [(ngModel)]="recsInput" rows="3" placeholder="Recommendation 1&#10;Recommendation 2"></textarea>
+            <textarea class="textarea" title="Recommendations" [(ngModel)]="recsInput" rows="3" placeholder="Recommendation 1&#10;Recommendation 2"></textarea>
           </div>
           <div style="grid-column:span 2;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Management Response</div>
           </div>
           <div class="form-row" style="grid-column:span 2;">
             <label class="form-label">Root Cause</label>
-            <input class="input" [(ngModel)]="obsForm.mgmtCause">
+            <input class="input" title="Root Cause" placeholder="Describe the root cause" [(ngModel)]="obsForm.mgmtCause">
           </div>
           <div class="form-row">
             <label class="form-label">Corrective Action</label>
-            <textarea class="textarea" [(ngModel)]="obsForm.mgmtCorrectiveAction" rows="2"></textarea>
+            <textarea class="textarea" title="Corrective Action" [(ngModel)]="obsForm.mgmtCorrectiveAction" rows="2"></textarea>
           </div>
           <div class="form-row">
             <label class="form-label">Preventive Action</label>
-            <textarea class="textarea" [(ngModel)]="obsForm.mgmtPreventiveAction" rows="2"></textarea>
+            <textarea class="textarea" title="Preventive Action" [(ngModel)]="obsForm.mgmtPreventiveAction" rows="2"></textarea>
           </div>
           <div class="form-row">
             <label class="form-label">Responsible Person</label>
-            <input class="input" [(ngModel)]="obsForm.mgmtResponsiblePerson">
+            <input class="input" title="Responsible Person" [(ngModel)]="obsForm.mgmtResponsiblePerson">
           </div>
           <div class="form-row">
             <label class="form-label">Designation</label>
-            <input class="input" [(ngModel)]="obsForm.mgmtResponsibleDesignation">
+            <input class="input" title="Designation" [(ngModel)]="obsForm.mgmtResponsibleDesignation">
           </div>
           <div class="form-row">
             <label class="form-label">Target Date</label>
-            <input class="input" type="date" [(ngModel)]="obsForm.mgmtTargetDate">
+            <input class="input" type="date" title="Target Date" [(ngModel)]="obsForm.mgmtTargetDate">
           </div>
           <div class="form-row" style="justify-content:center;padding-top:8px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
@@ -484,10 +484,10 @@
           </div>
         </div>
         <div style="margin-top:16px;display:flex;gap:10px;">
-          <button class="btn btn-primary" (click)="saveObservation()" [disabled]="loading || !obsForm.title">
+          <button type="button" class="btn btn-primary" (click)="saveObservation()" [disabled]="loading || !obsForm.title">
             {{ loading ? 'Saving...' : (editingObsId ? 'Update' : 'Add Observation') }}
           </button>
-          <button class="btn btn-ghost" (click)="showObsForm=false;editingObsId=null">Cancel</button>
+          <button type="button" class="btn btn-ghost" (click)="showObsForm=false;editingObsId=null">Cancel</button>
         </div>
       </div>
 
@@ -502,8 +502,8 @@
             <div style="display:flex;gap:8px;align-items:center;">
               <span [class]="riskClass(obs.riskLevel)">{{ obs.riskLevel }}</span>
               <span [class]="badgeClass(obs.status)">{{ obs.status }}</span>
-              <button class="btn btn-ghost btn-sm" (click)="openObsForm(obs)">Edit</button>
-              <button class="btn btn-danger btn-sm" (click)="deleteObservation(obs)">Delete</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="openObsForm(obs)">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm" (click)="deleteObservation(obs)">Delete</button>
             </div>
           </div>
 

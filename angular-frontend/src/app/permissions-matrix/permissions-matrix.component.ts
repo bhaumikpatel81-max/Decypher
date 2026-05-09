@@ -19,6 +19,34 @@ type Matrix = Record<string, Record<string, PermCell>>;
   styles: [`
     .tr-hover:hover { background:var(--surface-alt); }
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px; }
+    .pm-subtitle { color:var(--text-3);font-size:13px; }
+    .pm-center-state { padding:32px;text-align:center;color:var(--text-3); }
+    .pm-spinner-center { margin:0 auto; }
+    .pm-spinner-msg { margin-top:12px; }
+    .pm-table-wrap { overflow-x:auto; }
+    .pm-legend { display:flex;gap:20px;margin-bottom:20px;font-size:12px;color:var(--text-3); }
+    .pm-icon-read { font-size:16px;color:#10b981;vertical-align:middle; }
+    .pm-icon-write { font-size:16px;color:#6b4df0;vertical-align:middle; }
+    .pm-icon-delete { font-size:16px;color:#ef4444;vertical-align:middle; }
+    .pm-legend-note { margin-left:auto;color:#f59e0b;font-size:11px; }
+    .pm-table { width:100%;border-collapse:collapse;min-width:900px; }
+    .pm-head-row { border-bottom:2px solid var(--border); }
+    .pm-th-module { padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:700;min-width:200px; }
+    .pm-th-role { padding:10px;text-align:center;font-size:12px;color:var(--text-3);font-weight:700;min-width:130px; }
+    .pm-subhead-row { border-bottom:1px solid var(--border);background:var(--surface-alt); }
+    .pm-subhead-label { padding:6px 10px;font-size:11px;color:var(--text-3); }
+    .pm-subhead-cell { padding:6px 4px;text-align:center; }
+    .pm-rwd-row { display:flex;justify-content:center;gap:8px; }
+    .pm-lbl-r { font-size:10px;color:#10b981;font-weight:700; }
+    .pm-lbl-w { font-size:10px;color:#6b4df0;font-weight:700; }
+    .pm-lbl-d { font-size:10px;color:#ef4444;font-weight:700; }
+    .pm-group-row { background:var(--surface-alt); }
+    .pm-group-cell { padding:8px 10px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px; }
+    .pm-data-row { border-bottom:1px solid var(--border); }
+    .pm-module-cell { padding:10px;font-size:13px;font-weight:500; }
+    .pm-perm-cell { padding:8px 4px;text-align:center; }
+    .pm-icon-wrap { display:flex;justify-content:center;gap:8px;align-items:center; }
+    .pm-icon-toggle { font-size:18px;cursor:pointer;transition:color .15s; }
   `]
 })
 export class PermissionsMatrixComponent implements OnInit {

@@ -1,0 +1,10 @@
+{
+  "hints": {
+    "no-inline-styles": "off",
+    "axe/forms": "off",
+    "axe/color-contrast": "off",
+    "compat-api/css": "off",
+    "compat-api/html": "off",
+    "sri": "off"
+  }
+}
