@@ -400,4 +400,51 @@ namespace Decypher.Web.DTOs
     {
         public Guid FiscalYearId { get; set; }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  Budget Forecasting V2 — Request DTOs
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public class CreateBudgetPlanRequest
+    {
+        public string Name        { get; set; } = string.Empty;
+        public string FiscalYear  { get; set; } = string.Empty;
+        public string? Department { get; set; }
+        public Decypher.Web.Models.BudgetPlanType PlanType { get; set; } = Decypher.Web.Models.BudgetPlanType.AOP;
+        public string? Currency   { get; set; }
+        public decimal TotalBudget{ get; set; }
+    }
+
+    public class BudgetPlanItemRequest
+    {
+        public Decypher.Web.Models.BudgetItemCategory Category   { get; set; } = Decypher.Web.Models.BudgetItemCategory.Other;
+        public string? SubCategory  { get; set; }
+        public string? Description  { get; set; }
+        public decimal Q1Budget     { get; set; }
+        public decimal Q2Budget     { get; set; }
+        public decimal Q3Budget     { get; set; }
+        public decimal Q4Budget     { get; set; }
+        public decimal Q1Actual     { get; set; }
+        public decimal Q2Actual     { get; set; }
+        public decimal Q3Actual     { get; set; }
+        public decimal Q4Actual     { get; set; }
+        public decimal Q1Forecast   { get; set; }
+        public decimal Q2Forecast   { get; set; }
+        public decimal Q3Forecast   { get; set; }
+        public decimal Q4Forecast   { get; set; }
+        public Decypher.Web.Models.BudgetItemUnit Unit { get; set; } = Decypher.Web.Models.BudgetItemUnit.Amount;
+        public string? Notes        { get; set; }
+    }
+
+    public class PatchStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class CreateBudgetAlertRequest
+    {
+        public Guid BudgetPlanItemId { get; set; }
+        public Decypher.Web.Models.BudgetAlertType AlertType { get; set; } = Decypher.Web.Models.BudgetAlertType.OverBudget;
+        public decimal Threshold { get; set; } = 80m;
+    }
 }

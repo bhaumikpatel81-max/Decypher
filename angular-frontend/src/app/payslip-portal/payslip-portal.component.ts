@@ -48,9 +48,9 @@ import { environment } from '../../environments/environment';
             <!-- Header -->
             <div class="payslip-header">
               <div>
-                <div style="font-size:22px;font-weight:900;color:#6b4df0;letter-spacing:-0.5px;">AMNEX</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.7);">Amnex Infotechnologies Pvt. Ltd.</div>
-                <div style="font-size:11px;color:rgba(255,255,255,.6);">GIFT City, Gandhinagar, Gujarat 382355</div>
+                <div style="font-size:22px;font-weight:900;color:#6b4df0;letter-spacing:-0.5px;">{{companyShortName}}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.7);">{{companyName}}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.6);">{{companyAddress}}</div>
               </div>
               <div style="text-align:right;">
                 <div style="font-size:14px;font-weight:700;color:#fff;">PAYSLIP</div>
@@ -138,8 +138,13 @@ import { environment } from '../../environments/environment';
 export class PayslipPortalComponent implements OnInit {
   private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
+
   selectedEmp = '';
   selectedMonthIdx = 0;
+
+  companyName      = 'Your Company';
+  companyShortName = '';
+  companyAddress   = '';
 
   employees: any[] = [];
   months: any[] = [];
@@ -148,7 +153,22 @@ export class PayslipPortalComponent implements OnInit {
 
   get currentEmp() { return this.employees.find(e => e.id === this.selectedEmp); }
 
-  ngOnInit() { this.loadEmployees(); }
+  ngOnInit() {
+    this.loadCompanyInfo();
+    this.loadEmployees();
+  }
+
+  loadCompanyInfo() {
+    this.http.get<any>(`${environment.apiUrl}/api/settings/company`).subscribe({
+      next: r => {
+        const d = r?.data || r;
+        this.companyName      = d?.companyName    || d?.name    || 'Your Company';
+        this.companyShortName = d?.shortName       || d?.abbreviation || this.companyName.split(' ')[0].toUpperCase();
+        this.companyAddress   = d?.address || d?.companyAddress || '';
+      },
+      error: () => {}
+    });
+  }
 
   loadEmployees() {
     this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {

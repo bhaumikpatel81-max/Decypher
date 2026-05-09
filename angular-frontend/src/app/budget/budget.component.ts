@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 import {
   BudgetService, FiscalYear, DashboardKpi, Forecast, ForecastRow,
@@ -700,6 +701,260 @@ import {
     </div>
   </div>
 
+  <!-- ░░ PLANS — OVERVIEW ░░ -->
+  <div class="tab-content" *ngIf="activeTab === 'plans-overview'">
+    <!-- Plan selector + controls -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <select class="select" style="width:220px" [(ngModel)]="selectedPlanId" (change)="selectPlan(selectedPlanId)">
+        <option value="">— Select a plan —</option>
+        <option *ngFor="let p of plans; trackBy: trackById" [value]="p.id">{{p.name}} ({{p.fiscalYear}})</option>
+      </select>
+      <button class="btn btn-primary btn-sm" (click)="showNewPlanForm=!showNewPlanForm">+ New Plan</button>
+      <button class="btn btn-outline btn-sm" *ngIf="selectedPlanId" (click)="updatePlanStatus('Approved')" [disabled]="selectedPlan?.status==='Locked'">Approve</button>
+      <button class="btn btn-outline btn-sm" *ngIf="selectedPlanId" (click)="updatePlanStatus('Locked')" [disabled]="selectedPlan?.status==='Locked'">🔒 Lock</button>
+      <button class="btn btn-outline btn-sm" *ngIf="selectedPlanId" (click)="exportPlanExcel(selectedPlanId)">⬇ Excel</button>
+      <button class="btn btn-outline btn-sm" *ngIf="selectedPlanId" (click)="exportPlanPdf(selectedPlanId)">⬇ PDF</button>
+      <span *ngIf="selectedPlan" class="chip" [style.background]="selectedPlan.status==='Locked'?'#fef2f2':selectedPlan.status==='Approved'?'#f0fdf4':'#f8fafc'" [style.color]="selectedPlan.status==='Locked'?'#dc2626':selectedPlan.status==='Approved'?'#16a34a':'#475569'">{{selectedPlan.status}}</span>
+    </div>
+
+    <!-- New Plan Form -->
+    <div *ngIf="showNewPlanForm" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:600;color:#64748b">Plan Name</label><input class="input" style="width:180px" [(ngModel)]="newPlanDraft.name" placeholder="e.g. AOP 2025-26"></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:600;color:#64748b">Fiscal Year</label><input class="input" style="width:100px" [(ngModel)]="newPlanDraft.fiscalYear" placeholder="2025-26"></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:600;color:#64748b">Department</label><input class="input" style="width:130px" [(ngModel)]="newPlanDraft.department" placeholder="All"></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:600;color:#64748b">Type</label>
+        <select class="select" style="width:110px" [(ngModel)]="newPlanDraft.planType">
+          <option value="AOP">AOP</option><option value="Revised">Revised</option><option value="Rolling">Rolling</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:600;color:#64748b">Currency</label>
+        <select class="select" style="width:80px" [(ngModel)]="newPlanDraft.currency">
+          <option>INR</option><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option><option>SGD</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="createPlan()">Create</button>
+      <button class="btn btn-ghost btn-sm" (click)="showNewPlanForm=false">Cancel</button>
+    </div>
+
+    <div *ngIf="planLoading" class="loading-state">Loading plan…</div>
+
+    <!-- KPI Cards -->
+    <div *ngIf="planSummary && !planLoading" class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi-card"><div class="kpi-label">Total Budget</div><div class="kpi-value">{{planSummary.totalBudget | number:'1.0-0'}}</div><div class="kpi-sub">{{planSummary.currency}}</div></div>
+      <div class="kpi-card" [class.kpi-card--spent]="true"><div class="kpi-label">Actual Spent</div><div class="kpi-value">{{planSummary.totalActual | number:'1.0-0'}}</div><div class="kpi-sub">Burn Rate: {{planSummary.burnRate | number:'1.1-1'}}%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Forecast</div><div class="kpi-value">{{planSummary.totalForecast | number:'1.0-0'}}</div><div class="kpi-sub">Proj. YE: {{planSummary.projectedYearEnd | number:'1.0-0'}}</div></div>
+      <div class="kpi-card" [class.kpi-card--warn]="planSummary.variance < 0"><div class="kpi-label">Variance</div><div class="kpi-value" [style.color]="planSummary.variance<0?'#dc2626':'#16a34a'">{{planSummary.variance | number:'1.0-0'}}</div><div class="kpi-sub">{{planSummary.variancePct | number:'1.1-1'}}%</div></div>
+      <div class="kpi-card" [class.kpi-card--warn]="planSummary.burnRate > 90"><div class="kpi-label">Burn Rate</div><div class="kpi-value" [style.color]="planSummary.burnRate>100?'#dc2626':planSummary.burnRate>90?'#f97316':'#16a34a'">{{planSummary.burnRate | number:'1.1-1'}}%</div><div class="kpi-sub">{{planSummary.alertCount}} alert(s)</div></div>
+    </div>
+
+    <!-- Quarter Bar Chart (SVG) -->
+    <div *ngIf="planSummary?.byQuarter?.length && !planLoading" class="chart-card chart-card--wide" style="margin-bottom:16px">
+      <div class="chart-title">Quarter Comparison — Budget / Actual / Forecast</div>
+      <div style="display:flex;gap:24px;align-items:flex-end;padding:16px 0 24px;overflow-x:auto">
+        <ng-container *ngFor="let q of planSummary.byQuarter; trackBy: trackByIdx">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:80px">
+            <div style="display:flex;align-items:flex-end;gap:3px;height:100px">
+              <div title="Budget" [style.height.px]="pctBar(q.budget, planMaxQ)" style="width:20px;background:#6b4df0;border-radius:3px 3px 0 0;min-height:2px"></div>
+              <div title="Actual" [style.height.px]="pctBar(q.actual, planMaxQ)" style="width:20px;background:#3bbdea;border-radius:3px 3px 0 0;min-height:2px"></div>
+              <div title="Forecast" [style.height.px]="pctBar(q.forecast, planMaxQ)" style="width:20px;background:#a94ee6;border-radius:3px 3px 0 0;min-height:2px"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#64748b">{{q.quarter}}</span>
+          </div>
+        </ng-container>
+      </div>
+      <div style="display:flex;gap:16px;font-size:11px;padding:0 16px 8px">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#6b4df0;border-radius:2px;margin-right:4px"></span>Budget</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#3bbdea;border-radius:2px;margin-right:4px"></span>Actual</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#a94ee6;border-radius:2px;margin-right:4px"></span>Forecast</span>
+      </div>
+    </div>
+
+    <!-- Category Table -->
+    <div *ngIf="planSummary?.byCategory?.length && !planLoading" class="chart-card">
+      <div class="chart-title">Category Breakdown</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:2px solid #e2e8f0">
+            <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:700;color:#475569">Category</th>
+            <th style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#475569">Budget</th>
+            <th style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#475569">Actual</th>
+            <th style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#475569">Forecast</th>
+            <th style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#475569">Variance</th>
+            <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:700;color:#475569">Progress</th>
+          </tr></thead>
+          <tbody>
+            <tr *ngFor="let c of planSummary.byCategory; trackBy: trackByIdx" style="border-bottom:1px solid #f1f5f9">
+              <td style="padding:8px 12px;font-weight:600">{{c.category}}</td>
+              <td style="padding:8px 12px;text-align:right">{{c.budget | number:'1.0-0'}}</td>
+              <td style="padding:8px 12px;text-align:right">{{c.actual | number:'1.0-0'}}</td>
+              <td style="padding:8px 12px;text-align:right">{{c.forecast | number:'1.0-0'}}</td>
+              <td style="padding:8px 12px;text-align:right" [style.color]="c.variance<0?'#dc2626':'#16a34a'">{{c.variance | number:'1.0-0'}}</td>
+              <td style="padding:8px 12px;min-width:120px">
+                <div style="height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                  <div [style.width.%]="c.budget>0 ? min100(c.actual/c.budget*100) : 0" [style.background]="c.actual>c.budget?'#dc2626':'#6b4df0'" style="height:100%;border-radius:4px;transition:width .3s"></div>
+                </div>
+                <span style="font-size:10px;color:#94a3b8">{{c.budget>0 ? (c.actual/c.budget*100 | number:'1.0-0') : 0}}%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="!selectedPlanId && !planLoading" class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-title">Select or create a budget plan</div>
+      <div class="empty-state-description">Use the selector above to load an existing plan, or click + New Plan.</div>
+    </div>
+  </div>
+
+  <!-- ░░ PLANS — LINE ITEMS ░░ -->
+  <div class="tab-content" *ngIf="activeTab === 'plans-items'">
+    <div *ngIf="!selectedPlanId" class="empty-state">
+      <div class="empty-state-icon">📝</div>
+      <div class="empty-state-title">No plan selected</div>
+      <div class="empty-state-description">Switch to the Plans Overview tab and select a plan first.</div>
+    </div>
+
+    <ng-container *ngIf="selectedPlanId">
+      <!-- Toolbar -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <select class="select" style="width:140px" [(ngModel)]="itemFilterCategory">
+          <option value="">All categories</option>
+          <option *ngFor="let c of budgetItemCategories" [value]="c">{{c}}</option>
+        </select>
+        <input class="input" style="width:200px" [(ngModel)]="itemSearch" placeholder="Search description…">
+        <button class="btn btn-primary btn-sm" (click)="showAddItemForm=!showAddItemForm">+ Add Line Item</button>
+      </div>
+
+      <!-- Add Item Form -->
+      <div *ngIf="showAddItemForm" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Description</label><input class="input" style="width:160px" [(ngModel)]="newItemDraft.description" placeholder="Line item description"></div>
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Category</label>
+          <select class="select" style="width:120px" [(ngModel)]="newItemDraft.category">
+            <option *ngFor="let c of budgetItemCategories" [value]="c">{{c}}</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Q1 Budget</label><input class="input" style="width:90px" type="number" [(ngModel)]="newItemDraft.q1Budget"></div>
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Q2 Budget</label><input class="input" style="width:90px" type="number" [(ngModel)]="newItemDraft.q2Budget"></div>
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Q3 Budget</label><input class="input" style="width:90px" type="number" [(ngModel)]="newItemDraft.q3Budget"></div>
+        <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:11px;font-weight:600;color:#64748b">Q4 Budget</label><input class="input" style="width:90px" type="number" [(ngModel)]="newItemDraft.q4Budget"></div>
+        <button class="btn btn-primary btn-sm" (click)="addPlanLineItem()">Save</button>
+        <button class="btn btn-ghost btn-sm" (click)="showAddItemForm=false">Cancel</button>
+      </div>
+
+      <!-- Items Table -->
+      <div style="overflow-x:auto" *ngIf="filteredPlanItems.length">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:1200px">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">
+              <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;white-space:nowrap">Description</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569">Category</th>
+              <th *ngFor="let col of itemColumns; trackBy: trackByIdx" style="padding:8px 6px;text-align:right;font-weight:700;color:#475569;white-space:nowrap">{{col.label}}</th>
+              <th style="padding:8px 10px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredPlanItems; trackBy: trackById"
+                [style.background]="planItemRowBg(item)">
+              <td style="padding:7px 10px;font-weight:500">
+                <span *ngIf="editingPlanItemId!==item.id">{{item.description}}</span>
+                <input *ngIf="editingPlanItemId===item.id" class="input" style="width:140px;height:28px;font-size:12px" [(ngModel)]="item.description">
+              </td>
+              <td style="padding:7px 10px">
+                <span *ngIf="editingPlanItemId!==item.id" class="chip chip-neutral" style="font-size:10px">{{item.category}}</span>
+                <select *ngIf="editingPlanItemId===item.id" class="select" style="width:100px;height:28px;font-size:11px" [(ngModel)]="item.category">
+                  <option *ngFor="let c of budgetItemCategories" [value]="c">{{c}}</option>
+                </select>
+              </td>
+              <ng-container *ngFor="let col of itemColumns; trackBy: trackByIdx">
+                <td style="padding:7px 6px;text-align:right">
+                  <span *ngIf="editingPlanItemId!==item.id">{{item[col.field] | number:'1.0-0'}}</span>
+                  <input *ngIf="editingPlanItemId===item.id" class="input" style="width:72px;height:28px;font-size:12px;text-align:right" type="number" [(ngModel)]="item[col.field]">
+                </td>
+              </ng-container>
+              <td style="padding:7px 10px;white-space:nowrap">
+                <button *ngIf="editingPlanItemId!==item.id" class="btn btn-ghost btn-xs" (click)="editingPlanItemId=item.id">Edit</button>
+                <button *ngIf="editingPlanItemId===item.id" class="btn btn-primary btn-xs" (click)="savePlanLineItem(item)">Save</button>
+                <button *ngIf="editingPlanItemId===item.id" class="btn btn-ghost btn-xs" (click)="editingPlanItemId=''">Cancel</button>
+                <button class="btn btn-ghost btn-xs btn--danger" (click)="deletePlanLineItem(item.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!filteredPlanItems.length && !planLoading" class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-title">No line items yet</div>
+        <div class="empty-state-description">Click + Add Line Item to get started.</div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ░░ PLANS — SCENARIOS ░░ -->
+  <div class="tab-content" *ngIf="activeTab === 'plans-scenarios'">
+    <div *ngIf="!selectedPlanId" class="empty-state">
+      <div class="empty-state-icon">🔮</div>
+      <div class="empty-state-title">No plan selected</div>
+      <div class="empty-state-description">Select a plan in Plans Overview first.</div>
+    </div>
+
+    <ng-container *ngIf="selectedPlanId && planSummary">
+      <!-- Scenario Toggle -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;align-items:center">
+        <span style="font-size:13px;font-weight:600;color:#475569">Scenario:</span>
+        <button *ngFor="let sc of scenarios; trackBy: trackByIdx" class="btn btn-sm"
+          [style.background]="scenarioMult===sc.mult?'#6b4df0':'#f8fafc'"
+          [style.color]="scenarioMult===sc.mult?'#fff':'#475569'"
+          [style.border]="scenarioMult===sc.mult?'1.5px solid #6b4df0':'1.5px solid #e2e8f0'"
+          (click)="scenarioMult=sc.mult">{{sc.label}}</button>
+      </div>
+
+      <!-- KPI Scenario Cards -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi-card"><div class="kpi-label">Budget</div><div class="kpi-value">{{planSummary.totalBudget | number:'1.0-0'}}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Actuals</div><div class="kpi-value">{{planSummary.totalActual | number:'1.0-0'}}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Adj. Forecast</div><div class="kpi-value">{{planSummary.totalForecast * scenarioMult | number:'1.0-0'}}</div><div class="kpi-sub">× {{scenarioMult | number:'1.1-1'}}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Projected YE</div><div class="kpi-value">{{(planSummary.totalActual + planSummary.totalForecast * scenarioMult) | number:'1.0-0'}}</div></div>
+        <div class="kpi-card" [class.kpi-card--warn]="(planSummary.totalActual + planSummary.totalForecast * scenarioMult) > planSummary.totalBudget"><div class="kpi-label">vs Budget</div><div class="kpi-value" [style.color]="(planSummary.totalActual + planSummary.totalForecast * scenarioMult) > planSummary.totalBudget ? '#dc2626':'#16a34a'">{{planSummary.totalBudget - (planSummary.totalActual + planSummary.totalForecast * scenarioMult) | number:'1.0-0'}}</div></div>
+      </div>
+
+      <!-- Waterfall SVG Chart (simplified) -->
+      <div class="chart-card chart-card--wide" style="margin-bottom:20px">
+        <div class="chart-title">Waterfall: Budget → Actuals → Remaining Forecast → Projected YE</div>
+        <div style="display:flex;gap:2px;align-items:flex-end;padding:16px 0 24px;overflow-x:auto">
+          <ng-container *ngFor="let bar of waterfallBars; trackBy: trackByIdx">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:90px">
+              <div [style.height.px]="bar.height" [style.background]="bar.color" style="width:60px;border-radius:4px 4px 0 0;min-height:4px;display:flex;align-items:center;justify-content:center">
+                <span style="font-size:9px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px">{{bar.val | number:'1.0-0'}}</span>
+              </div>
+              <span style="font-size:10px;font-weight:600;color:#64748b;text-align:center;max-width:80px;line-height:1.2">{{bar.label}}</span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Version History -->
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="chart-title" style="margin-bottom:0">Version History</div>
+          <button class="btn btn-outline btn-sm" (click)="snapshotVersion()">📸 Snapshot Current</button>
+        </div>
+        <div *ngIf="planVersions.length === 0" class="empty-state" style="padding:20px">
+          <div class="empty-state-description">No snapshots yet. Click "Snapshot Current" to save the current plan state.</div>
+        </div>
+        <div *ngFor="let v of planVersions; trackBy: trackById" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1e293b">{{v.label}}</div>
+            <div style="font-size:11px;color:#94a3b8">{{v.createdAt | date:'dd MMM yyyy HH:mm'}} · v{{v.versionNumber}}</div>
+          </div>
+          <button class="btn btn-ghost btn-xs" (click)="viewVersion(v)">View JSON</button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
 </div>
   `,
   styles: [`
@@ -994,12 +1249,208 @@ export class BudgetComponent implements OnInit {
   importErrMsg = '';
 
   tabs = [
-    { key: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { key: 'forecast',  label: 'Forecast',  icon: '📅' },
-    { key: 'actuals',   label: 'Actuals',   icon: '💰' },
-    { key: 'reports',   label: 'Reports',   icon: '📋' },
-    { key: 'settings',  label: 'Settings',  icon: '⚙️' }
+    { key: 'dashboard',       label: 'Dashboard',     icon: '📊' },
+    { key: 'forecast',        label: 'Forecast',       icon: '📅' },
+    { key: 'actuals',         label: 'Actuals',        icon: '💰' },
+    { key: 'reports',         label: 'Reports',        icon: '📋' },
+    { key: 'settings',        label: 'Settings',       icon: '⚙️' },
+    { key: 'plans-overview',  label: 'Plans Overview', icon: '🗺️' },
+    { key: 'plans-items',     label: 'Line Items',     icon: '📝' },
+    { key: 'plans-scenarios', label: 'Scenarios',      icon: '🔮' },
   ];
+
+  // ── Plan V2 state ──────────────────────────────────────────────────────────
+  plans: any[]        = [];
+  selectedPlanId      = '';
+  selectedPlan: any   = null;
+  planSummary: any    = null;
+  planItems: any[]    = [];
+  planVersions: any[] = [];
+  planLoading         = false;
+  showNewPlanForm      = false;
+  showAddItemForm      = false;
+  newPlanDraft: any   = { name:'', fiscalYear:'', department:'', planType:'AOP', currency:'INR', totalBudget:0 };
+  newItemDraft: any   = { description:'', category:'Salary', subCategory:'', q1Budget:0, q2Budget:0, q3Budget:0, q4Budget:0 };
+  editingPlanItemId   = '';
+  itemFilterCategory  = '';
+  itemSearch          = '';
+  scenarioMult        = 1.0;
+
+  scenarios = [
+    { label: 'Optimistic (+10%)', mult: 1.1 },
+    { label: 'Base (0%)',         mult: 1.0 },
+    { label: 'Conservative (-10%)', mult: 0.9 }
+  ];
+
+  budgetItemCategories = ['Headcount','Salary','Recruitment','Training','IT','Admin','Marketing','Procurement','Other'];
+
+  itemColumns = [
+    { label:'Q1B', field:'q1Budget' }, { label:'Q1A', field:'q1Actual' }, { label:'Q1F', field:'q1Forecast' },
+    { label:'Q2B', field:'q2Budget' }, { label:'Q2A', field:'q2Actual' }, { label:'Q2F', field:'q2Forecast' },
+    { label:'Q3B', field:'q3Budget' }, { label:'Q3A', field:'q3Actual' }, { label:'Q3F', field:'q3Forecast' },
+    { label:'Q4B', field:'q4Budget' }, { label:'Q4A', field:'q4Actual' }, { label:'Q4F', field:'q4Forecast' },
+  ];
+
+  get filteredPlanItems(): any[] {
+    return this.planItems.filter(i => {
+      const matchCat  = !this.itemFilterCategory || i.category === this.itemFilterCategory;
+      const matchSrch = !this.itemSearch || (i.description || '').toLowerCase().includes(this.itemSearch.toLowerCase());
+      return matchCat && matchSrch;
+    });
+  }
+
+  get planMaxQ(): number {
+    if (!this.planSummary?.byQuarter?.length) return 1;
+    return Math.max(...this.planSummary.byQuarter.flatMap((q: any) => [q.budget, q.actual, q.forecast]), 1);
+  }
+
+  get waterfallBars(): any[] {
+    if (!this.planSummary) return [];
+    const s = this.planSummary;
+    const adj = s.totalForecast * this.scenarioMult;
+    const maxVal = Math.max(s.totalBudget, s.totalActual + adj, 1);
+    const h = (v: number) => Math.round(Math.max(v / maxVal * 120, 4));
+    return [
+      { label: 'Budget',      val: s.totalBudget,            color: '#6b4df0', height: h(s.totalBudget) },
+      { label: 'Actuals',     val: s.totalActual,             color: '#3bbdea', height: h(s.totalActual) },
+      { label: 'Rem. Forecast', val: adj,                     color: '#a94ee6', height: h(adj) },
+      { label: 'Projected YE', val: s.totalActual + adj,      color: s.totalActual+adj>s.totalBudget?'#dc2626':'#16a34a', height: h(s.totalActual+adj) },
+    ];
+  }
+
+  trackByIdx = (i: number) => i;
+
+  pctBar(val: number, max: number): number {
+    return Math.round(Math.max(val / (max || 1) * 100, 2));
+  }
+
+  planItemRowBg(item: any): string {
+    const actual = item.q1Actual + item.q2Actual + item.q3Actual + item.q4Actual;
+    const budget = item.q1Budget + item.q2Budget + item.q3Budget + item.q4Budget;
+    const forecast = item.q1Forecast + item.q2Forecast + item.q3Forecast + item.q4Forecast;
+    if (actual > budget) return '#fff1f2';
+    if (forecast > budget) return '#fffbeb';
+    return '';
+  }
+
+  loadPlans() {
+    this.http.get<any>(`${environment.apiUrl}/api/budget/plans`).subscribe({
+      next: r => { this.plans = [...(r.data ?? r)]; },
+      error: () => {}
+    });
+  }
+
+  selectPlan(id: string) {
+    if (!id) { this.selectedPlan = null; this.planSummary = null; this.planItems = []; this.planVersions = []; return; }
+    this.selectedPlan = this.plans.find(p => p.id === id) ?? null;
+    this.loadPlanSummary(id);
+    this.loadPlanItems(id);
+    this.loadPlanVersions(id);
+  }
+
+  loadPlanSummary(id: string) {
+    this.planLoading = true;
+    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/summary`).subscribe({
+      next: r => { this.planSummary = { ...(r.data ?? r) }; this.planLoading = false; },
+      error: () => { this.planLoading = false; }
+    });
+  }
+
+  loadPlanItems(id: string) {
+    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/lineitems`).subscribe({
+      next: r => { this.planItems = [...(r.data ?? r)]; },
+      error: () => {}
+    });
+  }
+
+  loadPlanVersions(id: string) {
+    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/versions`).subscribe({
+      next: r => { this.planVersions = [...(r.data ?? r)]; },
+      error: () => {}
+    });
+  }
+
+  createPlan() {
+    this.http.post<any>(`${environment.apiUrl}/api/budget/plans`, this.newPlanDraft).subscribe({
+      next: r => {
+        this.plans = [...this.plans, r.data ?? r];
+        this.selectedPlanId = (r.data ?? r).id;
+        this.selectedPlan   = (r.data ?? r);
+        this.showNewPlanForm = false;
+        this.newPlanDraft   = { name:'', fiscalYear:'', department:'', planType:'AOP', currency:'INR', totalBudget:0 };
+      },
+      error: err => { this._snack.open(err?.error?.error ?? 'Create failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  updatePlanStatus(status: string) {
+    this.http.patch<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/status`, { status }).subscribe({
+      next: r => {
+        this.selectedPlan = { ...(r.data ?? r) };
+        this.plans = [...this.plans.map(p => p.id === this.selectedPlanId ? this.selectedPlan : p)];
+      },
+      error: err => { this._snack.open(err?.error?.error ?? 'Status update failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  addPlanLineItem() {
+    const body = {
+      category: this.newItemDraft.category ?? 'Other',
+      subCategory: this.newItemDraft.subCategory ?? '',
+      description: this.newItemDraft.description ?? '',
+      q1Budget: +(this.newItemDraft.q1Budget || 0), q2Budget: +(this.newItemDraft.q2Budget || 0),
+      q3Budget: +(this.newItemDraft.q3Budget || 0), q4Budget: +(this.newItemDraft.q4Budget || 0),
+      q1Actual: 0, q2Actual: 0, q3Actual: 0, q4Actual: 0,
+      q1Forecast: 0, q2Forecast: 0, q3Forecast: 0, q4Forecast: 0, unit: 'Amount'
+    };
+    this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/lineitems`, body).subscribe({
+      next: () => { this.showAddItemForm = false; this.newItemDraft = { description:'', category:'Salary' }; this.loadPlanItems(this.selectedPlanId); this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Add failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  savePlanLineItem(item: any) {
+    this.http.put<any>(`${environment.apiUrl}/api/budget/lineitems/${item.id}`, item).subscribe({
+      next: () => { this.editingPlanItemId = ''; this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Save failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  deletePlanLineItem(id: string) {
+    this.http.delete<any>(`${environment.apiUrl}/api/budget/lineitems/${id}`).subscribe({
+      next: () => { this.planItems = [...this.planItems.filter(i => i.id !== id)]; this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Delete failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  snapshotVersion() {
+    this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/versions`, {}).subscribe({
+      next: () => { this.loadPlanVersions(this.selectedPlanId); this._snack.open('Snapshot saved', 'Close', { duration: 2000 }); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Snapshot failed', 'Close', { duration: 3000 }); }
+    });
+  }
+
+  viewVersion(v: any) {
+    this.http.get<any>(`${environment.apiUrl}/api/budget/versions/${v.id}`).subscribe({
+      next: r => { const json = (r.data ?? r).snapshotJson; const win = window.open('', '_blank'); win?.document.write('<pre style="font-family:monospace;padding:20px">' + JSON.stringify(JSON.parse(json || '{}'), null, 2) + '</pre>'); },
+      error: () => {}
+    });
+  }
+
+  exportPlanExcel(id: string) {
+    this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/excel`, { responseType: 'blob' }).subscribe(blob => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `budget-plan-${id}.xlsx`; a.click(); URL.revokeObjectURL(a.href);
+    });
+  }
+
+  exportPlanPdf(id: string) {
+    this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/pdf`, { responseType: 'blob' }).subscribe(blob => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `budget-plan-${id}.pdf`; a.click(); URL.revokeObjectURL(a.href);
+    });
+  }
+
 
   reportTypes = [
     { key: 'summary', label: 'Budget Summary' },
@@ -1067,7 +1518,7 @@ export class BudgetComponent implements OnInit {
     return allocation.allottedAmount - actual.amount;
   }
 
-  constructor(private svc: BudgetService, private route: ActivatedRoute, private router: Router, private http: HttpClient) {}
+  constructor(private svc: BudgetService, private route: ActivatedRoute, private router: Router, private http: HttpClient, private _snack: MatSnackBar) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -1077,6 +1528,7 @@ export class BudgetComponent implements OnInit {
     this.loadFiscalYears();
     this.loadConfig();
     this.loadCostCategories();
+    this.loadPlans();
   }
 
   setTab(tab: string) {
@@ -1093,6 +1545,12 @@ export class BudgetComponent implements OnInit {
   }
 
   loadTabData(tab: string) {
+    if (tab.startsWith('plans-') && this.selectedPlanId) {
+      if (tab === 'plans-overview')  this.loadPlanSummary(this.selectedPlanId);
+      if (tab === 'plans-items')     this.loadPlanItems(this.selectedPlanId);
+      if (tab === 'plans-scenarios') { this.loadPlanSummary(this.selectedPlanId); this.loadPlanVersions(this.selectedPlanId); }
+      return;
+    }
     if (!this.selectedFyId) return;
     switch (tab) {
       case 'dashboard': this.loadDashboard(); break;

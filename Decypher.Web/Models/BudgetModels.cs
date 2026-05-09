@@ -170,4 +170,110 @@ namespace Decypher.Web.Models
         [MaxLength(7)]
         public string BrandColor { get; set; } = "#1565C0";
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  Budget vs Forecasting V2 — Plan-based models
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public enum BudgetPlanType    { AOP, Revised, Rolling }
+    public enum BudgetPlanStatus  { Draft, Approved, Locked }
+    public enum BudgetItemCategory{ Headcount, Salary, Recruitment, Training, IT, Admin, Marketing, Procurement, Other }
+    public enum BudgetItemUnit    { Amount, Headcount, Percentage }
+    public enum BudgetAlertType   { OverBudget, UnderUtilized, ForecastExceedsBudget }
+
+    public class BudgetPlan : BaseEntity
+    {
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, MaxLength(20)]
+        public string FiscalYear { get; set; } = string.Empty;   // e.g. "2025-26"
+
+        [MaxLength(100)]
+        public string Department { get; set; } = string.Empty;
+
+        public BudgetPlanType PlanType { get; set; } = BudgetPlanType.AOP;
+
+        [MaxLength(10)]
+        public string Currency { get; set; } = "INR";
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalBudget { get; set; }
+
+        public BudgetPlanStatus Status { get; set; } = BudgetPlanStatus.Draft;
+
+        public virtual ICollection<BudgetPlanItem>  Items    { get; set; } = new List<BudgetPlanItem>();
+        public virtual ICollection<BudgetVersion>   Versions { get; set; } = new List<BudgetVersion>();
+    }
+
+    public class BudgetPlanItem : BaseEntity
+    {
+        [Required]
+        public Guid BudgetPlanId { get; set; }
+
+        public BudgetItemCategory Category    { get; set; } = BudgetItemCategory.Other;
+
+        [MaxLength(100)]
+        public string SubCategory  { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string Description  { get; set; } = string.Empty;
+
+        // ── Budgeted per quarter ───────────────────────────────────────────────
+        [Column(TypeName = "decimal(18,2)")] public decimal Q1Budget   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q2Budget   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q3Budget   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q4Budget   { get; set; }
+
+        // ── Actuals per quarter ────────────────────────────────────────────────
+        [Column(TypeName = "decimal(18,2)")] public decimal Q1Actual   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q2Actual   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q3Actual   { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q4Actual   { get; set; }
+
+        // ── Rolling forecast per quarter ───────────────────────────────────────
+        [Column(TypeName = "decimal(18,2)")] public decimal Q1Forecast { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q2Forecast { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q3Forecast { get; set; }
+        [Column(TypeName = "decimal(18,2)")] public decimal Q4Forecast { get; set; }
+
+        public BudgetItemUnit Unit  { get; set; } = BudgetItemUnit.Amount;
+        public string?        Notes { get; set; }
+
+        public virtual BudgetPlan Plan { get; set; } = null!;
+        public virtual ICollection<BudgetAlert> Alerts { get; set; } = new List<BudgetAlert>();
+    }
+
+    public class BudgetVersion : BaseEntity
+    {
+        [Required]
+        public Guid BudgetPlanId { get; set; }
+
+        public int VersionNumber { get; set; }
+
+        [MaxLength(100)]
+        public string Label { get; set; } = string.Empty;   // "Budget v1", "Revised Jun"
+
+        public string SnapshotJson { get; set; } = "{}";    // full plan JSON snapshot
+
+        [MaxLength(450)]
+        public string? CreatedByUserId { get; set; }
+
+        public virtual BudgetPlan Plan { get; set; } = null!;
+    }
+
+    public class BudgetAlert : BaseEntity
+    {
+        [Required]
+        public Guid BudgetPlanItemId { get; set; }
+
+        public BudgetAlertType AlertType  { get; set; } = BudgetAlertType.OverBudget;
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal Threshold { get; set; } = 80m;   // e.g. 80 = notify at 80% burn
+
+        public bool IsActive { get; set; } = true;
+
+        public virtual BudgetPlanItem LineItem { get; set; } = null!;
+    }
 }

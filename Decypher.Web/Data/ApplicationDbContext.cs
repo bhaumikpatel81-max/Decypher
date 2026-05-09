@@ -49,13 +49,19 @@ namespace Decypher.Web.Data
         public DbSet<Requisition> Requisitions { get; set; }
         public DbSet<CandidateSource> CandidateSources { get; set; }
 
-        // ─── Budget Module ─────────────────────────────────────────────────
+        // ─── Budget Module (V1) ────────────────────────────────────────────
         public DbSet<BudgetFiscalYear> BudgetFiscalYears { get; set; }
         public DbSet<BudgetAllocation> BudgetAllocations { get; set; }
         public DbSet<BudgetLineItem> BudgetLineItems { get; set; }
         public DbSet<BudgetActual> BudgetActuals { get; set; }
         public DbSet<BudgetCostCategoryConfig> BudgetCostCategoryConfigs { get; set; }
         public DbSet<BudgetTenantConfig> BudgetTenantConfigs { get; set; }
+
+        // ─── Budget Forecasting V2 (Plan-based) ───────────────────────────
+        public DbSet<BudgetPlan>     BudgetPlans     { get; set; }
+        public DbSet<BudgetPlanItem> BudgetPlanItems { get; set; }
+        public DbSet<BudgetVersion>  BudgetVersions  { get; set; }
+        public DbSet<BudgetAlert>    BudgetAlerts    { get; set; }
 
         // ─── Requisition extensions ────────────────────────────────────────
         public DbSet<RequisitionStatusHistory> RequisitionStatusHistories { get; set; }

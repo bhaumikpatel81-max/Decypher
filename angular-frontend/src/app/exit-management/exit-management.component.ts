@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -26,8 +27,12 @@ import { environment } from '../../environments/environment';
       <div class="card mb-6" *ngIf="showForm">
         <h3 style="font-weight:700;margin-bottom:16px;">Initiate Exit Process</h3>
         <div class="form-grid-3">
-          <input class="input" placeholder="Employee Name" [(ngModel)]="draft.employee">
-          <input class="input" placeholder="Employee ID" [(ngModel)]="draft.empId">
+          <select class="select" [(ngModel)]="draft.employeeId" (change)="onEmployeeChange()">
+            <option value="">Select employee</option>
+            <option *ngFor="let e of employees; trackBy: trackById" [value]="e.id">
+              {{e.firstName}} {{e.lastName}}
+            </option>
+          </select>
           <input class="input" placeholder="Designation" [(ngModel)]="draft.designation">
           <input class="input" placeholder="Department" [(ngModel)]="draft.department">
           <input class="input" type="date" [(ngModel)]="draft.lastDay" title="Last working day">
@@ -42,12 +47,12 @@ import { environment } from '../../environments/environment';
           <button class="btn btn-ghost" (click)="showForm=false;initiateError=''">Cancel</button>
         </div>
       </div>
-      <div *ngIf="reminderMsg" style="margin-bottom:12px;padding:10px 16px;background:#d1fae5;border-radius:8px;color:#065f46;font-size:13px;font-weight:600;">{{reminderMsg}}</div>
+
 
       <mat-tab-group>
         <mat-tab label="Active Exits ({{activeExits.length}})">
           <div style="padding:16px 0;">
-            <div class="exit-card" *ngFor="let ex of activeExits">
+            <div class="exit-card" *ngFor="let ex of activeExits; trackBy: trackById">
               <div class="exit-header">
                 <div>
                   <div style="font-weight:700;font-size:15px;">{{ex.employee}}</div>
@@ -60,7 +65,7 @@ import { environment } from '../../environments/environment';
               </div>
               <!-- Clearance checklist -->
               <div class="clearance-grid">
-                <div class="clearance-item" *ngFor="let c of ex.clearances" (click)="toggleClearance(ex, c)">
+                <div class="clearance-item" *ngFor="let c of ex.clearances; trackBy: trackById" (click)="toggleClearance(ex, c)">
                   <div class="clearance-check" [class.done]="c.done">{{c.done?'✓':'○'}}</div>
                   <div>
                     <div style="font-size:12px;font-weight:600;">{{c.dept}}</div>
@@ -80,7 +85,7 @@ import { environment } from '../../environments/environment';
         </mat-tab>
         <mat-tab label="Completed ({{completedExits.length}})">
           <div style="padding:16px 0;">
-            <div class="exit-card" style="opacity:.75;" *ngFor="let ex of completedExits">
+            <div class="exit-card" style="opacity:.75;" *ngFor="let ex of completedExits; trackBy: trackById">
               <div class="exit-header">
                 <div>
                   <div style="font-weight:700;">{{ex.employee}}</div>
@@ -116,58 +121,111 @@ import { environment } from '../../environments/environment';
 })
 export class ExitManagementComponent implements OnInit {
   private api = `${environment.apiUrl}/api/employees`;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snack: MatSnackBar) {}
+
   showForm = false;
+  loading = false;
   initiateError = '';
   reminderMsg = '';
-  draft: any = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' };
+
+  employees: any[] = [];
+  draft: any = { employeeId: '', employeeName: '', designation: '', department: '', lastDay: '', exitType: 'Resignation', reason: '' };
+
   kpis = [
-    { val:3, lbl:'Active Exits', color:'#f59e0b' },
-    { val:1, lbl:'Awaiting Clearance', color:'#ef4444' },
-    { val:18, lbl:'Completed This Year', color:'#10b981' },
-    { val:94, lbl:'Avg Days to Close', color:'#6b4df0' },
+    { val: 0, lbl: 'Active Exits',        color: '#f59e0b' },
+    { val: 0, lbl: 'Awaiting Clearance',  color: '#ef4444' },
+    { val: 0, lbl: 'Completed This Year', color: '#10b981' },
+    { val: 0, lbl: 'Avg Days to Close',   color: '#6b4df0' },
   ];
+
+  trackById = (_: number, item: any) => item.id;
 
   exits: any[] = [];
 
   get activeExits() { return this.exits.filter(e => e.stage !== 'Completed'); }
   get completedExits() { return this.exits.filter(e => e.stage === 'Completed'); }
 
-  ngOnInit() { this.loadExits(); }
+  ngOnInit() {
+    this.loadEmployees();
+    this.loadExits();
+  }
+
+  loadEmployees() {
+    this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({
+      next: r => { this.employees = [...(r?.data || r || [])]; },
+      error: () => {}
+    });
+  }
+
+  onEmployeeChange() {
+    const emp = this.employees.find(e => e.id === this.draft.employeeId);
+    if (emp) {
+      this.draft.employeeName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+      this.draft.designation  = this.draft.designation  || emp.designation || '';
+      this.draft.department   = this.draft.department   || emp.department  || '';
+    }
+  }
 
   loadExits() {
-    this.http.get<any[]>(`${this.api}/exits`).subscribe(data => {
-      this.exits = (data || []).map(e => ({
-        id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
-        designation: e.designation || '', department: e.department || '',
-        lastDay: e.lastWorkingDate?.slice(0,10) || '', exitType: e.exitType || 'Resignation',
-        stage: e.status || 'Initiated',
-        clearances: (e.checklistItems || []).map((item: any) => ({ id: item.id, dept: item.itemName, done: item.isCompleted }))
-      }));
-      const active = this.exits.filter(e => e.stage !== 'Completed').length;
-      this.kpis[0].val = active;
-      this.kpis[1].val = this.exits.filter(e => e.stage === 'Initiated' || e.stage === 'Pending').length;
-      this.kpis[2].val = this.exits.filter(e => e.stage === 'Completed').length;
-      const completed = this.exits.filter(e => e.stage === 'Completed' && e.initiatedDate && e.lastDay);
-      if (completed.length) {
-        const totalDays = completed.reduce((sum: number, e: any) => {
-          const days = Math.abs((new Date(e.lastDay).getTime() - new Date(e.initiatedDate).getTime()) / 86400000);
-          return sum + (isNaN(days) ? 0 : days);
-        }, 0);
-        this.kpis[3].val = Math.round(totalDays / completed.length) || 0;
+    this.loading = true;
+    this.http.get<any[]>(`${this.api}/exits`).subscribe({
+      next: data => {
+        this.exits = [...(data || []).map((e: any) => ({
+          id: e.id,
+          employee:    e.employeeName  || '',
+          empId:       e.employeeCode  || '',
+          designation: e.designation   || '',
+          department:  e.department    || '',
+          lastDay:     e.lastWorkingDate?.slice(0, 10) || '',
+          exitType:    e.exitType      || 'Resignation',
+          stage:       e.status        || 'Initiated',
+          initiatedDate: e.initiatedDate || e.createdAt || '',
+          clearances:  (e.checklistItems || []).map((item: any) => ({
+            id:   item.id,
+            dept: item.itemName,
+            done: item.isCompleted
+          }))
+        }))];
+        this.loading = false;
+        const active = this.exits.filter(e => e.stage !== 'Completed').length;
+        this.kpis[0].val = active;
+        this.kpis[1].val = this.exits.filter(e => e.stage === 'Initiated' || e.stage === 'Pending').length;
+        this.kpis[2].val = this.exits.filter(e => e.stage === 'Completed').length;
+        const completed = this.exits.filter(e => e.stage === 'Completed' && e.initiatedDate && e.lastDay);
+        if (completed.length) {
+          const totalDays = completed.reduce((sum: number, e: any) => {
+            const days = Math.abs((new Date(e.lastDay).getTime() - new Date(e.initiatedDate).getTime()) / 86400000);
+            return sum + (isNaN(days) ? 0 : days);
+          }, 0);
+          this.kpis[3].val = Math.round(totalDays / completed.length) || 0;
+        }
+      },
+      error: err => {
+        this.loading = false;
+        this.snack.open(err.status === 403 ? 'Access denied' : 'Failed to load exits', 'Close', { duration: 4000 });
       }
     });
   }
 
   initiateExit() {
-    if (!this.draft.employee) return;
+    if (!this.draft.employeeId) { this.initiateError = 'Please select an employee'; return; }
     const payload = {
-      employeeName: this.draft.employee, employeeCode: this.draft.empId,
-      designation: this.draft.designation, department: this.draft.department,
-      lastWorkingDate: this.draft.lastDay, exitType: this.draft.exitType, reason: this.draft.reason
+      employeeId:      this.draft.employeeId,
+      employeeName:    this.draft.employeeName,
+      designation:     this.draft.designation,
+      department:      this.draft.department,
+      lastWorkingDate: this.draft.lastDay,
+      exitType:        this.draft.exitType,
+      reason:          this.draft.reason
     };
     this.http.post<any>(`${this.api}/exits`, payload).subscribe({
-      next: () => { this.loadExits(); this.draft = { employee:'', empId:'', designation:'', department:'', lastDay:'', exitType:'Resignation', reason:'' }; this.showForm = false; },
+      next: () => {
+        this.loadExits();
+        this.draft = { employeeId: '', employeeName: '', designation: '', department: '', lastDay: '', exitType: 'Resignation', reason: '' };
+        this.showForm = false;
+        this.initiateError = '';
+        this.snack.open('Exit initiated', '', { duration: 2000 });
+      },
       error: err => { this.initiateError = err?.error?.message || 'Failed to initiate exit'; }
     });
   }
@@ -186,5 +244,7 @@ export class ExitManagementComponent implements OnInit {
     });
   }
 
-  sendReminder(ex: any) { this.reminderMsg = `Reminder sent to pending departments for ${ex.employee}`; setTimeout(() => { this.reminderMsg = ''; }, 3000); }
+  sendReminder(ex: any) {
+    this.snack.open(`Reminder sent to pending departments for ${ex.employee}`, '', { duration: 3000 });
+  }
 }
