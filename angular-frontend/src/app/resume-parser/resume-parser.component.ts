@@ -1,11 +1,10 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+﻿import { Component, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-resume-parser',
+@Component({ selector: 'app-resume-parser',
   template: `
     <section class="stack-page">
       <div class="card form-card">
@@ -108,24 +107,18 @@ import { environment } from '../../environments/environment';
     </section>
 
     <style>
-      .upload-zone {
-        border: 2px dashed var(--border-strong);
+      .upload-zone { border: 2px dashed var(--border-strong);
         border-radius: 10px;
         padding: 24px;
         cursor: pointer;
         transition: border-color 0.2s, background 0.2s;
         background: var(--surface-alt);
-        margin-bottom: 4px;
-      }
-      .upload-zone:hover, .upload-zone.dz-hover {
-        border-color: var(--brand-violet-500);
-        background: var(--brand-violet-50, #f4f1ff);
-      }
-      .upload-zone.dz-loaded {
-        border-style: solid;
+        margin-bottom: 4px; }
+      .upload-zone:hover, .upload-zone.dz-hover { border-color: var(--brand-violet-500);
+        background: var(--brand-violet-50, #f4f1ff); }
+      .upload-zone.dz-loaded { border-style: solid;
         border-color: var(--brand-violet-400);
-        background: var(--brand-violet-50, #f4f1ff);
-      }
+        background: var(--brand-violet-50, #f4f1ff); }
       .dz-idle { text-align: center; }
       .dz-icon { font-size: 36px; margin-bottom: 8px; }
       .dz-label { font-size: 15px; color: var(--text-2); }
@@ -134,23 +127,16 @@ import { environment } from '../../environments/environment';
       .dz-file-info { display: flex; align-items: center; gap: 12px; }
       .dz-file-icon { font-size: 28px; }
       .dz-spinner { color: var(--text-3); font-size: 13px; margin-left: auto; }
-      .dz-remove {
-        margin-left: auto; background: none; border: none; cursor: pointer;
-        font-size: 16px; color: var(--text-3); padding: 4px 8px; border-radius: 4px;
-      }
+      .dz-remove { margin-left: auto; background: none; border: none; cursor: pointer;
+        font-size: 16px; color: var(--text-3); padding: 4px 8px; border-radius: 4px; }
       .dz-remove:hover { background: var(--n-100); color: var(--danger-500); }
-      .or-divider {
-        display: flex; align-items: center; gap: 12px;
-        color: var(--text-3); font-size: 13px; margin: 14px 0 10px;
-      }
-      .or-divider::before, .or-divider::after {
-        content: ''; flex: 1; height: 1px; background: var(--border);
-      }
+      .or-divider { display: flex; align-items: center; gap: 12px;
+        color: var(--text-3); font-size: 13px; margin: 14px 0 10px; }
+      .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     </style>
   `
 })
-export class ResumeParserComponent {
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+export class ResumeParserComponent { @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   cvText = '';
   parsing = false;
@@ -164,91 +150,58 @@ export class ResumeParserComponent {
 
   constructor(private http: HttpClient, private router: Router, private snack: MatSnackBar) {}
 
-  get fileIcon(): string {
-    const ext = this.selectedFile?.name.split('.').pop()?.toLowerCase() ?? '';
-    return ({ pdf: '📄', docx: '📝', doc: '📝', jpg: '🖼️', jpeg: '🖼️', png: '🖼️' } as any)[ext] ?? '📎';
-  }
+  get fileIcon(): string { const ext = this.selectedFile?.name.split('.').pop()?.toLowerCase() ?? '';
+    return ({ pdf: '📄', docx: '📝', doc: '📝', jpg: '🖼️', jpeg: '🖼️', png: '🖼️' } as any)[ext] ?? '📎'; }
 
-  get fileSizeLabel(): string {
-    if (!this.selectedFile) return '';
+  get fileSizeLabel(): string { if (!this.selectedFile) return '';
     const kb = this.selectedFile.size / 1024;
-    return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`;
-  }
+    return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`; }
 
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-    this.isDragOver = true;
-  }
+  onDragOver(event: DragEvent) { event.preventDefault();
+    this.isDragOver = true; }
 
-  onDrop(event: DragEvent) {
-    event.preventDefault();
+  onDrop(event: DragEvent) { event.preventDefault();
     this.isDragOver = false;
     const file = event.dataTransfer?.files[0];
-    if (file) this.extractFromFile(file);
-  }
+    if (file) this.extractFromFile(file); }
 
-  onFileSelect(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) this.extractFromFile(file);
-  }
+  onFileSelect(event: Event) { const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.extractFromFile(file); }
 
-  clearFile(event: MouseEvent) {
-    event.stopPropagation();
+  clearFile(event: MouseEvent) { event.stopPropagation();
     this.selectedFile = null;
     this.cvText = '';
     this.extractError = '';
-    if (this.fileInput?.nativeElement) this.fileInput.nativeElement.value = '';
-  }
+    if (this.fileInput?.nativeElement) this.fileInput.nativeElement.value = ''; }
 
-  extractFromFile(file: File) {
-    this.selectedFile = file;
+  extractFromFile(file: File) { this.selectedFile = file;
     this.extracting = true;
     this.extractError = '';
     this.cvText = '';
 
     const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      this.http.post<{ text: string }>(`${environment.apiUrl}/api/resume-parser/extract-text`, {
-        fileData: base64,
+    reader.onload = () => { const base64 = (reader.result as string).split(',')[1];
+      this.http.post<{ text: string }>(`${environment.apiUrl}/api/resume-parser/extract-text`, { fileData: base64,
         fileName: file.name,
-        mimeType: file.type
-      }).subscribe({
-        next: r => { this.cvText = r.text; this.extracting = false; },
-        error: err => {
-          this.extractError = err?.error?.error ?? 'Failed to extract text from file';
-          this.extracting = false;
-        }
-      });
-    };
-    reader.readAsDataURL(file);
-  }
+        mimeType: file.type }).subscribe({ next: r => { this.cvText = r.text; this.extracting = false; },
+        error: err => { this.extractError = err?.error?.error ?? 'Failed to extract text from file';
+          this.extracting = false; } }); };
+    reader.readAsDataURL(file); }
 
-  parse() {
-    this.parsing = true;
+  parse() { this.parsing = true;
     this.parseError = '';
     this.http.post<any>(`${environment.apiUrl}/api/resume-parser/parse`, { cvText: this.cvText })
-      .subscribe({
-        next: r => { this.result = r; this.parsing = false; },
-        error: err => { this.parseError = err?.error?.error ?? 'Parse failed'; this.parsing = false; }
-      });
-  }
+      .subscribe({ next: r => { this.result = r; this.parsing = false; },
+        error: err => { this.parseError = err?.error?.error ?? 'Parse failed'; this.parsing = false; } }); }
 
-  runScorecard() {
-    this.router.navigate(['/ai-scorecard'], { state: { resumeText: this.cvText } });
-  }
+  runScorecard() { this.router.navigate(['/ai-scorecard'], { state: { resumeText: this.cvText } }); }
 
-  saveToDatabase() {
-    if (!this.result) return;
-    const payload = {
-      name: this.result.fullName,
+  saveToDatabase() { if (!this.result) return;
+    const payload = { name: this.result.fullName,
       email: this.result.email,
       skillsText: (this.result.skills ?? []).join(', '),
-      cvText: this.cvText
-    };
-    this.http.post(`${environment.apiUrl}/api/cv-database`, payload).subscribe({
-      next: () => this.snack.open('Saved to CV Database', '', { duration: 2000 }),
-      error: () => this.snack.open('Failed to save to CV Database', 'Close', { duration: 3000 })
-    });
-  }
+      cvText: this.cvText };
+    this.http.post(`${environment.apiUrl}/api/cv-database`, payload).subscribe({ next: () => this.snack.open('Saved to CV Database', '', { duration: 2000 }),
+      error: () => this.snack.open('Failed to save to CV Database', 'Close', { duration: 3000 }) }); }
 }
+

@@ -1,17 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface MsgTemplate {
-  id: string;
+interface MsgTemplate { id: string;
   name: string;
   subject?: string;
   body: string;
   variables: string[];
 }
 
-@Component({
-  selector: 'app-communication-center',
+@Component({ selector: 'app-communication-center',
   template: `
     <section class="stack-page">
       <div class="grid grid-cols-2 gap-6">
@@ -198,30 +196,22 @@ interface MsgTemplate {
   `,
   styles: [`
     .channel-tabs { display:flex; gap:8px; margin-bottom:20px; }
-    .ch-tab {
-      padding:8px 20px; border-radius:8px; border:1.5px solid var(--border);
+    .ch-tab { padding:8px 20px; border-radius:8px; border:1.5px solid var(--border);
       background:transparent; cursor:pointer; font-size:13px; font-weight:600;
-      color:var(--text); transition:all .15s;
-    }
+      color:var(--text); transition:all .15s; }
     .ch-tab.active { background:var(--brand); color:#fff; border-color:var(--brand); }
 
     .field-label { display:block; font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
 
-    .preview-box {
-      background:#f8f9fa; border:1px solid var(--border); border-radius:6px;
+    .preview-box { background:#f8f9fa; border:1px solid var(--border); border-radius:6px;
       padding:12px; font-size:13px; white-space:pre-wrap; color:var(--text);
-      min-height:60px; max-height:120px; overflow-y:auto;
-    }
+      min-height:60px; max-height:120px; overflow-y:auto; }
 
-    .candidate-list {
-      border:1px solid var(--border); border-radius:8px;
-      max-height:220px; overflow-y:auto;
-    }
-    .cand-row {
-      display:flex; align-items:center; gap:10px; padding:10px 12px;
+    .candidate-list { border:1px solid var(--border); border-radius:8px;
+      max-height:220px; overflow-y:auto; }
+    .cand-row { display:flex; align-items:center; gap:10px; padding:10px 12px;
       border-bottom:1px solid var(--border); cursor:pointer;
-      transition:background .1s;
-    }
+      transition:background .1s; }
     .cand-row:last-child { border-bottom:none; }
     .cand-row:hover { background:#f8f7ff; }
     .cand-row.cand-selected { background:#f0efff; }
@@ -229,36 +219,26 @@ interface MsgTemplate {
     .chip-xs { padding:2px 7px; border-radius:10px; font-size:11px; white-space:nowrap; }
 
     .stats-row { display:flex; gap:10px; }
-    .stat-pill {
-      flex:1; display:flex; flex-direction:column; align-items:center;
-      padding:10px 8px; border-radius:10px; gap:2px;
-    }
+    .stat-pill { flex:1; display:flex; flex-direction:column; align-items:center;
+      padding:10px 8px; border-radius:10px; gap:2px; }
     .stat-num { font-size:22px; font-weight:700; line-height:1; }
     .stat-lbl { font-size:11px; font-weight:600; opacity:.8; }
 
-    .history-row {
-      display:flex; align-items:center; gap:10px; padding:10px 0;
-      border-bottom:1px solid var(--border); flex-wrap:wrap;
-    }
+    .history-row { display:flex; align-items:center; gap:10px; padding:10px 0;
+      border-bottom:1px solid var(--border); flex-wrap:wrap; }
     .history-row:last-child { border-bottom:none; }
     .history-detail { flex:1; min-width:0; }
-    .ch-badge {
-      padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap;
-    }
+    .ch-badge { padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
     .ch-email     { background:#dbeafe; color:#1e40af; }
     .ch-sms       { background:#dcfce7; color:#166534; }
     .ch-whatsapp  { background:#f3e8ff; color:#6b21a8; }
 
-    .status-dot {
-      display:inline-block; width:8px; height:8px; border-radius:50%;
-      margin-right:5px; vertical-align:middle;
-    }
+    .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+      margin-right:5px; vertical-align:middle; }
     .btn.active { background:var(--brand); color:#fff; }
   `]
 })
-export class CommunicationCenterComponent implements OnInit {
-
-  activeTab: 'email' | 'sms' | 'whatsapp' = 'email';
+export class CommunicationCenterComponent implements OnInit { activeTab: 'email' | 'sms' | 'whatsapp' = 'email';
 
   candidates: any[] = [];
   filteredCandidates: any[] = [];
@@ -297,161 +277,107 @@ export class CommunicationCenterComponent implements OnInit {
   smsTemplates:   MsgTemplate[] = [...this.fallbackSms];
   whatsappTemplates: MsgTemplate[] = [...this.fallbackWhatsapp];
 
-  get activeTemplates(): MsgTemplate[] {
-    return this.activeTab === 'email' ? this.emailTemplates
+  get activeTemplates(): MsgTemplate[] { return this.activeTab === 'email' ? this.emailTemplates
          : this.activeTab === 'sms'   ? this.smsTemplates
-         : this.whatsappTemplates;
-  }
+         : this.whatsappTemplates; }
 
-  loadTemplates() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/communications/templates`).subscribe({
-      next: data => {
-        const email     = data.filter(t => t.channel === 'email'    || t.type === 'email');
+  loadTemplates() { this.http.get<any[]>(`${environment.apiUrl}/api/communications/templates`).subscribe({ next: data => { const email     = data.filter(t => t.channel === 'email'    || t.type === 'email');
         const sms       = data.filter(t => t.channel === 'sms'      || t.type === 'sms');
         const whatsapp  = data.filter(t => t.channel === 'whatsapp' || t.type === 'whatsapp');
         if (email.length)    this.emailTemplates    = email.map(this.mapTemplate);
         if (sms.length)      this.smsTemplates      = sms.map(this.mapTemplate);
-        if (whatsapp.length) this.whatsappTemplates = whatsapp.map(this.mapTemplate);
-      },
-      error: () => { /* keep fallbacks */ }
-    });
-  }
+        if (whatsapp.length) this.whatsappTemplates = whatsapp.map(this.mapTemplate); },
+      error: () => { /* keep fallbacks */ } }); }
 
-  private mapTemplate(t: any): MsgTemplate {
-    return {
-      id: t.id ?? t.templateId,
+  private mapTemplate(t: any): MsgTemplate { return { id: t.id ?? t.templateId,
       name: t.name ?? t.title,
       subject: t.subject,
       body: t.body ?? t.content ?? '',
-      variables: t.variables ?? t.placeholders ?? []
-    };
-  }
+      variables: t.variables ?? t.placeholders ?? [] }; }
 
-  get filteredHistory() {
-    return this.historyFilter === 'All'
+  get filteredHistory() { return this.historyFilter === 'All'
       ? this.history
-      : this.history.filter(h => h.channel === this.historyFilter);
-  }
+      : this.history.filter(h => h.channel === this.historyFilter); }
 
-  get canSend(): boolean {
-    return !!this.selectedTemplateId && this.selectedIds.size > 0;
-  }
+  get canSend(): boolean { return !!this.selectedTemplateId && this.selectedIds.size > 0; }
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.loadCandidates();
+  ngOnInit() { this.loadCandidates();
     this.loadHistory();
-    this.loadTemplates();
-  }
+    this.loadTemplates(); }
 
-  loadCandidates() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/candidates`)
-      .subscribe({
-        next: d => { this.candidates = d; this.filteredCandidates = d; },
-        error: () => {}
-      });
-  }
+  loadCandidates() { this.http.get<any[]>(`${environment.apiUrl}/api/candidates`)
+      .subscribe({ next: d => { this.candidates = d; this.filteredCandidates = d; },
+        error: () => {} }); }
 
-  loadHistory() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/notifications/history`)
-      .subscribe({ next: d => this.history = d, error: () => {} });
-  }
+  loadHistory() { this.http.get<any[]>(`${environment.apiUrl}/api/notifications/history`)
+      .subscribe({ next: d => this.history = d, error: () => {} }); }
 
-  switchTab(tab: 'email' | 'sms' | 'whatsapp') {
-    this.activeTab = tab;
+  switchTab(tab: 'email' | 'sms' | 'whatsapp') { this.activeTab = tab;
     this.selectedTemplateId = '';
     this.selectedTemplate = null;
     this.variableValues = {};
     this.messagePreview = '';
-    this.emailSubject = '';
-  }
+    this.emailSubject = ''; }
 
-  onTemplateChange() {
-    this.selectedTemplate = this.activeTemplates.find(t => t.id === this.selectedTemplateId) || null;
+  onTemplateChange() { this.selectedTemplate = this.activeTemplates.find(t => t.id === this.selectedTemplateId) || null;
     if (!this.selectedTemplate) return;
     this.emailSubject = this.selectedTemplate.subject || '';
     this.variableValues = {};
     this.selectedTemplate.variables.forEach(v => this.variableValues[v] = '');
-    this.refreshPreview();
-  }
+    this.refreshPreview(); }
 
-  refreshPreview() {
-    if (!this.selectedTemplate) return;
+  refreshPreview() { if (!this.selectedTemplate) return;
     let text = this.selectedTemplate.body;
-    for (const [key, val] of Object.entries(this.variableValues)) {
-      text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val || `{{${key}}}`);
-    }
-    this.messagePreview = text;
-  }
+    for (const [key, val] of Object.entries(this.variableValues)) { text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val || `{{${key}}}`); }
+    this.messagePreview = text; }
 
-  filterCandidates() {
-    const q = this.candidateSearch.toLowerCase();
+  filterCandidates() { const q = this.candidateSearch.toLowerCase();
     this.filteredCandidates = q
       ? this.candidates.filter(c =>
           `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
           (c.email || '').toLowerCase().includes(q) ||
           (c.phone || '').includes(q))
-      : this.candidates;
-  }
+      : this.candidates; }
 
-  toggleCandidate(id: string) {
-    if (this.selectedIds.has(id)) this.selectedIds.delete(id);
+  toggleCandidate(id: string) { if (this.selectedIds.has(id)) this.selectedIds.delete(id);
     else this.selectedIds.add(id);
     // trigger change detection on Set
-    this.selectedIds = new Set(this.selectedIds);
-  }
+    this.selectedIds = new Set(this.selectedIds); }
 
   selectAll() { this.selectedIds = new Set(this.filteredCandidates.map(c => c.id)); }
   clearAll()  { this.selectedIds = new Set(); }
 
-  send() {
-    if (!this.canSend) return;
+  send() { if (!this.canSend) return;
     this.sending = true;
     this.sendError = '';
     const ids = Array.from(this.selectedIds);
     let req: any;
     let url: string;
 
-    if (this.activeTab === 'email') {
-      url = `${environment.apiUrl}/api/notifications/email`;
-      req = { candidateIds: ids, templateId: this.selectedTemplateId, subject: this.emailSubject, body: this.messagePreview };
-    } else if (this.activeTab === 'sms') {
-      url = `${environment.apiUrl}/api/notifications/sms`;
-      req = { candidateIds: ids, message: this.messagePreview };
-    } else {
-      url = `${environment.apiUrl}/api/notifications/whatsapp`;
-      req = { candidateIds: ids, templateId: this.selectedTemplateId, variables: this.variableValues };
-    }
+    if (this.activeTab === 'email') { url = `${environment.apiUrl}/api/notifications/email`;
+      req = { candidateIds: ids, templateId: this.selectedTemplateId, subject: this.emailSubject, body: this.messagePreview }; } else if (this.activeTab === 'sms') { url = `${environment.apiUrl}/api/notifications/sms`;
+      req = { candidateIds: ids, message: this.messagePreview }; } else { url = `${environment.apiUrl}/api/notifications/whatsapp`;
+      req = { candidateIds: ids, templateId: this.selectedTemplateId, variables: this.variableValues }; }
 
-    this.http.post(url, req).subscribe({
-      next: () => {
-        this.sending = false;
+    this.http.post(url, req).subscribe({ next: () => { this.sending = false;
         this.sendOk   = true;
         this.clearAll();
         this.loadHistory();
-        setTimeout(() => this.sendOk = false, 3000);
-      },
-      error: (e: any) => {
-        this.sending   = false;
-        this.sendError = e?.error?.error || 'Send failed. Please try again.';
-      }
-    });
-  }
+        setTimeout(() => this.sendOk = false, 3000); },
+      error: (e: any) => { this.sending   = false;
+        this.sendError = e?.error?.error || 'Send failed. Please try again.'; } }); }
 
-  statsByChannel(ch: string): number {
-    return this.history.filter(h => h.channel === ch).length;
-  }
+  statsByChannel(ch: string): number { return this.history.filter(h => h.channel === ch).length; }
 
-  channelIcon(ch: string): string {
-    return ch === 'Email' ? '✉️' : ch === 'SMS' ? '💬' : '📱';
-  }
+  channelIcon(ch: string): string { return ch === 'Email' ? '✉️' : ch === 'SMS' ? '💬' : '📱'; }
 }
 
-interface MsgTemplate {
-  id: string;
+interface MsgTemplate { id: string;
   name: string;
   subject?: string;
   body: string;
   variables: string[];
 }
+

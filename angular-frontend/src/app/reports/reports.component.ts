@@ -1,17 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-const CHART_ICONS: Record<string, string> = {
-  bar: '📊', dualLine: '📈', kpiTable: '🗂️', funnel: '🔽', donut: '🍩'
+const CHART_ICONS: Record<string, string> = { bar: '📊', dualLine: '📈', kpiTable: '🗂️', funnel: '🔽', donut: '🍩'
 };
-const FREQ_COLORS: Record<string, string> = {
-  Monthly: '#0ea5e9', Weekly: '#f97316', Quarterly: '#8b5cf6'
+const FREQ_COLORS: Record<string, string> = { Monthly: '#0ea5e9', Weekly: '#f97316', Quarterly: '#8b5cf6'
 };
 
-interface ReportMeta {
-  key: string; label: string; icon: string; freq: string; chartType: string; desc: string;
+interface ReportMeta { key: string; label: string; icon: string; freq: string; chartType: string; desc: string;
 }
 interface Section { label: string; sub?: string; reports: ReportMeta[]; }
 
@@ -144,8 +141,7 @@ const CATEGORIES = [
   { key: 'compliance',     label: 'Compliance',      icon: '✅', color: '#14b8a6' },
 ];
 
-const SECTIONS_MAP: Record<string, Section[]> = {
-  'hr-recruitment': [
+const SECTIONS_MAP: Record<string, Section[]> = { 'hr-recruitment': [
     { label: 'Standard Reports', reports: HR_REC_STANDARD },
     { label: 'Talent Acquisition P3', sub: 'Advanced TA metrics with org-unit breakdown', reports: HR_REC_P3 },
   ],
@@ -158,8 +154,7 @@ const SECTIONS_MAP: Record<string, Section[]> = {
   'compliance': [{ label: 'Compliance', reports: COMPLIANCE }],
 };
 
-@Component({
-  selector: 'app-reports',
+@Component({ selector: 'app-reports',
   template: `
     <section class="stack-page">
       <div class="card" style="padding:20px 24px">
@@ -356,8 +351,7 @@ const SECTIONS_MAP: Record<string, Section[]> = {
     </section>
   `
 })
-export class ReportsComponent implements OnInit {
-  private readonly api = environment.apiUrl;
+export class ReportsComponent implements OnInit { private readonly api = environment.apiUrl;
 
   categories    = CATEGORIES;
   activeCategory = 'hr-recruitment';
@@ -373,35 +367,24 @@ export class ReportsComponent implements OnInit {
 
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
-  ngOnInit() {
-    const now = new Date();
+  ngOnInit() { const now = new Date();
     const y = now.getFullYear(), m = now.getMonth();
     this.fromDate = new Date(y, m - 1, 1).toISOString().split('T')[0];
-    this.toDate   = now.toISOString().split('T')[0];
-  }
+    this.toDate   = now.toISOString().split('T')[0]; }
 
-  get currentSections(): Section[] {
-    return SECTIONS_MAP[this.activeCategory] ?? [];
-  }
+  get currentSections(): Section[] { return SECTIONS_MAP[this.activeCategory] ?? []; }
 
-  get activeCategoryColor(): string {
-    return CATEGORIES.find(c => c.key === this.activeCategory)?.color ?? '#6b4df0';
-  }
+  get activeCategoryColor(): string { return CATEGORIES.find(c => c.key === this.activeCategory)?.color ?? '#6b4df0'; }
 
-  selectCategory(key: string) {
-    this.activeCategory = key;
+  selectCategory(key: string) { this.activeCategory = key;
     this.selected       = '';
-    this.reportData     = null;
-  }
+    this.reportData     = null; }
 
-  selectReport(r: ReportMeta) {
-    this.selected      = r.key;
+  selectReport(r: ReportMeta) { this.selected      = r.key;
     this.selectedLabel = r.label;
-    this.reportData    = null;
-  }
+    this.reportData    = null; }
 
-  runReport() {
-    if (!this.selected) return;
+  runReport() { if (!this.selected) return;
     this.loading = true;
     let params = `?from=${this.fromDate}&to=${this.toDate}&groupBy=${encodeURIComponent(this.groupByLabel)}`;
     if (this.selected === 'full-year-demand')
@@ -411,60 +394,37 @@ export class ReportsComponent implements OnInit {
     if (['open-positions-aging','positions-closed-mtd'].includes(this.selected))
       params = `?groupBy=${encodeURIComponent(this.groupByLabel)}`;
 
-    this.http.get<any>(`${this.api}/api/reports/${this.selected}${params}`).subscribe({
-      next: data => {
-        this.reportData = {
-          ...data,
+    this.http.get<any>(`${this.api}/api/reports/${this.selected}${params}`).subscribe({ next: data => { this.reportData = { ...data,
           rows:    [...(data.rows    || [])],
           columns: [...(data.columns || [])],
-          kpis:    [...(data.kpis    || [])]
-        };
-        this.loading = false;
-      },
-      error: () => {
-        // Fall back to mock data so the UI is always useful
+          kpis:    [...(data.kpis    || [])] };
+        this.loading = false; },
+      error: () => { // Fall back to mock data so the UI is always useful
         this.reportData = this.getMockData(this.selected);
         this.loading    = false;
-        this.snack.open('Live data unavailable — showing sample data', 'Close', { duration: 3000 });
-      }
-    });
-  }
+        this.snack.open('Live data unavailable — showing sample data', 'Close', { duration: 3000 }); } }); }
 
-  exportExcel() {
-    window.open(`${this.api}/api/reports/${this.selected}/export/excel?from=${this.fromDate}&to=${this.toDate}`, '_blank');
-  }
-  exportPdf() {
-    window.open(`${this.api}/api/reports/${this.selected}/export/pdf?from=${this.fromDate}&to=${this.toDate}`, '_blank');
-  }
+  exportExcel() { window.open(`${this.api}/api/reports/${this.selected}/export/excel?from=${this.fromDate}&to=${this.toDate}`, '_blank'); }
+  exportPdf() { window.open(`${this.api}/api/reports/${this.selected}/export/pdf?from=${this.fromDate}&to=${this.toDate}`, '_blank'); }
 
   freqColor(freq: string): string { return FREQ_COLORS[freq] ?? '#64748b'; }
   chartIcon(type: string): string  { return CHART_ICONS[type] ?? '📊'; }
 
-  funnelWidth(index: number, total: number): string {
-    return `${100 - (index / (total || 1)) * 40}%`;
-  }
+  funnelWidth(index: number, total: number): string { return `${100 - (index / (total || 1)) * 40}%`; }
 
-  cellColor(col: string, val: any): string {
-    if (col === 'Status') {
-      if (val === 'On Target')   return '#16a34a';
+  cellColor(col: string, val: any): string { if (col === 'Status') { if (val === 'On Target')   return '#16a34a';
       if (val === 'Over Target') return '#dc2626';
       if (val === 'Overdue')     return '#dc2626';
-      if (val === 'Warning')     return '#f97316';
-    }
-    if (col === 'Criticality') {
-      if (val === 'P1') return '#dc2626';
+      if (val === 'Warning')     return '#f97316'; }
+    if (col === 'Criticality') { if (val === 'P1') return '#dc2626';
       if (val === 'P2') return '#f97316';
-      if (val === 'P3') return '#eab308';
-    }
+      if (val === 'P3') return '#eab308'; }
     if (col === 'Aging Band' && typeof val === 'string' && val.startsWith('60')) return '#dc2626';
     if (col === 'vs Target'  && typeof val === 'string' && val.startsWith('+'))  return '#dc2626';
-    return '';
-  }
+    return ''; }
 
-  getMockData(type: string): any {
-    const bu = this.groupByLabel;
-    const mock: Record<string, any> = {
-      // ── HR Recruitment — Standard ─────────────────────────────────────────
+  getMockData(type: string): any { const bu = this.groupByLabel;
+    const mock: Record<string, any> = { // ── HR Recruitment — Standard ─────────────────────────────────────────
       'requisition-aging':      { kpis:[{label:'Total Open',value:24},{label:'Overdue',value:7},{label:'Avg Days Open',value:34}], chartType:'bar', columns:['Requisition','Department','Days Open','Status'], rows:[] },
       'vendor-performance':     { kpis:[{label:'Total Vendors',value:12},{label:'Avg Quality',value:'84%'},{label:'Avg Joining Rate',value:'68%'}], chartType:'bar', columns:['Vendor','Submissions','Selections','Joining Rate','SLA Score'], rows:[] },
       'candidate-funnel':       { kpis:[{label:'Submitted',value:240},{label:'Screened',value:80},{label:'Selected',value:22},{label:'Joined',value:18}], chartType:'funnel', columns:['Stage','Count','Conversion %'], rows:[{Stage:'Submitted',Count:240,'Conversion %':'100%'},{Stage:'Screening',Count:80,'Conversion %':'33%'},{Stage:'Selected',Count:22,'Conversion %':'9.2%'},{Stage:'Joined',Count:18,'Conversion %':'7.5%'}] },
@@ -556,8 +516,7 @@ export class ReportsComponent implements OnInit {
       'equal-pay-audit':        { kpis:[{label:'Roles Audited',value:24},{label:'Pay Gap > 10%',value:3},{label:'Avg Gender Pay Gap',value:'6.2%'}], chartType:'bar', columns:['Role','Grade','Male Median','Female Median','Pay Gap %','Status'], rows:[] },
       'hr-policy-compliance':   { kpis:[{label:'Policies Active',value:12},{label:'Avg Compliance',value:'82%'},{label:'Non-Compliant',value:2}], chartType:'donut', columns:['Policy','Scope','Compliance %','Violations','Status'], rows:[] },
       'statutory-deduction':    { kpis:[{label:'PF Deducted',value:'₹3.84L'},{label:'ESI Deducted',value:'₹0.69L'},{label:'TDS Deducted',value:'₹2.1L'},{label:'PT Deducted',value:'₹42K'}], chartType:'bar', columns:['Month','PF Employee','PF Employer','ESI','TDS','PT','Total'], rows:[] },
-      'workplace-safety':       { kpis:[{label:'Incidents MTD',value:0},{label:'Near Misses',value:2},{label:'Safety Training Done',value:'88%'}], chartType:'bar', columns:['Month','Incidents','Near Misses','Safety Training %','Status'], rows:[] },
-    };
-    return mock[type] ?? { kpis:[], chartType:'bar', columns:[], rows:[] };
-  }
+      'workplace-safety':       { kpis:[{label:'Incidents MTD',value:0},{label:'Near Misses',value:2},{label:'Safety Training Done',value:'88%'}], chartType:'bar', columns:['Month','Incidents','Near Misses','Safety Training %','Status'], rows:[] }, };
+    return mock[type] ?? { kpis:[], chartType:'bar', columns:[], rows:[] }; }
 }
+

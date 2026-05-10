@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService, CurrentUser } from './services/auth.service';
 
-@Component({
-  selector: 'app-root',
+@Component({ selector: 'app-root',
   template: `
     <section class="login-screen" *ngIf="!isAuthenticated">
       <div class="login-art">
@@ -199,16 +198,13 @@ import { AuthService, CurrentUser } from './services/auth.service';
   `,
   styles: [`
     /* ===== LOGIN SCREEN – two-column flex layout ===== */
-    .login-screen {
-      height: 100vh;
+    .login-screen { height: 100vh;
       width: 100vw;
       display: flex;
-      overflow: hidden;
-    }
+      overflow: hidden; }
 
     /* ---- Left: art / brand column ---- */
-    .login-art {
-      flex: 1;
+    .login-art { flex: 1;
       min-width: 0;
       padding: 44px 52px 52px;
       background: linear-gradient(125deg, #1ae3f4 0%, #0798ef 45%, #1255df 100%);
@@ -216,107 +212,85 @@ import { AuthService, CurrentUser } from './services/auth.service';
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      position: relative;
-    }
-    .login-art::before {
-      content: "";
+      position: relative; }
+    .login-art::before { content: "";
       position: absolute;
       border-radius: 50%;
       width: 720px;
       height: 720px;
       left: -180px;
       bottom: -260px;
-      background: rgba(255,255,255,0.07);
-    }
-    .login-art::after {
-      content: "";
+      background: rgba(255,255,255,0.07); }
+    .login-art::after { content: "";
       position: absolute;
       border-radius: 50%;
       width: 260px;
       height: 260px;
       right: 100px;
       top: 180px;
-      background: rgba(255,255,255,0.06);
-    }
-    .brand-lockup {
-      display: flex;
+      background: rgba(255,255,255,0.06); }
+    .brand-lockup { display: flex;
       align-items: center;
       gap: 14px;
       position: relative;
-      z-index: 2;
-    }
-    .login-logo-white {
-      width: 130px;
+      z-index: 2; }
+    .login-logo-white { width: 130px;
       height: auto;
       border-radius: 16px;
       background: rgba(255,255,255,0.95);
       padding: 12px;
-      box-shadow: 0 14px 40px rgba(15,23,42,0.18);
-    }
-    .circuit-logo {
-      position: absolute;
+      box-shadow: 0 14px 40px rgba(15,23,42,0.18); }
+    .circuit-logo { position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-46%, -58%);
       width: 440px;
       height: 280px;
       filter: drop-shadow(0 20px 60px rgba(124,58,237,0.4));
-      z-index: 1;
-    }
-    .panel {
-      position: absolute;
+      z-index: 1; }
+    .panel { position: absolute;
       width: 235px;
       height: 170px;
       border: 2px solid rgba(103,232,249,0.6);
       background: linear-gradient(135deg, rgba(126,34,206,0.74), rgba(29,78,216,0.52));
-      transform: skewY(16deg);
-    }
+      transform: skewY(16deg); }
     .panel-back  { left: 175px; top: 18px; }
     .panel-front { left: 70px;  top: 82px; border-color: rgba(37,99,235,0.7); }
-    .wire {
-      position: absolute;
+    .wire { position: absolute;
       height: 8px;
       border-radius: 999px;
       background: linear-gradient(90deg, #22d3ee, #8b5cf6);
-      transform-origin: left center;
-    }
+      transform-origin: left center; }
     .wire-a { width: 380px; left: 20px;  top: 150px; transform: rotate(16deg); }
     .wire-b { width: 270px; left: 110px; top: 172px; transform: rotate(-14deg); background: linear-gradient(90deg,#67e8f9,#60a5fa); }
     .wire-c { width: 245px; left: 190px; top: 112px; transform: rotate(17deg);  background: linear-gradient(90deg,#c084fc,#2563eb); }
-    .node {
-      position: absolute;
+    .node { position: absolute;
       width: 34px;
       height: 34px;
       border-radius: 50%;
       background: #67e8f9;
-      box-shadow: 0 0 24px currentColor;
-    }
+      box-shadow: 0 0 24px currentColor; }
     .n1 { left: 12px;  top: 132px; background: #c084fc; }
     .n2 { left: 258px; top: 134px; }
     .n3 { left: 195px; top: 208px; background: #60a5fa; }
     .n4 { left: 370px; top: 121px; }
-    .login-art h1 {
-      max-width: 560px;
+    .login-art h1 { max-width: 560px;
       font-size: 36px;
       font-weight: 800;
       line-height: 1.1;
       margin: auto 0 16px;
       position: relative;
-      z-index: 2;
-    }
-    .login-art > p {
-      max-width: 500px;
+      z-index: 2; }
+    .login-art > p { max-width: 500px;
       color: rgba(255,255,255,0.8);
       font-size: 16px;
       line-height: 1.65;
       position: relative;
       z-index: 2;
-      margin: 0;
-    }
+      margin: 0; }
 
     /* ---- Right: login panel column ---- */
-    .login-panel {
-      width: 440px;
+    .login-panel { width: 440px;
       min-width: 440px;
       background: #fff;
       overflow-y: auto;
@@ -327,47 +301,35 @@ import { AuthService, CurrentUser } from './services/auth.service';
       gap: 14px;
       box-shadow: -20px 0 80px rgba(15,23,42,0.18);
       position: relative;
-      z-index: 5;
-    }
-    .login-panel-header {
-      display: flex;
+      z-index: 5; }
+    .login-panel-header { display: flex;
       justify-content: center;
-      margin-bottom: 4px;
-    }
-    .login-logo-black {
-      width: 140px;
+      margin-bottom: 4px; }
+    .login-logo-black { width: 140px;
       height: auto;
       display: block;
       border-radius: 14px;
-      box-shadow: 0 10px 30px rgba(15,23,42,0.1);
-    }
-    .login-panel h2 {
-      margin: 0;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.1); }
+    .login-panel h2 { margin: 0;
       font-size: 28px;
       font-weight: 800;
       text-align: center;
       color: #0f172a;
-      letter-spacing: -0.5px;
-    }
-    .panel-subtitle {
-      margin: 0;
+      letter-spacing: -0.5px; }
+    .panel-subtitle { margin: 0;
       color: #64748b;
       text-align: center;
-      font-size: 14px;
-    }
+      font-size: 14px; }
 
     /* Role tabs – segmented control style */
-    .role-tabs {
-      display: grid;
+    .role-tabs { display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0;
       margin: 4px 0;
       background: #f1f5f9;
       border-radius: 10px;
-      padding: 4px;
-    }
-    .role-tabs button {
-      border: none;
+      padding: 4px; }
+    .role-tabs button { border: none;
       background: transparent;
       border-radius: 7px;
       padding: 10px 6px;
@@ -375,27 +337,19 @@ import { AuthService, CurrentUser } from './services/auth.service';
       font-weight: 600;
       font-size: 13px;
       color: #64748b;
-      transition: all 0.15s ease;
-    }
-    .role-tabs button.active {
-      background: #fff;
+      transition: all 0.15s ease; }
+    .role-tabs button.active { background: #fff;
       color: #5b21b6;
       box-shadow: 0 2px 8px rgba(91,33,182,0.15);
-      font-weight: 700;
-    }
-    .role-tabs button:hover:not(.active) {
-      color: #334155;
-    }
+      font-weight: 700; }
+    .role-tabs button:hover:not(.active) { color: #334155; }
 
     /* Form fields */
-    .login-panel label {
-      font-size: 13px;
+    .login-panel label { font-size: 13px;
       font-weight: 700;
       color: #374151;
-      margin-bottom: -4px;
-    }
-    .login-panel .input {
-      width: 100%;
+      margin-bottom: -4px; }
+    .login-panel .input { width: 100%;
       height: 50px;
       font-size: 15px;
       padding: 0 16px;
@@ -405,28 +359,22 @@ import { AuthService, CurrentUser } from './services/auth.service';
       outline: none;
       color: #0f172a;
       background: #fafafa;
-      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-    }
-    .login-panel .input:focus {
-      border-color: #7c3aed;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+    .login-panel .input:focus { border-color: #7c3aed;
       background: #fff;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
-    }
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
 
     /* Error */
-    .login-error {
-      color: #b91c1c;
+    .login-error { color: #b91c1c;
       font-size: 13px;
       background: #fef2f2;
       border: 1px solid #fecaca;
       border-radius: 8px;
       padding: 10px 14px;
-      margin: 0;
-    }
+      margin: 0; }
 
     /* Sign-in button */
-    .login-btn {
-      width: 100%;
+    .login-btn { width: 100%;
       height: 52px;
       font-size: 16px;
       font-weight: 700;
@@ -438,21 +386,15 @@ import { AuthService, CurrentUser } from './services/auth.service';
       color: #fff !important;
       box-shadow: 0 6px 22px rgba(124,58,237,0.35);
       transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
-      margin-top: 4px;
-    }
-    .login-btn:hover {
-      background: linear-gradient(135deg, #6d28d9 0%, #1d4ed8 100%);
+      margin-top: 4px; }
+    .login-btn:hover { background: linear-gradient(135deg, #6d28d9 0%, #1d4ed8 100%);
       box-shadow: 0 10px 30px rgba(124,58,237,0.45);
-      transform: translateY(-1px);
-    }
-    .login-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
-    }
+      transform: translateY(-1px); }
+    .login-btn:active { transform: translateY(0);
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3); }
 
     /* Demo credentials */
-    .credential-hint {
-      display: grid;
+    .credential-hint { display: grid;
       gap: 5px;
       font-size: 12px;
       color: #64748b;
@@ -460,68 +402,47 @@ import { AuthService, CurrentUser } from './services/auth.service';
       border: 1px solid #e8edf5;
       border-radius: 10px;
       padding: 12px 14px;
-      margin-top: 2px;
-    }
-    .credential-hint strong {
-      color: #475569;
+      margin-top: 2px; }
+    .credential-hint strong { color: #475569;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      margin-bottom: 2px;
-    }
+      margin-bottom: 2px; }
 
     /* Sidebar / topbar shared styles */
-    .brand-mark, .sidebar-logo {
-      width: 42px;
+    .brand-mark, .sidebar-logo { width: 42px;
       height: 42px;
       border-radius: 10px;
       display: grid;
       place-items: center;
       background: #111827;
       color: #fff;
-      font-weight: 800;
-    }
-    .nav-symbol {
-      width: 22px;
+      font-weight: 800; }
+    .nav-symbol { width: 22px;
       min-width: 22px;
       font-size: 12px;
       font-weight: 800;
-      color: #64748b;
-    }
+      color: #64748b; }
     .user-menu-header { padding: 12px 16px; }
     .user-menu-name  { font-weight: 700; font-size: 14px; color: var(--text); }
     .user-menu-email { font-size: 12px; color: var(--text-3); margin-top: 2px; }
     .btn-sm { height: 28px; font-size: 12px; padding: 0 12px; }
 
     /* ---- Mobile ---- */
-    @media (max-width: 900px) {
-      .login-screen {
-        flex-direction: column;
+    @media (max-width: 900px) { .login-screen { flex-direction: column;
         height: auto;
         min-height: 100vh;
-        overflow: auto;
-      }
-      .login-art {
-        min-height: 340px;
-        padding: 32px 28px 44px;
-      }
-      .circuit-logo {
-        transform: translate(-46%, -60%) scale(0.6);
-      }
-      .login-art h1 {
-        font-size: 26px;
-      }
-      .login-panel {
-        width: 100%;
+        overflow: auto; }
+      .login-art { min-height: 340px;
+        padding: 32px 28px 44px; }
+      .circuit-logo { transform: translate(-46%, -60%) scale(0.6); }
+      .login-art h1 { font-size: 26px; }
+      .login-panel { width: 100%;
         min-width: 0;
         padding: 36px 28px 44px;
-        box-shadow: none;
-      }
-    }
-  `]
-})
-export class AppComponent implements OnInit {
-  sidebarCollapsed = false;
+        box-shadow: none; } }
+  `] })
+export class AppComponent implements OnInit { sidebarCollapsed = false;
   isAuthenticated = false;
   currentUser: CurrentUser | null = null;
   currentPageTitle = 'Dashboard';
@@ -536,9 +457,10 @@ export class AppComponent implements OnInit {
 
   allApps = [
     // Core
-    { path: '/dashboard',              label: 'Dashboard',              shortLabel: 'Dashboard',         symbol: 'D',  color: '#292966', adminOnly: false },
+    { path: '/dashboard',                label: 'Dashboard',              shortLabel: 'Dashboard',         symbol: 'D',  color: '#292966', adminOnly: false },
+    { path: '/recruitment-dashboard',    label: 'Recruitment Dashboard',  shortLabel: 'Rec. Dashboard',    symbol: 'RD', color: '#2563eb', adminOnly: false },
     // Recruitment
-    { path: '/requisitions',           label: 'Requisitions',           shortLabel: 'Requisitions',      symbol: 'RQ', color: '#e8912a', adminOnly: false },
+    { path: '/requisitions',             label: 'Requisitions',           shortLabel: 'Requisitions',      symbol: 'RQ', color: '#e8912a', adminOnly: false },
     { path: '/job-broadcasting',       label: 'Job Broadcasting',       shortLabel: 'Job Board',         symbol: 'JB', color: '#7c3aed', adminOnly: false },
     { path: '/cv-database',            label: 'Talent Database',        shortLabel: 'Talent DB',         symbol: 'CV', color: '#5C5C99', adminOnly: false },
     { path: '/pipeline-board',         label: 'Pipeline Board',         shortLabel: 'Pipeline',          symbol: 'PB', color: '#a94ee6', adminOnly: false },
@@ -611,7 +533,7 @@ export class AppComponent implements OnInit {
     { path: '/audit-trail',            label: 'Activity Logs',          shortLabel: 'Activity Logs',     symbol: 'AU', color: '#6b4df0', adminOnly: false },
     { path: '/internal-audit',         label: 'Internal Audit',         shortLabel: 'Internal Audit',    symbol: 'IA', color: '#b45309', adminOnly: false },
     // Administration
-    { path: '/users',                  label: 'User Management',        shortLabel: 'Users',             symbol: 'UA', color: '#343a48', adminOnly: true  },
+    { path: '/users',                  label: 'User Management',        shortLabel: 'Users',             symbol: 'UA', color: '#343a48', adminOnly: true },
     { path: '/import-center',          label: 'Import Center',          shortLabel: 'Import',            symbol: '📥', color: '#0891b2', adminOnly: false },
     { path: '/integrations',           label: 'Integrations Hub',       shortLabel: 'Integrations',      symbol: '🔌', color: '#059669', adminOnly: false },
     // Helpdesk
@@ -621,9 +543,9 @@ export class AppComponent implements OnInit {
     // Employee Portal
     { path: '/portal',                 label: 'Employee Portal',        shortLabel: 'Portal',            symbol: '🏠', color: '#6366f1', adminOnly: false },
     // Workflow Engine
-    { path: '/workflow-builder',       label: 'Workflow Engine',        shortLabel: 'Workflows',         symbol: '⚙️', color: '#7c3aed', adminOnly: true  },
+    { path: '/workflow-builder',       label: 'Workflow Engine',        shortLabel: 'Workflows',         symbol: '⚙️', color: '#7c3aed', adminOnly: true },
     // RBAC
-    { path: '/permissions',            label: 'Permissions Matrix',     shortLabel: 'Permissions',       symbol: '🔐', color: '#374151', adminOnly: true  },
+    { path: '/permissions',            label: 'Permissions Matrix',     shortLabel: 'Permissions',       symbol: '🔐', color: '#374151', adminOnly: true },
   ];
 
   recentApps: any[] = [];
@@ -637,7 +559,7 @@ export class AppComponent implements OnInit {
 
   private readonly groupDefs = [
     { id:'recruitment',   label:'Recruitment',              symbol:'RE', color:'#2563eb',
-      paths:['/requisitions','/job-broadcasting','/cv-database','/pipeline-board','/interview-scheduler','/video-interviews','/offer-management','/source-tracking','/vendors'] },
+      paths:['/recruitment-dashboard','/requisitions','/job-broadcasting','/cv-database','/pipeline-board','/interview-scheduler','/video-interviews','/offer-management','/source-tracking','/vendors'] },
     { id:'corehr',        label:'Core HR',                  symbol:'HR', color:'#6b4df0',
       paths:['/employee-directory','/org-chart','/document-management','/letters-certificates','/exit-management','/internal-job-postings'] },
     { id:'attendance',    label:'Attendance & Time',        symbol:'AT', color:'#0891b2',
@@ -674,127 +596,72 @@ export class AppComponent implements OnInit {
 
   visibleModuleGroups: any[] = [];
 
-  private computeVisibleGroups() {
-    this.visibleModuleGroups = this.groupDefs
-      .map(g => ({
-        ...g,
+  private computeVisibleGroups() { this.visibleModuleGroups = this.groupDefs
+      .map(g => ({ ...g,
         expanded: this.expandedGroups.has(g.id),
         modules: this.allApps.filter(a =>
           g.paths.includes(a.path) && (!a.adminOnly || this.canAccessAdmin)
-        )
-      }))
-      .filter(g => g.modules.length > 0);
-  }
+        ) }))
+      .filter(g => g.modules.length > 0); }
 
   trackByGroupId(_: number, group: any) { return group.id; }
   trackByAppPath(_: number, app: any) { return app.path; }
 
-  toggleGroup(groupId: string) {
-    if (this.expandedGroups.has(groupId)) {
-      this.expandedGroups.delete(groupId);
-    } else {
-      this.expandedGroups.add(groupId);
-    }
-    this.computeVisibleGroups();
-  }
+  toggleGroup(groupId: string) { if (this.expandedGroups.has(groupId)) { this.expandedGroups.delete(groupId); } else { this.expandedGroups.add(groupId); }
+    this.computeVisibleGroups(); }
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      this.isAuthenticated = !!user;
+  ngOnInit() { this.authService.currentUser$.subscribe(user => { this.isAuthenticated = !!user;
       this.currentUser = user;
       this.canAccessAdmin = user?.role === 'SuperAdmin';
       this.refreshApps();
-      this.computeVisibleGroups();
-    });
+      this.computeVisibleGroups(); });
 
-    this.router.events.subscribe(() => {
-      this.updatePageTitle();
-      this.trackRecentApp();
-    });
+    this.router.events.subscribe(() => { this.updatePageTitle();
+      this.trackRecentApp(); });
 
     this.refreshApps();
-    this.computeVisibleGroups();
-  }
+    this.computeVisibleGroups(); }
 
-  refreshApps() {
-    const visible = this.allApps.filter(a => !a.adminOnly || this.canAccessAdmin);
+  refreshApps() { const visible = this.allApps.filter(a => !a.adminOnly || this.canAccessAdmin);
     this.recentApps = visible.slice(0, 9);
-    this.filteredApps = visible;
-  }
+    this.filteredApps = visible; }
 
-  onAppSearch(event: Event) {
-    this.appSearch = (event.target as HTMLInputElement).value.trim();
+  onAppSearch(event: Event) { this.appSearch = (event.target as HTMLInputElement).value.trim();
     const q = this.appSearch.toLowerCase();
     const visible = this.allApps.filter(a => !a.adminOnly || this.canAccessAdmin);
-    this.filteredApps = q ? visible.filter(a => a.label.toLowerCase().includes(q)) : visible;
-  }
+    this.filteredApps = q ? visible.filter(a => a.label.toLowerCase().includes(q)) : visible; }
 
-  trackRecentApp() {
-    const url = this.router.url.split('?')[0];
+  trackRecentApp() { const url = this.router.url.split('?')[0];
     const found = this.allApps.find(a => url.startsWith(a.path) && (!a.adminOnly || this.canAccessAdmin));
     if (!found) return;
     const list = [found, ...this.recentApps.filter(a => a.path !== found.path)].slice(0, 9);
-    this.recentApps = list;
-  }
+    this.recentApps = list; }
 
-  usePreset(type: string) {
-    this.selectedLogin = type;
+  usePreset(type: string) { this.selectedLogin = type;
     this.email = '';
-    this.password = '';
-  }
+    this.password = ''; }
 
-  login() {
+  login() { this.loginError = '';
+    if (!this.email || !this.password) { this.loginError = 'Please enter your email and password.';
+      return; }
+    this.authService.login(this.email, this.password).subscribe({ next: () => this.router.navigate(['/dashboard']),
+      error: err => { if (err.status === 0) { this.loginError = 'Cannot connect to server. Please try again in a moment.'; } else if (err.status === 503) { this.loginError = 'Service temporarily unavailable. Please try again shortly.'; } else { this.loginError = err?.error?.error || 'Incorrect email or password.'; } } }); }
+
+  guestLogin() { this.selectedLogin = 'guest';
     this.loginError = '';
-    if (!this.email || !this.password) {
-      this.loginError = 'Please enter your email and password.';
-      return;
-    }
-    this.authService.login(this.email, this.password).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: err => {
-        if (err.status === 0) {
-          this.loginError = 'Cannot connect to server. Please try again in a moment.';
-        } else if (err.status === 503) {
-          this.loginError = 'Service temporarily unavailable. Please try again shortly.';
-        } else {
-          this.loginError = err?.error?.error || 'Incorrect email or password.';
-        }
-      }
-    });
-  }
+    this.authService.guestLogin().subscribe({ next: () => this.router.navigate(['/dashboard']),
+      error: err => { if (err.status === 0) { this.loginError = 'Cannot connect to server. Please try again in a moment.'; } else { this.loginError = 'Guest login is currently unavailable.'; } } }); }
 
-  guestLogin() {
-    this.selectedLogin = 'guest';
-    this.loginError = '';
-    this.authService.guestLogin().subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: err => {
-        if (err.status === 0) {
-          this.loginError = 'Cannot connect to server. Please try again in a moment.';
-        } else {
-          this.loginError = 'Guest login is currently unavailable.';
-        }
-      }
-    });
-  }
+  toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; }
 
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
+  globalSearch(event: Event) { const query = (event.target as HTMLInputElement).value.trim();
+    if (query) { this.router.navigate(['/cv-database'], { queryParams: { skills: query } }); } }
 
-  globalSearch(event: Event) {
-    const query = (event.target as HTMLInputElement).value.trim();
-    if (query) {
-      this.router.navigate(['/cv-database'], { queryParams: { skills: query } });
-    }
-  }
-
-  updatePageTitle() {
-    const titles: { [key: string]: { title: string; breadcrumb: string } } = {
-      // Core
-      '/dashboard':             { title: 'Dashboard',             breadcrumb: 'Home / Dashboard' },
+  updatePageTitle() { const titles: { [key: string]: { title: string; breadcrumb: string } } = { // Core
+      '/dashboard':                { title: 'Dashboard',                breadcrumb: 'Home / Dashboard' },
+      '/recruitment-dashboard':    { title: 'Recruitment Dashboard',    breadcrumb: 'Home / Recruitment Dashboard' },
       '/vendors':               { title: 'Vendor Management',     breadcrumb: 'Home / Vendor Management' },
       '/budget':                { title: 'Budget & Forecasting',  breadcrumb: 'Home / Budget & Forecasting' },
       '/recruiters':            { title: 'Recruiter Performance', breadcrumb: 'Home / Recruiter Performance' },
@@ -831,17 +698,11 @@ export class AppComponent implements OnInit {
       '/compliance':            { title: 'Compliance',            breadcrumb: 'Admin / Compliance' },
       '/audit-trail':           { title: 'Activity Logs',         breadcrumb: 'Policies & Compliance / Activity Logs' },
       '/internal-audit':        { title: 'Internal Audit',        breadcrumb: 'Policies & Compliance / Internal Audit' },
-      '/permissions':           { title: 'Permissions Matrix',    breadcrumb: 'Admin / Permissions Matrix' },
-    };
+      '/permissions':           { title: 'Permissions Matrix',    breadcrumb: 'Admin / Permissions Matrix' }, };
     const match = Object.keys(titles).find(key => this.router.url.startsWith(key));
-    if (match) {
-      this.currentPageTitle = titles[match].title;
-      this.currentBreadcrumb = titles[match].breadcrumb;
-    }
-  }
+    if (match) { this.currentPageTitle = titles[match].title;
+      this.currentBreadcrumb = titles[match].breadcrumb; } }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/']);
-  }
-}
+  logout() { this.authService.logout();
+    this.router.navigate(['/']); } }
+

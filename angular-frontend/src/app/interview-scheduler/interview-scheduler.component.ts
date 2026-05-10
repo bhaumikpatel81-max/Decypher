@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-interview-scheduler',
+@Component({ selector: 'app-interview-scheduler',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -221,8 +220,7 @@ import { environment } from '../../environments/environment';
     .interview-detail { flex:1; display:flex; flex-direction:column; gap:2px; }
   `]
 })
-export class InterviewSchedulerComponent implements OnInit {
-  activeTab = 0;
+export class InterviewSchedulerComponent implements OnInit { activeTab = 0;
   interviews: any[] = [];
   saving = false;
   saveOk = false;
@@ -236,44 +234,28 @@ export class InterviewSchedulerComponent implements OnInit {
 
   ngOnInit() { this.loadInterviews(); }
 
-  loadInterviews() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/interviews`).subscribe({
-      next: data => {
-        this.interviews = [...(data || []).map(i => ({
-          id: i.id, type: i.interviewType || i.type || 'Video',
+  loadInterviews() { this.http.get<any[]>(`${environment.apiUrl}/api/interviews`).subscribe({ next: data => { this.interviews = [...(data || []).map(i => ({ id: i.id, type: i.interviewType || i.type || 'Video',
           scheduledAt: i.scheduledAt || i.scheduledDate || '',
           candidateId: i.candidateId || '',
           status: i.status || 'Scheduled',
-          meetingLink: i.meetingLink || ''
-        }))];
-        this.buildTrend();
-      },
-      error: () => this.snack.open('Failed to load interviews', 'Close', { duration: 3000 })
-    });
-  }
+          meetingLink: i.meetingLink || '' }))];
+        this.buildTrend(); },
+      error: () => this.snack.open('Failed to load interviews', 'Close', { duration: 3000 }) }); }
 
-  private buildTrend() {
-    const now = new Date();
+  private buildTrend() { const now = new Date();
     const months: string[] = [];
     const counts: number[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(d.toLocaleString('default', { month: 'short' }));
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      counts.push(this.interviews.filter(iv => (iv.scheduledAt || '').slice(0, 7) === ym).length);
-    }
+      counts.push(this.interviews.filter(iv => (iv.scheduledAt || '').slice(0, 7) === ym).length); }
     this.ivMonths = months;
-    this.ivTrend = counts;
-  }
+    this.ivTrend = counts; }
 
-  schedule() {
-    this.saving = true; this.saveOk = false; this.saveErr = '';
+  schedule() { this.saving = true; this.saveOk = false; this.saveErr = '';
     this.http.post<any>(`${environment.apiUrl}/api/interviews`, this.form)
-      .subscribe({
-        next: r => { this.interviews = [r, ...this.interviews]; this.saving = false; this.saveOk = true; },
-        error: (err: any) => { this.saveErr = err?.error?.error ?? 'Failed to schedule'; this.saving = false; }
-      });
-  }
+      .subscribe({ next: r => { this.interviews = [r, ...this.interviews]; this.saving = false; this.saveOk = true; },
+        error: (err: any) => { this.saveErr = err?.error?.error ?? 'Failed to schedule'; this.saving = false; } }); }
 
   get phoneCount()     { return this.interviews.filter(i => i.type === 'Phone').length; }
   get videoCount()     { return this.interviews.filter(i => i.type === 'Video').length; }
@@ -282,29 +264,20 @@ export class InterviewSchedulerComponent implements OnInit {
   get completedCount() { return this.interviews.filter(i => i.status === 'Completed').length; }
   get cancelledCount() { return this.interviews.filter(i => i.status === 'Cancelled').length; }
   get maxType()        { return Math.max(this.phoneCount, this.videoCount, this.onsiteCount, 1); }
-  get completionRate() {
-    return this.interviews.length ? Math.round(this.completedCount / this.interviews.length * 100) : 0;
-  }
-  get cancellationRate() {
-    return this.interviews.length ? Math.round(this.cancelledCount / this.interviews.length * 100) : 0;
-  }
+  get completionRate() { return this.interviews.length ? Math.round(this.completedCount / this.interviews.length * 100) : 0; }
+  get cancellationRate() { return this.interviews.length ? Math.round(this.cancelledCount / this.interviews.length * 100) : 0; }
 
   private dash(n: number) { return Math.round((n / (this.interviews.length || 1)) * 283); }
   get scheduledDash()  { return this.dash(this.scheduledCount); }
   get completedDash()  { return this.dash(this.completedCount); }
   get cancelledDash()  { return this.dash(this.cancelledCount); }
 
-  get ivLinePoints(): string {
-    const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get ivAreaPoints(): string {
-    const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+  get ivLinePoints(): string { const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get ivAreaPoints(): string { const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get ivDotPoints(): {x: number, y: number}[] {
-    const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return `0,90 ${line} 500,90`; }
+  get ivDotPoints(): {x: number, y: number}[] { const pts = this.ivTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
 }
+

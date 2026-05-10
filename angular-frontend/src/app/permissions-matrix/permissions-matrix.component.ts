@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
-interface PermCell {
-  canRead: boolean;
+interface PermCell { canRead: boolean;
   canWrite: boolean;
   canDelete: boolean;
   saving: { read: boolean; write: boolean; delete: boolean };
@@ -13,8 +12,7 @@ interface PermCell {
 
 type Matrix = Record<string, Record<string, PermCell>>;
 
-@Component({
-  selector: 'app-permissions-matrix',
+@Component({ selector: 'app-permissions-matrix',
   templateUrl: './permissions-matrix.component.html',
   styles: [`
     .tr-hover:hover { background:var(--surface-alt); }
@@ -49,8 +47,7 @@ type Matrix = Record<string, Record<string, PermCell>>;
     .pm-icon-toggle { font-size:18px;cursor:pointer;transition:color .15s; }
   `]
 })
-export class PermissionsMatrixComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/permissions`;
+export class PermissionsMatrixComponent implements OnInit { private api = `${environment.apiUrl}/api/permissions`;
 
   loading = true;
   matrix: Matrix = {};
@@ -131,56 +128,31 @@ export class PermissionsMatrixComponent implements OnInit {
     private snack: MatSnackBar
   ) {}
 
-  get isSuperAdmin(): boolean {
-    return this.auth.getCurrentUser()?.role === 'SuperAdmin';
-  }
+  get isSuperAdmin(): boolean { return this.auth.getCurrentUser()?.role === 'SuperAdmin'; }
 
-  ngOnInit(): void {
-    if (this.isSuperAdmin) this.loadMatrix();
-    else this.loading = false;
-  }
+  ngOnInit(): void { if (this.isSuperAdmin) this.loadMatrix();
+    else this.loading = false; }
 
-  loadMatrix(): void {
-    this.loading = true;
+  loadMatrix(): void { this.loading = true;
     this.http.get<Record<string, Record<string, { canRead: boolean; canWrite: boolean; canDelete: boolean }>>>(
       `${this.api}/matrix`
-    ).subscribe({
-      next: data => {
-        const built: Matrix = {};
-        for (const role of this.configRoles) {
-          built[role] = {};
-          for (const group of this.moduleGroups) {
-            for (const mod of group.modules) {
-              const raw = data[role]?.[mod.key];
-              built[role][mod.key] = {
-                canRead: raw?.canRead ?? false,
+    ).subscribe({ next: data => { const built: Matrix = {};
+        for (const role of this.configRoles) { built[role] = {};
+          for (const group of this.moduleGroups) { for (const mod of group.modules) { const raw = data[role]?.[mod.key];
+              built[role][mod.key] = { canRead: raw?.canRead ?? false,
                 canWrite: raw?.canWrite ?? false,
                 canDelete: raw?.canDelete ?? false,
-                saving: { read: false, write: false, delete: false }
-              };
-            }
-          }
-        }
+                saving: { read: false, write: false, delete: false } }; } } }
         this.matrix = { ...built };
-        this.loading = false;
-      },
-      error: () => {
-        this.snack.open('Failed to load permissions matrix', 'Close', { duration: 3000 });
-        this.loading = false;
-      }
-    });
-  }
+        this.loading = false; },
+      error: () => { this.snack.open('Failed to load permissions matrix', 'Close', { duration: 3000 });
+        this.loading = false; } }); }
 
-  cell(role: string, moduleKey: string): PermCell {
-    return this.matrix[role]?.[moduleKey] ?? { canRead: false, canWrite: false, canDelete: false, saving: { read: false, write: false, delete: false } };
-  }
+  cell(role: string, moduleKey: string): PermCell { return this.matrix[role]?.[moduleKey] ?? { canRead: false, canWrite: false, canDelete: false, saving: { read: false, write: false, delete: false } }; }
 
-  isSaving(role: string, moduleKey: string, field: 'read' | 'write' | 'delete'): boolean {
-    return this.matrix[role]?.[moduleKey]?.saving[field] ?? false;
-  }
+  isSaving(role: string, moduleKey: string, field: 'read' | 'write' | 'delete'): boolean { return this.matrix[role]?.[moduleKey]?.saving[field] ?? false; }
 
-  toggle(role: string, moduleKey: string, field: 'canRead' | 'canWrite' | 'canDelete'): void {
-    const current = this.cell(role, moduleKey);
+  toggle(role: string, moduleKey: string, field: 'canRead' | 'canWrite' | 'canDelete'): void { const current = this.cell(role, moduleKey);
 
     // Dependency enforcement
     if (field === 'canWrite' && !current.canRead) return;
@@ -190,71 +162,39 @@ export class PermissionsMatrixComponent implements OnInit {
 
     // Cascade: revoking read → also revoke write + delete; revoking write → also revoke delete
     const updated: Partial<PermCell> = { [field]: newValue };
-    if (field === 'canRead' && !newValue) {
-      updated.canWrite = false;
-      updated.canDelete = false;
-    }
-    if (field === 'canWrite' && !newValue) {
-      updated.canDelete = false;
-    }
+    if (field === 'canRead' && !newValue) { updated.canWrite = false;
+      updated.canDelete = false; }
+    if (field === 'canWrite' && !newValue) { updated.canDelete = false; }
 
     const savingField = field === 'canRead' ? 'read' : field === 'canWrite' ? 'write' : 'delete';
 
     // Optimistic update
-    this.matrix = {
-      ...this.matrix,
-      [role]: {
-        ...this.matrix[role],
-        [moduleKey]: {
-          ...current,
+    this.matrix = { ...this.matrix,
+      [role]: { ...this.matrix[role],
+        [moduleKey]: { ...current,
           ...updated,
-          saving: { ...current.saving, [savingField]: true }
-        }
-      }
-    };
+          saving: { ...current.saving, [savingField]: true } } } };
 
-    const payload = {
-      canRead: this.matrix[role][moduleKey].canRead,
+    const payload = { canRead: this.matrix[role][moduleKey].canRead,
       canWrite: this.matrix[role][moduleKey].canWrite,
-      canDelete: this.matrix[role][moduleKey].canDelete
-    };
+      canDelete: this.matrix[role][moduleKey].canDelete };
 
     this.http.put<{ canRead: boolean; canWrite: boolean; canDelete: boolean }>(
       `${this.api}/matrix/${encodeURIComponent(role)}/${encodeURIComponent(moduleKey)}`,
       payload
-    ).subscribe({
-      next: saved => {
-        this.matrix = {
-          ...this.matrix,
-          [role]: {
-            ...this.matrix[role],
-            [moduleKey]: {
-              canRead: saved.canRead,
+    ).subscribe({ next: saved => { this.matrix = { ...this.matrix,
+          [role]: { ...this.matrix[role],
+            [moduleKey]: { canRead: saved.canRead,
               canWrite: saved.canWrite,
               canDelete: saved.canDelete,
-              saving: { ...this.matrix[role][moduleKey].saving, [savingField]: false }
-            }
-          }
-        };
-      },
-      error: () => {
-        // Revert optimistic update
-        this.matrix = {
-          ...this.matrix,
-          [role]: {
-            ...this.matrix[role],
-            [moduleKey]: {
-              ...current,
-              saving: { ...current.saving, [savingField]: false }
-            }
-          }
-        };
-        this.snack.open(`Failed to update ${role} › ${moduleKey}`, 'Close', { duration: 3000 });
-      }
-    });
-  }
+              saving: { ...this.matrix[role][moduleKey].saving, [savingField]: false } } } }; },
+      error: () => { // Revert optimistic update
+        this.matrix = { ...this.matrix,
+          [role]: { ...this.matrix[role],
+            [moduleKey]: { ...current,
+              saving: { ...current.saving, [savingField]: false } } } };
+        this.snack.open(`Failed to update ${role} › ${moduleKey}`, 'Close', { duration: 3000 }); } }); }
 
-  trackByKey(_: number, item: { key: string }): string {
-    return item.key;
-  }
+  trackByKey(_: number, item: { key: string }): string { return item.key; }
 }
+

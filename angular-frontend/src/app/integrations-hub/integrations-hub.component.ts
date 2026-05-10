@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface Integration {
-  id: string;
+interface Integration { id: string;
   name: string;
   logo: string;
   description: string;
@@ -14,8 +13,7 @@ interface Integration {
   lastSync?: string;
 }
 
-@Component({
-  selector: 'app-integrations-hub',
+@Component({ selector: 'app-integrations-hub',
   template: `
     <section class="stack-page">
       <div class="grid grid-cols-2 gap-6">
@@ -148,27 +146,20 @@ interface Integration {
     </section>
   `,
   styles: [`
-    .intg-card {
-      display:flex; align-items:center; gap:14px; padding:14px 16px;
+    .intg-card { display:flex; align-items:center; gap:14px; padding:14px 16px;
       background:var(--surface); border:1px solid var(--border); border-radius:10px;
-      cursor:pointer; margin-bottom:10px; transition:border-color .15s, box-shadow .15s;
-    }
+      cursor:pointer; margin-bottom:10px; transition:border-color .15s, box-shadow .15s; }
     .intg-card:hover { border-color:var(--brand); box-shadow:0 2px 8px rgba(124,58,237,.1); }
     .intg-connected { border-color:#86efac; background:#f0fdf4; }
-    .intg-logo {
-      font-size:28px; width:44px; height:44px; border-radius:10px;
+    .intg-logo { font-size:28px; width:44px; height:44px; border-radius:10px;
       background:var(--surface-alt); display:flex; align-items:center;
-      justify-content:center; flex-shrink:0;
-    }
-    .intg-logo-lg {
-      font-size:36px; width:56px; height:56px; border-radius:12px;
+      justify-content:center; flex-shrink:0; }
+    .intg-logo-lg { font-size:36px; width:56px; height:56px; border-radius:12px;
       background:var(--surface-alt); display:flex; align-items:center;
-      justify-content:center; flex-shrink:0;
-    }
+      justify-content:center; flex-shrink:0; }
   `]
 })
-export class IntegrationsHubComponent implements OnInit {
-  integrations: Integration[] = [
+export class IntegrationsHubComponent implements OnInit { integrations: Integration[] = [
     { id: 'linkedin',    name: 'LinkedIn Jobs',      logo: '🔷', description: 'Post jobs and source candidates from LinkedIn',          category: 'Job Boards',     connected: false },
     { id: 'naukri',     name: 'Naukri',             logo: '🟧', description: 'India\'s largest job portal for candidate sourcing',      category: 'Job Boards',     connected: false },
     { id: 'indeed',     name: 'Indeed',             logo: '🔵', description: 'Publish job listings and receive applications',           category: 'Job Boards',     connected: false },
@@ -191,62 +182,39 @@ export class IntegrationsHubComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/integrations`)
-      .subscribe({
-        next: configs => {
-          configs.forEach(cfg => {
-            const intg = this.integrations.find(i => i.id === cfg.id);
-            if (intg) { intg.connected = cfg.connected; intg.lastSync = cfg.lastSync; }
-          });
-        },
-        error: () => {}
-      });
-  }
+  ngOnInit() { this.http.get<any[]>(`${environment.apiUrl}/api/integrations`)
+      .subscribe({ next: configs => { configs.forEach(cfg => { const intg = this.integrations.find(i => i.id === cfg.id);
+            if (intg) { intg.connected = cfg.connected; intg.lastSync = cfg.lastSync; } }); },
+        error: () => {} }); }
 
-  get filtered(): Integration[] {
-    return this.activeCategory === 'All'
+  get filtered(): Integration[] { return this.activeCategory === 'All'
       ? this.integrations
-      : this.integrations.filter(i => i.category === this.activeCategory);
-  }
+      : this.integrations.filter(i => i.category === this.activeCategory); }
 
-  get connectedCount(): number {
-    return this.integrations.filter(i => i.connected).length;
-  }
+  get connectedCount(): number { return this.integrations.filter(i => i.connected).length; }
 
-  select(intg: Integration) {
-    this.selected = intg;
+  select(intg: Integration) { this.selected = intg;
     this.configDraft = { apiKey: intg.apiKey || '', webhookUrl: intg.webhookUrl || '' };
     this.saveOk = false;
-    this.showKey = false;
-  }
+    this.showKey = false; }
 
-  toggleConnect(intg: Integration, event: any) {
-    intg.connected = event.checked;
+  toggleConnect(intg: Integration, event: any) { intg.connected = event.checked;
     if (!intg.connected) { intg.lastSync = undefined; }
-    this.persistConfig(intg);
-  }
+    this.persistConfig(intg); }
 
-  saveConfig() {
-    if (!this.selected) return;
+  saveConfig() { if (!this.selected) return;
     this.saving = true;
     this.selected.apiKey = this.configDraft.apiKey;
     this.selected.webhookUrl = this.configDraft.webhookUrl;
     if (this.configDraft.apiKey) { this.selected.connected = true; this.selected.lastSync = new Date().toISOString(); }
-    this.persistConfig(this.selected, () => { this.saving = false; this.saveOk = true; });
-  }
+    this.persistConfig(this.selected, () => { this.saving = false; this.saveOk = true; }); }
 
-  disconnect() {
-    if (!this.selected) return;
+  disconnect() { if (!this.selected) return;
     this.selected.connected = false;
     this.selected.apiKey = '';
     this.selected.lastSync = undefined;
-    this.persistConfig(this.selected);
-  }
+    this.persistConfig(this.selected); }
 
-  private persistConfig(intg: Integration, cb?: () => void) {
-    this.http.post(`${environment.apiUrl}/api/integrations/${intg.id}`, {
-      connected: intg.connected, apiKey: intg.apiKey, webhookUrl: intg.webhookUrl
-    }).subscribe({ next: () => cb && cb(), error: () => { this.saving = false; cb && cb(); } });
-  }
+  private persistConfig(intg: Integration, cb?: () => void) { this.http.post(`${environment.apiUrl}/api/integrations/${intg.id}`, { connected: intg.connected, apiKey: intg.apiKey, webhookUrl: intg.webhookUrl }).subscribe({ next: () => cb && cb(), error: () => { this.saving = false; cb && cb(); } }); }
 }
+

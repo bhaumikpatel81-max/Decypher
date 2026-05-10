@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-internal-job-postings',
+@Component({ selector: 'app-internal-job-postings',
   template: `
     <section class="stack-page">
       <div class="card">
@@ -156,8 +155,7 @@ import { environment } from '../../environments/environment';
     </section>
   `
 })
-export class InternalJobPostingsComponent implements OnInit {
-  private readonly api = `${environment.apiUrl}/api/internal-job-postings`;
+export class InternalJobPostingsComponent implements OnInit { private readonly api = `${environment.apiUrl}/api/internal-job-postings`;
   postings: any[] = [];
   filterStatus = '';
   showForm = false;
@@ -168,42 +166,29 @@ export class InternalJobPostingsComponent implements OnInit {
 
   ngOnInit() { this.load(); }
 
-  load() {
-    const params = this.filterStatus ? `?status=${this.filterStatus}` : '';
-    this.http.get<any[]>(`${this.api}${params}`).subscribe(data => this.postings = data, () => this.postings = []);
-  }
+  load() { const params = this.filterStatus ? `?status=${this.filterStatus}` : '';
+    this.http.get<any[]>(`${this.api}${params}`).subscribe(data => this.postings = data, () => this.postings = []); }
 
-  openForm() {
-    this.draft = { employmentType: 'FullTime', postingType: 'Internal', status: 'Draft', currency: 'INR', showSalary: false };
+  openForm() { this.draft = { employmentType: 'FullTime', postingType: 'Internal', status: 'Draft', currency: 'INR', showSalary: false };
     this.showForm = true;
-    this.saveError = '';
-  }
+    this.saveError = ''; }
 
-  editPosting(p: any) {
-    this.draft = { ...p };
+  editPosting(p: any) { this.draft = { ...p };
     this.showForm = true;
-    this.saveError = '';
-  }
+    this.saveError = ''; }
 
   closeForm() { this.showForm = false; }
 
-  save() {
-    const req = this.draft.id
+  save() { const req = this.draft.id
       ? this.http.put(`${this.api}/${this.draft.id}`, this.draft)
       : this.http.post(this.api, this.draft);
-    req.subscribe(() => { this.closeForm(); this.load(); }, err => this.saveError = err.error?.message || 'Save failed.');
-  }
+    req.subscribe(() => { this.closeForm(); this.load(); }, err => this.saveError = err.error?.message || 'Save failed.'); }
 
-  deletePosting(id: string) {
-    if (!confirm('Delete this posting?')) return;
-    this.http.delete(`${this.api}/${id}`).subscribe(() => this.load());
-  }
+  deletePosting(id: string) { if (!confirm('Delete this posting?')) return;
+    this.http.delete(`${this.api}/${id}`).subscribe(() => this.load()); }
 
-  statusColor(s: string) {
-    return s === 'Active' ? '#16a34a' : s === 'Paused' ? '#d97706' : '#64748b';
-  }
+  statusColor(s: string) { return s === 'Active' ? '#16a34a' : s === 'Paused' ? '#d97706' : '#64748b'; }
 
-  postingTypeColor(t: string) {
-    return t === 'Internal' ? '#2563eb' : t === 'Referral' ? '#7c3aed' : '#0891b2';
-  }
+  postingTypeColor(t: string) { return t === 'Internal' ? '#2563eb' : t === 'Referral' ? '#7c3aed' : '#0891b2'; }
 }
+

@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-pipeline-board',
+@Component({ selector: 'app-pipeline-board',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -200,8 +199,7 @@ import { environment } from '../../environments/environment';
     .kanban-empty { color:var(--text-3); font-size:12px; text-align:center; padding:16px 0; }
   `]
 })
-export class PipelineBoardComponent implements OnInit {
-  activeTab = 0;
+export class PipelineBoardComponent implements OnInit { activeTab = 0;
   jobId = '';
   board: any[] = [];
   loading = false;
@@ -211,20 +209,14 @@ export class PipelineBoardComponent implements OnInit {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/pipeline-board/stages`)
-      .subscribe({ next: () => {}, error: () => {} });
-  }
+  ngOnInit() { this.http.get<any[]>(`${environment.apiUrl}/api/pipeline-board/stages`)
+      .subscribe({ next: () => {}, error: () => {} }); }
 
-  loadBoard() {
-    if (!this.jobId.trim()) return;
+  loadBoard() { if (!this.jobId.trim()) return;
     this.loading = true;
     this.http.get<any[]>(`${environment.apiUrl}/api/pipeline-board/${this.jobId}`)
-      .subscribe({
-        next: data => { this.board = data; this.loading = false; this.loaded = true; },
-        error: () => { this.loading = false; this.loaded = true; }
-      });
-  }
+      .subscribe({ next: data => { this.board = data; this.loading = false; this.loaded = true; },
+        error: () => { this.loading = false; this.loaded = true; } }); }
 
   openCandidate(id: string) { this.router.navigate(['/candidate-portal'], { queryParams: { candidateId: id } }); }
 
@@ -232,25 +224,18 @@ export class PipelineBoardComponent implements OnInit {
   get avgPerStage()  { return this.board.length ? Math.round(this.totalCandidates / this.board.length) : 0; }
   get topStage()     { return [...this.board].sort((a, b) => b.candidates.length - a.candidates.length)[0]?.stage?.name || '—'; }
 
-  get stageStats(): {name: string, colour: string, count: number, pct: number}[] {
-    const total = this.totalCandidates || 1;
-    return this.board.map((col, i) => ({
-      name:   col.stage.name,
+  get stageStats(): {name: string, colour: string, count: number, pct: number}[] { const total = this.totalCandidates || 1;
+    return this.board.map((col, i) => ({ name:   col.stage.name,
       colour: col.stage.colour || this.stageColors[i % this.stageColors.length],
       count:  col.candidates.length,
-      pct:    Math.round(col.candidates.length / total * 100)
-    }));
-  }
+      pct:    Math.round(col.candidates.length / total * 100) })); }
 
-  get donutSegments(): {colour: string, dash: number, offset: number}[] {
-    const total = this.totalCandidates || 1;
+  get donutSegments(): {colour: string, dash: number, offset: number}[] { const total = this.totalCandidates || 1;
     const circ = 283;
     let offset = 0;
-    return this.stageStats.map(s => {
-      const dash = (s.count / total) * circ;
+    return this.stageStats.map(s => { const dash = (s.count / total) * circ;
       const seg = { colour: s.colour, dash, offset };
       offset += dash;
-      return seg;
-    });
-  }
+      return seg; }); }
 }
+

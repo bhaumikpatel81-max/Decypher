@@ -1,8 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { AgenticAIService } from '../services/agentic-ai.service';
 
-@Component({
-  selector: 'app-ai-features',
+@Component({ selector: 'app-ai-features',
   template: `
     <div class="ai-hub-container page-enter">
       <div class="ai-hub-header">
@@ -377,170 +376,124 @@ import { AgenticAIService } from '../services/agentic-ai.service';
     </div>
   `,
   styles: [`
-    .ai-hub-header {
-      display: flex;
+    .ai-hub-header { display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 32px;
-    }
+      margin-bottom: 32px; }
 
-    .ai-features-grid {
-      display: grid;
+    .ai-features-grid { display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
-      margin-bottom: 32px;
-    }
+      margin-bottom: 32px; }
 
-    .ai-feature-card {
-      background: var(--surface);
+    .ai-feature-card { background: var(--surface);
       border: 2px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 24px;
       cursor: pointer;
-      transition: all var(--transition-base);
-    }
+      transition: all var(--transition-base); }
 
-    .ai-feature-card:hover {
-      border-color: var(--brand-violet-500);
+    .ai-feature-card:hover { border-color: var(--brand-violet-500);
       box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
+      transform: translateY(-2px); }
 
-    .feature-icon {
-      width: 64px;
+    .feature-icon { width: 64px;
       height: 64px;
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 20px;
-      color: white;
-    }
+      color: white; }
 
     .gradient-violet { background: var(--brand-gradient); }
     .gradient-cyan { background: linear-gradient(135deg, #3bbdea 0%, #22a3d2 100%); }
     .gradient-magenta { background: linear-gradient(135deg, #c56bff 0%, #a94ee6 100%); }
     .gradient-amber { background: linear-gradient(135deg, #e8912a 0%, #c37416 100%); }
 
-    .feature-title {
-      font-size: 18px;
+    .feature-title { font-size: 18px;
       font-weight: 600;
       color: var(--text);
-      margin-bottom: 8px;
-    }
+      margin-bottom: 8px; }
 
-    .feature-description {
-      font-size: 14px;
+    .feature-description { font-size: 14px;
       color: var(--text-2);
       margin-bottom: 20px;
-      line-height: 1.6;
-    }
+      line-height: 1.6; }
 
-    .feature-stats {
-      display: flex;
+    .feature-stats { display: flex;
       gap: 24px;
       margin-bottom: 20px;
       padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
+      border-bottom: 1px solid var(--border); }
 
-    .stat-value {
-      font-family: 'Space Grotesk', sans-serif;
+    .stat-value { font-family: 'Space Grotesk', sans-serif;
       font-size: 24px;
       font-weight: 700;
       color: var(--brand-violet-500);
-      display: block;
-    }
+      display: block; }
 
-    .stat-label {
-      font-size: 12px;
+    .stat-label { font-size: 12px;
       color: var(--text-3);
       display: block;
-      margin-top: 4px;
-    }
+      margin-top: 4px; }
 
-    .match-card {
-      background: var(--surface-alt);
+    .match-card { background: var(--surface-alt);
       border-radius: var(--radius-md);
       padding: 20px;
-      margin-bottom: 16px;
-    }
+      margin-bottom: 16px; }
 
-    .match-score {
-      font-family: 'Space Grotesk', sans-serif;
+    .match-score { font-family: 'Space Grotesk', sans-serif;
       font-size: 32px;
       font-weight: 700;
-      color: var(--text-3);
-    }
+      color: var(--text-3); }
 
-    .match-score.high {
-      color: var(--success-500);
-    }
+    .match-score.high { color: var(--success-500); }
 
-    .overall-score-card {
-      display: flex;
+    .overall-score-card { display: flex;
       align-items: center;
       gap: 32px;
       padding: 32px;
       background: var(--brand-gradient-soft);
       border-radius: var(--radius-lg);
-      margin-bottom: 32px;
-    }
+      margin-bottom: 32px; }
 
-    .score-big {
-      font-family: 'Space Grotesk', sans-serif;
+    .score-big { font-family: 'Space Grotesk', sans-serif;
       font-size: 32px;
       font-weight: 700;
-      fill: var(--brand-violet-500);
-    }
+      fill: var(--brand-violet-500); }
 
-    .recommendation {
-      font-size: 24px;
+    .recommendation { font-size: 24px;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 4px;
-    }
+      margin-bottom: 4px; }
 
-    .chatbot-container {
-      display: grid;
+    .chatbot-container { display: grid;
       grid-template-columns: 280px 1fr 280px;
       gap: 20px;
-      height: 600px;
-    }
+      height: 600px; }
 
-    .chat-messages {
-      flex: 1;
+    .chat-messages { flex: 1;
       overflow-y: auto;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
+      gap: 12px; }
 
-    .chat-message {
-      display: flex;
-    }
+    .chat-message { display: flex; }
 
-    .chat-message.user {
-      justify-content: flex-end;
-    }
+    .chat-message.user { justify-content: flex-end; }
 
-    .message-bubble {
-      max-width: 70%;
+    .message-bubble { max-width: 70%;
       padding: 12px 16px;
       border-radius: var(--radius-md);
       background: var(--surface-alt);
-      color: var(--text);
-    }
+      color: var(--text); }
 
-    .chat-message.user .message-bubble {
-      background: var(--brand-violet-500);
-      color: white;
-    }
-  `]
-})
-export class AIFeaturesComponent implements OnInit {
-  activeFeature: string | null = null;
+    .chat-message.user .message-bubble { background: var(--brand-violet-500);
+      color: white; }
+  `] })
+export class AIFeaturesComponent implements OnInit { activeFeature: string | null = null;
   jobDescription = '';
   matching = false;
   matchResults: any[] = [];
@@ -550,12 +503,10 @@ export class AIFeaturesComponent implements OnInit {
   analyzing = false;
   analysisResult: any = null;
 
-  questionGenRequest = {
-    candidateName: '',
+  questionGenRequest = { candidateName: '',
     jobTitle: '',
     experience: 0,
-    skills: ''
-  };
+    skills: '' };
   generatingQuestions = false;
   generatedQuestions: any = null;
   questionCategories: any[] = [];
@@ -567,96 +518,54 @@ export class AIFeaturesComponent implements OnInit {
 
   constructor(private aiService: AgenticAIService) {}
 
-  ngOnInit() {
-    this.loadConversations();
-  }
+  ngOnInit() { this.loadConversations(); }
 
-  async findMatches() {
-    this.matching = true;
-    try {
-      const result = await this.aiService.autoMatch(this.jobDescription);
-      this.matchResults = result.topMatches;
-    } catch (error) {
-      console.error('Match error:', error);
-    } finally {
-      this.matching = false;
-    }
-  }
+  async findMatches() { this.matching = true;
+    try { const result = await this.aiService.autoMatch(this.jobDescription);
+      this.matchResults = result.topMatches; } catch (error) { console.error('Match error:', error); } finally { this.matching = false; } }
 
-  async analyzeMatch() {
-    this.analyzing = true;
-    try {
-      this.analysisResult = await this.aiService.analyzeMatch(this.analysisJD, this.analysisResume);
-    } catch (error) {
-      console.error('Analysis error:', error);
-    } finally {
-      this.analyzing = false;
-    }
-  }
+  async analyzeMatch() { this.analyzing = true;
+    try { this.analysisResult = await this.aiService.analyzeMatch(this.analysisJD, this.analysisResume); } catch (error) { console.error('Analysis error:', error); } finally { this.analyzing = false; } }
 
-  async generateQuestions() {
-    this.generatingQuestions = true;
-    try {
-      const request = {
-        ...this.questionGenRequest,
-        skills: this.questionGenRequest.skills.split(',').map(s => s.trim())
-      };
+  async generateQuestions() { this.generatingQuestions = true;
+    try { const request = { ...this.questionGenRequest,
+        skills: this.questionGenRequest.skills.split(',').map(s => s.trim()) };
       this.generatedQuestions = await this.aiService.generateQuestions(request);
       this.questionCategories = [
         { title: 'Technical Questions', questions: this.generatedQuestions.technicalQuestions },
         { title: 'Behavioral Questions', questions: this.generatedQuestions.behavioralQuestions },
         { title: 'Situational Questions', questions: this.generatedQuestions.situationalQuestions },
         { title: 'Custom Questions', questions: this.generatedQuestions.customQuestions }
-      ];
-    } catch (error) {
-      console.error('Generation error:', error);
-    } finally {
-      this.generatingQuestions = false;
-    }
-  }
+      ]; } catch (error) { console.error('Generation error:', error); } finally { this.generatingQuestions = false; } }
 
-  loadConversations() {
-    this.conversations = [
-      { id: '1', candidateName: 'Alex Kumar',  lastMessage: 'Thank you for the opportunity!',       status: 'completed'   },
+  loadConversations() { this.conversations = [
+      { id: '1', candidateName: 'Alex Kumar',  lastMessage: 'Thank you for the opportunity!',       status: 'completed' },
       { id: '2', candidateName: 'Priya Singh', lastMessage: 'When can I expect the next step?',     status: 'in-progress' },
       { id: '3', candidateName: 'Raj Mehta',   lastMessage: 'I am available from next Monday.',     status: 'in-progress' },
     ];
     this.screeningChecklist = [
-      { label: 'Introduction sent',        completed: true  },
-      { label: 'Basic screening done',     completed: true  },
+      { label: 'Introduction sent',        completed: true },
+      { label: 'Basic screening done',     completed: true },
       { label: 'Technical questions asked',completed: false },
       { label: 'Availability confirmed',   completed: false },
       { label: 'Summary generated',        completed: false },
     ];
-    if (this.conversations.length) this.selectConversation(this.conversations[0]);
-  }
+    if (this.conversations.length) this.selectConversation(this.conversations[0]); }
 
-  selectConversation(conv: any) {
-    this.currentMessages = [
+  selectConversation(conv: any) { this.currentMessages = [
       { role: 'assistant', content: `Hi ${conv.candidateName}, I'm Decypher's AI screening assistant. Let's get started with a few quick questions!` },
       { role: 'user',      content: conv.lastMessage },
-    ];
-  }
+    ]; }
 
-  async sendMessage() {
-    const msg = this.chatMessage.trim();
+  async sendMessage() { const msg = this.chatMessage.trim();
     if (!msg) return;
     this.currentMessages.push({ role: 'user', content: msg });
     this.chatMessage = '';
-    try {
-      const reply = await this.aiService.chat(msg, 'candidate-screening');
-      this.currentMessages.push({ role: 'assistant', content: reply });
-    } catch {
-      this.currentMessages.push({ role: 'assistant', content: 'Sorry, I could not connect to the AI right now. Please try again.' });
-    }
-  }
+    try { const reply = await this.aiService.chat(msg, 'candidate-screening');
+      this.currentMessages.push({ role: 'assistant', content: reply }); } catch { this.currentMessages.push({ role: 'assistant', content: 'Sorry, I could not connect to the AI right now. Please try again.' }); } }
 
-  getDifficultyChip(difficulty: string): string {
-    const chips: any = {
-      'Easy': 'chip-success',
+  getDifficultyChip(difficulty: string): string { const chips: any = { 'Easy': 'chip-success',
       'Medium': 'chip-warning',
-      'Hard': 'chip-danger'
-    };
-    return chips[difficulty] || 'chip-neutral';
-  }
-}
+      'Hard': 'chip-danger' };
+    return chips[difficulty] || 'chip-neutral'; } }
+

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -22,8 +22,7 @@ const FEATURES = [
   { key: 'InternalJobPostings',   label: 'Internal Job Postings' },
 ];
 
-const FEATURE_NOTES: Record<string, string> = {
-  Requisitions: 'Dates must be dd-mm-yyyy. Priority: Low/Medium/High/Critical. Headcount is an integer. Requisition IDs must be unique.',
+const FEATURE_NOTES: Record<string, string> = { Requisitions: 'Dates must be dd-mm-yyyy. Priority: Low/Medium/High/Critical. Headcount is an integer. Requisition IDs must be unique.',
   Candidates: 'Skills are semicolon-separated. Stage must match: Submitted/Screening/L1/L2/L3/HR/Selected/Rejected/Joined/Dropped. Vendor Name will be resolved to Vendor ID.',
   Vendors: 'Category: General/Recruiter/Staffing/Executive. Status: Active/Inactive/Blacklisted/Suspended. Existing vendors are updated by name.',
   BudgetFiscalYears: 'FiscalYearLabel is used as the key in all other budget sheets — it must be unique and match exactly.',
@@ -37,8 +36,7 @@ const FEATURE_NOTES: Record<string, string> = {
   InternalJobPostings: 'ShowSalary No = salary bands hidden from employees. RequisitionID links posting to an approved requisition.',
 };
 
-@Component({
-  selector: 'app-import-center',
+@Component({ selector: 'app-import-center',
   template: `
 <div class="import-shell">
 
@@ -305,14 +303,12 @@ const FEATURE_NOTES: Record<string, string> = {
 
 <!-- ─── Styles ──────────────────────────────────────────────────────────────── -->
 <style>
-.import-shell {
-  padding: 24px 28px;
+.import-shell { padding: 24px 28px;
   max-width: 1100px;
   margin: 0 auto;
   font-family: inherit;
 }
-.page-header {
-  display: flex;
+.page-header { display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
@@ -332,8 +328,7 @@ const FEATURE_NOTES: Record<string, string> = {
 .step { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: #9ca3af; }
 .step.active { color: #6b4df0; }
 .step.done { color: #059669; }
-.step-num {
-  width: 28px; height: 28px; border-radius: 50%;
+.step-num { width: 28px; height: 28px; border-radius: 50%;
   background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700;
 }
@@ -353,8 +348,7 @@ const FEATURE_NOTES: Record<string, string> = {
 .select-sm { padding: 6px 10px; border: 1.5px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
 
 /* File drop zone */
-.file-drop-zone {
-  border: 2px dashed #d1d5db; border-radius: 10px; padding: 32px 20px;
+.file-drop-zone { border: 2px dashed #d1d5db; border-radius: 10px; padding: 32px 20px;
   text-align: center; cursor: pointer; transition: all .2s; background: #fafafa;
 }
 .file-drop-zone:hover, .file-drop-zone.has-file { border-color: #6b4df0; background: #f5f3ff; }
@@ -444,8 +438,7 @@ const FEATURE_NOTES: Record<string, string> = {
 </style>
 `,
 })
-export class ImportCenterComponent implements OnInit {
-  readonly features = FEATURES;
+export class ImportCenterComponent implements OnInit { readonly features = FEATURES;
   readonly featureNotes = FEATURE_NOTES;
 
   activeTab: 'import' | 'history' = 'import';
@@ -482,36 +475,25 @@ export class ImportCenterComponent implements OnInit {
 
   ngOnInit() {}
 
-  onFeatureChange() {
-    this.featureNote = this.featureNotes[this.selectedFeature] ?? '';
-    this.selectedFile = null;
-  }
+  onFeatureChange() { this.featureNote = this.featureNotes[this.selectedFeature] ?? '';
+    this.selectedFile = null; }
 
-  onFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.[0]) this.selectedFile = input.files[0];
-  }
+  onFileSelect(event: Event) { const input = event.target as HTMLInputElement;
+    if (input.files?.[0]) this.selectedFile = input.files[0]; }
 
-  onFileDrop(event: DragEvent) {
-    event.preventDefault();
+  onFileDrop(event: DragEvent) { event.preventDefault();
     const file = event.dataTransfer?.files?.[0];
-    if (file) this.selectedFile = file;
-  }
+    if (file) this.selectedFile = file; }
 
-  downloadTemplate() {
-    if (!this.selectedFeature) return;
+  downloadTemplate() { if (!this.selectedFeature) return;
     const url = `${this.api}/api/import/template/${this.selectedFeature}`;
-    this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
-      const a = document.createElement('a');
+    this.http.get(url, { responseType: 'blob' }).subscribe(blob => { const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `${this.selectedFeature.toLowerCase()}_template.csv`;
       a.click();
-      URL.revokeObjectURL(a.href);
-    });
-  }
+      URL.revokeObjectURL(a.href); }); }
 
-  validate() {
-    if (!this.selectedFile || !this.selectedFeature) return;
+  validate() { if (!this.selectedFile || !this.selectedFeature) return;
     this.validating = true;
 
     const fd = new FormData();
@@ -520,9 +502,7 @@ export class ImportCenterComponent implements OnInit {
     fd.append('hasHeader', String(this.hasHeader));
     fd.append('delimiter', this.delimiter);
 
-    this.http.post<any>(`${this.api}/api/import/validate`, fd).subscribe({
-      next: res => {
-        this.validating = false;
+    this.http.post<any>(`${this.api}/api/import/validate`, fd).subscribe({ next: res => { this.validating = false;
         this.detectedColumns = res.columns ?? [];
         this.previewRows = (res.preview ?? []).map((r: any[]) => r.map(String));
         this.fileToken = res.fileToken ?? '';
@@ -530,82 +510,49 @@ export class ImportCenterComponent implements OnInit {
         // Build initial mappings — auto-map where column name matches system field
         const sysFields = this.getSystemFields(this.selectedFeature);
         this.systemFields = sysFields;
-        this.mappings = this.detectedColumns.map(col => {
-          const matched = sysFields.find(f => f.toLowerCase() === col.toLowerCase().replace(/[^a-z0-9]/gi, '')) ?? '';
-          return { csvColumn: col, systemField: matched, skip: false };
-        });
+        this.mappings = this.detectedColumns.map(col => { const matched = sysFields.find(f => f.toLowerCase() === col.toLowerCase().replace(/[^a-z0-9]/gi, '')) ?? '';
+          return { csvColumn: col, systemField: matched, skip: false }; });
 
-        this.step = 2;
-      },
-      error: err => {
-        this.validating = false;
-        this.importErrMsg = err?.error?.error ?? 'Could not parse file. Please check format and try again.';
-      }
-    });
-  }
+        this.step = 2; },
+      error: err => { this.validating = false;
+        this.importErrMsg = err?.error?.error ?? 'Could not parse file. Please check format and try again.'; } }); }
 
-  autoMap() {
-    const sysFields = this.systemFields;
-    this.mappings = this.mappings.map(m => {
-      const clean = m.csvColumn.toLowerCase().replace(/[^a-z0-9]/gi, '');
+  autoMap() { const sysFields = this.systemFields;
+    this.mappings = this.mappings.map(m => { const clean = m.csvColumn.toLowerCase().replace(/[^a-z0-9]/gi, '');
       const match = sysFields.find(f => f.toLowerCase() === clean || f.toLowerCase().replace(/[^a-z0-9]/gi, '') === clean);
-      return { ...m, systemField: match ?? m.systemField };
-    });
-  }
+      return { ...m, systemField: match ?? m.systemField }; }); }
 
-  executeImport() {
-    this.importing = true;
-    const payload = {
-      feature: this.selectedFeature,
+  executeImport() { this.importing = true;
+    const payload = { feature: this.selectedFeature,
       mappings: this.mappings,
       fileToken: this.fileToken,
-      scheduleAt: this.scheduleMode === 'immediate' ? null : null
-    };
+      scheduleAt: this.scheduleMode === 'immediate' ? null : null };
 
-    this.http.post<any>(`${this.api}/api/import/execute`, payload).subscribe({
-      next: res => {
-        this.importing = false;
+    this.http.post<any>(`${this.api}/api/import/execute`, payload).subscribe({ next: res => { this.importing = false;
         this.importResult = res;
-        this.step = 3;
-      },
-      error: err => {
-        this.importing = false;
-        this.importErrMsg = err?.error?.error ?? 'Import failed. Please try again.';
-      }
-    });
-  }
+        this.step = 3; },
+      error: err => { this.importing = false;
+        this.importErrMsg = err?.error?.error ?? 'Import failed. Please try again.'; } }); }
 
-  loadHistory() {
-    this.historyLoading = true;
-    this.http.get<ImportHistory[]>(`${this.api}/api/import/history`).subscribe({
-      next: h => { this.history = h; this.historyLoading = false; },
-      error: () => { this.historyLoading = false; }
-    });
-  }
+  loadHistory() { this.historyLoading = true;
+    this.http.get<ImportHistory[]>(`${this.api}/api/import/history`).subscribe({ next: h => { this.history = h; this.historyLoading = false; },
+      error: () => { this.historyLoading = false; } }); }
 
-  downloadErrorReport(id: string) {
-    this.http.get(`${this.api}/api/import/history/${id}/error-report`, { responseType: 'blob' }).subscribe(blob => {
-      const a = document.createElement('a');
+  downloadErrorReport(id: string) { this.http.get(`${this.api}/api/import/history/${id}/error-report`, { responseType: 'blob' }).subscribe(blob => { const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `error_report_${id}.csv`;
       a.click();
-      URL.revokeObjectURL(a.href);
-    });
-  }
+      URL.revokeObjectURL(a.href); }); }
 
-  resetWizard() {
-    this.step = 1;
+  resetWizard() { this.step = 1;
     this.selectedFeature = '';
     this.selectedFile = null;
     this.mappings = [];
     this.fileToken = '';
     this.importResult = null;
-    this.featureNote = '';
-  }
+    this.featureNote = ''; }
 
-  private getSystemFields(feature: string): string[] {
-    const map: Record<string, string[]> = {
-      Requisitions: ['RequisitionId','Title','Department','Location','Headcount','BudgetMin','BudgetMax','Currency','Priority','Category','EmploymentType','ExperienceFrom','ExperienceTo','SalaryTimeframe','RecruitmentStartDate','ExpectedClosureDate','ReportingManagerId','HRBPId','EmployeeType','BillableNonBillable','OPEXCAPEX','BudgetedSalaryFixed','BudgetedSalaryVariable','BudgetedSalaryTotal','ProjectName','ProjectLocation','Comments','AutoApprove','IsReplacement','ReplacementEmployeeId','AssetRequirements','PayrollSpecification','RFPRequirement'],
+  private getSystemFields(feature: string): string[] { const map: Record<string, string[]> = { Requisitions: ['RequisitionId','Title','Department','Location','Headcount','BudgetMin','BudgetMax','Currency','Priority','Category','EmploymentType','ExperienceFrom','ExperienceTo','SalaryTimeframe','RecruitmentStartDate','ExpectedClosureDate','ReportingManagerId','HRBPId','EmployeeType','BillableNonBillable','OPEXCAPEX','BudgetedSalaryFixed','BudgetedSalaryVariable','BudgetedSalaryTotal','ProjectName','ProjectLocation','Comments','AutoApprove','IsReplacement','ReplacementEmployeeId','AssetRequirements','PayrollSpecification','RFPRequirement'],
       Candidates: ['CandidateName','Email','Phone','VendorName','RequisitionId','CurrentCompany','CurrentRole','TotalExperience','CurrentCTC','ExpectedCTC','Currency','NoticePeriod','Location','Skills','SubmissionDate','Stage','CVJDMatchScore','DropoutRiskScore','CompetencyScore','RejectionReason','DropoutReason','InterviewNotes'],
       Vendors: ['VendorName','ContactPerson','Email','Phone','Address','City','State','Category','Status','QualityScore','SLAScore','JoiningRatePercent','AvgTimeToSubmit','Notes'],
       BudgetFiscalYears: ['FiscalYearLabel','StartDate','EndDate','TotalBudgetAmount','Currency','Status','Notes'],
@@ -616,8 +563,7 @@ export class ImportCenterComponent implements OnInit {
       TalentPool: ['CandidateEmail','Tags','NurtureStatus','Notes','LastContactedDate'],
       CandidateSources: ['CandidateEmail','Source','CampaignCode','RecordedDate'],
       InterviewSchedule: ['CandidateEmail','RequisitionId','ScheduledDate','ScheduledTime','InterviewType','MeetingLink','RecruiterEmployeeIds','Notes','Status'],
-      InternalJobPostings: ['Title','Department','Location','EmploymentType','PostingType','Description','Requirements','SalaryBandMin','SalaryBandMax','Currency','ShowSalary','PostedDate','ClosingDate','Status','RequisitionId','Notes'],
-    };
-    return map[feature] ?? [];
-  }
+      InternalJobPostings: ['Title','Department','Location','EmploymentType','PostingType','Description','Requirements','SalaryBandMin','SalaryBandMax','Currency','ShowSalary','PostedDate','ClosingDate','Status','RequisitionId','Notes'], };
+    return map[feature] ?? []; }
 }
+

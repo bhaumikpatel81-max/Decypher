@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface PayrollRecord {
-  id: number; name: string; empId: string; dept: string;
+interface PayrollRecord { id: number; name: string; empId: string; dept: string;
   ctc: number; basic: number; hra: number; da: number; special: number;
   pf: number; pt: number; tds: number; netPay: number;
 }
 
-@Component({
-  selector: 'app-payroll',
+@Component({ selector: 'app-payroll',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -288,8 +286,7 @@ interface PayrollRecord {
     .spill.pending { background:#fef3c7;color:#92400e; }
   `]
 })
-export class PayrollComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class PayrollComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   tab = 'dashboard';
   selectedMonth = new Date().getMonth() + 1;
   selectedYear = String(new Date().getFullYear());
@@ -319,146 +316,95 @@ export class PayrollComponent implements OnInit {
   get avgNetPay() { return this.payrollData.length ? this.totalPayroll / this.payrollData.length : 0; }
   sum(field: keyof PayrollRecord): number { return this.payrollData.reduce((s, p) => s + (p[field] as number), 0); }
 
-  get deptBreakdown(): { dept: string; total: number; count: number }[] {
-    const map: { [k: string]: { total: number; count: number } } = {};
-    this.payrollData.forEach(p => {
-      if (!map[p.dept]) map[p.dept] = { total: 0, count: 0 };
+  get deptBreakdown(): { dept: string; total: number; count: number }[] { const map: { [k: string]: { total: number; count: number } } = {};
+    this.payrollData.forEach(p => { if (!map[p.dept]) map[p.dept] = { total: 0, count: 0 };
       map[p.dept].total += p.netPay;
-      map[p.dept].count++;
-    });
+      map[p.dept].count++; });
     return Object.entries(map).sort((a, b) => b[1].total - a[1].total)
-      .map(([dept, v]) => ({ dept, ...v }));
-  }
+      .map(([dept, v]) => ({ dept, ...v })); }
 
   get maxDept(): number { return Math.max(...this.deptBreakdown.map(d => d.total), 1); }
 
-  get componentSplit(): { label: string; pct: number; color: string }[] {
-    const gross = this.totalCTC || 1;
+  get componentSplit(): { label: string; pct: number; color: string }[] { const gross = this.totalCTC || 1;
     return [
       { label: 'Basic', pct: Math.round((this.sum('basic') / gross) * 100), color: '#6b4df0' },
       { label: 'HRA',   pct: Math.round((this.sum('hra')   / gross) * 100), color: '#10b981' },
       { label: 'DA',    pct: Math.round((this.sum('da')    / gross) * 100), color: '#3b82f6' },
       { label: 'Special/Other', pct: Math.round((this.sum('special') / gross) * 100), color: '#f59e0b' },
-    ].filter(c => c.pct > 0);
-  }
+    ].filter(c => c.pct > 0); }
 
-  get componentDonut(): string {
-    if (!this.payrollData.length) return 'conic-gradient(var(--border) 0deg 360deg)';
+  get componentDonut(): string { if (!this.payrollData.length) return 'conic-gradient(var(--border) 0deg 360deg)';
     let pct = 0;
-    const segs = this.componentSplit.map(c => {
-      const deg = (c.pct / 100) * 360;
+    const segs = this.componentSplit.map(c => { const deg = (c.pct / 100) * 360;
       const r = `${c.color} ${pct}deg ${pct + deg}deg`;
       pct += deg;
-      return r;
-    });
-    return `conic-gradient(${segs.join(', ')})`;
-  }
+      return r; });
+    return `conic-gradient(${segs.join(', ')})`; }
 
-  get monthlyTrend(): { label: string; value: number }[] {
-    return [...this.history].reverse().slice(0, 6).map(h => ({
-      label: `${h.month}/${String(h.year).slice(2)}`,
-      value: h.total || 0
-    }));
-  }
+  get monthlyTrend(): { label: string; value: number }[] { return [...this.history].reverse().slice(0, 6).map(h => ({ label: `${h.month}/${String(h.year).slice(2)}`,
+      value: h.total || 0 })); }
 
   get maxTrend(): number { return Math.max(...this.monthlyTrend.map(t => t.value), 1); }
 
   toVal = (t: { value: number }) => t.value;
 
-  svgLine(values: number[], w: number, h: number): string {
-    if (values.length < 2) return '';
+  svgLine(values: number[], w: number, h: number): string { if (values.length < 2) return '';
     const max = Math.max(...values, 1);
-    return values.map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
+    return values.map((v, i) => { const x = (i / (values.length - 1)) * w;
       const y = h - (v / max) * (h - 10);
-      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-    }).join(' ');
-  }
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`; }).join(' '); }
 
-  svgArea(values: number[], w: number, h: number): string {
-    if (values.length < 2) return '';
-    return this.svgLine(values, w, h) + ` L ${w} ${h} L 0 ${h} Z`;
-  }
+  svgArea(values: number[], w: number, h: number): string { if (values.length < 2) return '';
+    return this.svgLine(values, w, h) + ` L ${w} ${h} L 0 ${h} Z`; }
 
-  get trendDots(): { x: number; y: number }[] {
-    const values = this.monthlyTrend.map(t => t.value);
+  get trendDots(): { x: number; y: number }[] { const values = this.monthlyTrend.map(t => t.value);
     if (values.length < 2) return [];
     const max = Math.max(...values, 1);
     const h = 140;
-    return values.map((v, i) => ({
-      x: (i / (values.length - 1)) * 500,
-      y: h - (v / max) * (h - 10)
-    }));
-  }
+    return values.map((v, i) => ({ x: (i / (values.length - 1)) * 500,
+      y: h - (v / max) * (h - 10) })); }
 
-  get netPayBands(): { label: string; count: number; color: string }[] {
-    const bands = [
+  get netPayBands(): { label: string; count: number; color: string }[] { const bands = [
       { label: '<₹20K',        min: 0,     max: 20000,  color: '#ef4444' },
       { label: '₹20K–40K',     min: 20000, max: 40000,  color: '#f59e0b' },
       { label: '₹40K–70K',     min: 40000, max: 70000,  color: '#6b4df0' },
       { label: '₹70K–1L',      min: 70000, max: 100000, color: '#3b82f6' },
       { label: '>₹1L',         min: 100000, max: Infinity, color: '#10b981' },
     ];
-    return bands.map(b => ({ ...b, count: this.payrollData.filter(p => p.netPay >= b.min && p.netPay < b.max).length }));
-  }
+    return bands.map(b => ({ ...b, count: this.payrollData.filter(p => p.netPay >= b.min && p.netPay < b.max).length })); }
 
   ngOnInit() { this.loadHistory(); }
 
-  loadHistory() {
-    this.http.get<any[]>(`${this.api}/runs`).subscribe({
-      next: data => {
-        this.history = [...(data || []).map(r => ({
-          id: r.id, month: r.month, year: r.year,
-          count: r.totalEmployees || 0, total: r.totalNetPay || 0, status: r.status
-        }))];
-      },
-      error: () => this.snack.open('Failed to load payroll history', 'Close', { duration: 3000 })
-    });
-  }
+  loadHistory() { this.http.get<any[]>(`${this.api}/runs`).subscribe({ next: data => { this.history = [...(data || []).map(r => ({ id: r.id, month: r.month, year: r.year,
+          count: r.totalEmployees || 0, total: r.totalNetPay || 0, status: r.status }))]; },
+      error: () => this.snack.open('Failed to load payroll history', 'Close', { duration: 3000 }) }); }
 
-  runPayroll() {
-    this.running = true;
+  runPayroll() { this.running = true;
     this.runProgress = 0;
     const iv = setInterval(() => { this.runProgress += 15; if (this.runProgress >= 75) clearInterval(iv); }, 200);
 
-    this.http.post<any>(`${this.api}/runs/process`, { month: this.selectedMonth, year: parseInt(this.selectedYear) }).subscribe({
-      next: run => {
-        clearInterval(iv);
+    this.http.post<any>(`${this.api}/runs/process`, { month: this.selectedMonth, year: parseInt(this.selectedYear) }).subscribe({ next: run => { clearInterval(iv);
         this.runProgress = 100;
         this.running = false;
         this.payrollRan = true;
         this.currentRunId = run.id;
-        this.payrollData = [...(run.payslips || []).map((p: any) => ({
-          id: p.id, name: p.employeeName || '', empId: p.employeeCode || '', dept: p.department || '',
+        this.payrollData = [...(run.payslips || []).map((p: any) => ({ id: p.id, name: p.employeeName || '', empId: p.employeeCode || '', dept: p.department || '',
           ctc: p.annualCTC || 0, basic: p.basicSalary || 0, hra: p.hra || 0,
           da: p.da || 0, special: p.specialAllowance || 0,
           pf: p.pfDeduction || 0, pt: p.professionalTax || 0,
-          tds: p.tdsDeduction || 0, netPay: p.netPay || 0
-        }))];
+          tds: p.tdsDeduction || 0, netPay: p.netPay || 0 }))];
         this.loadHistory();
-        this.snack.open(`Payroll processed — ${this.payrollData.length} employees`, '', { duration: 2500 });
-      },
-      error: () => { clearInterval(iv); this.running = false; this.snack.open('Payroll processing failed', 'Close', { duration: 3000 }); }
-    });
-  }
+        this.snack.open(`Payroll processed — ${this.payrollData.length} employees`, '', { duration: 2500 }); },
+      error: () => { clearInterval(iv); this.running = false; this.snack.open('Payroll processing failed', 'Close', { duration: 3000 }); } }); }
 
-  exportCSV() {
-    this.http.get(`${this.api}/export/csv`, { responseType: 'blob' }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
+  exportCSV() { this.http.get(`${this.api}/export/csv`, { responseType: 'blob' }).subscribe({ next: blob => { const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `payroll-${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click(); URL.revokeObjectURL(url);
-      },
-      error: () => this.snack.open('Export failed', 'Close', { duration: 3000 })
-    });
-  }
+        a.click(); URL.revokeObjectURL(url); },
+      error: () => this.snack.open('Export failed', 'Close', { duration: 3000 }) }); }
 
-  lockPayroll() {
-    if (!this.currentRunId) return;
-    this.http.post(`${this.api}/runs/${this.currentRunId}/approve`, {}).subscribe({
-      next: () => { this.locked = true; this.loadHistory(); this.snack.open('Payroll locked', '', { duration: 2000 }); },
-      error: () => { this.locked = true; this.snack.open('Payroll locked locally', '', { duration: 2000 }); }
-    });
-  }
+  lockPayroll() { if (!this.currentRunId) return;
+    this.http.post(`${this.api}/runs/${this.currentRunId}/approve`, {}).subscribe({ next: () => { this.locked = true; this.loadHistory(); this.snack.open('Payroll locked', '', { duration: 2000 }); },
+      error: () => { this.locked = true; this.snack.open('Payroll locked locally', '', { duration: 2000 }); } }); }
 }
+

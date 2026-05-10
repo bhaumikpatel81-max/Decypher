@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface WorkflowStep {
-  name: string;
+interface WorkflowStep { name: string;
   role: string;
   slaDays: number;
 }
 
-interface WorkflowDefinition {
-  id?: string;
+interface WorkflowDefinition { id?: string;
   name: string;
   entityType: string;
   stepsJson: string;
@@ -18,8 +16,7 @@ interface WorkflowDefinition {
   steps?: WorkflowStep[];
 }
 
-interface WorkflowInstance {
-  id: string;
+interface WorkflowInstance { id: string;
   entityId: string;
   entityType: string;
   currentStep: number;
@@ -31,8 +28,7 @@ interface WorkflowInstance {
   definition?: WorkflowDefinition;
 }
 
-@Component({
-  selector: 'app-workflow-builder',
+@Component({ selector: 'app-workflow-builder',
   template: `
     <div class="page-container page-enter">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
@@ -174,8 +170,7 @@ interface WorkflowInstance {
     </div>
   `
 })
-export class WorkflowBuilderComponent implements OnInit {
-  definitions: WorkflowDefinition[] = [];
+export class WorkflowBuilderComponent implements OnInit { definitions: WorkflowDefinition[] = [];
   instances: WorkflowInstance[] = [];
   slaCount = 0;
 
@@ -189,91 +184,52 @@ export class WorkflowBuilderComponent implements OnInit {
 
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
-  ngOnInit() {
-    this.loadDefinitions();
+  ngOnInit() { this.loadDefinitions();
     this.loadInstances();
-    this.loadSLABreaches();
-  }
+    this.loadSLABreaches(); }
 
-  loadDefinitions() {
-    this.http.get<WorkflowDefinition[]>(`${this.api}/definitions`).subscribe({
-      next: d => { this.definitions = [...d.map(def => ({ ...def, steps: this.parseSteps(def.stepsJson) }))]; },
-      error: () => this.snack.open('Failed to load workflow definitions', 'Close', { duration: 3000 })
-    });
-  }
+  loadDefinitions() { this.http.get<WorkflowDefinition[]>(`${this.api}/definitions`).subscribe({ next: d => { this.definitions = [...d.map(def => ({ ...def, steps: this.parseSteps(def.stepsJson) }))]; },
+      error: () => this.snack.open('Failed to load workflow definitions', 'Close', { duration: 3000 }) }); }
 
-  loadInstances() {
-    const params = new URLSearchParams();
+  loadInstances() { const params = new URLSearchParams();
     if (this.instanceFilter)   params.set('status', this.instanceFilter);
     if (this.entityTypeFilter) params.set('entityType', this.entityTypeFilter);
-    this.http.get<WorkflowInstance[]>(`${this.api}/instances?${params}`).subscribe({
-      next: i => { this.instances = [...i]; },
-      error: () => this.snack.open('Failed to load workflow instances', 'Close', { duration: 3000 })
-    });
-  }
+    this.http.get<WorkflowInstance[]>(`${this.api}/instances?${params}`).subscribe({ next: i => { this.instances = [...i]; },
+      error: () => this.snack.open('Failed to load workflow instances', 'Close', { duration: 3000 }) }); }
 
-  loadSLABreaches() {
-    this.http.get<WorkflowInstance[]>(`${this.api}/sla-breaches`).subscribe({
-      next: b => { this.slaCount = b.length; },
-      error: () => {}
-    });
-  }
+  loadSLABreaches() { this.http.get<WorkflowInstance[]>(`${this.api}/sla-breaches`).subscribe({ next: b => { this.slaCount = b.length; },
+      error: () => {} }); }
 
   startNew() { this.draft = this.emptyDraft(); this.editing = true; }
 
-  editDefinition(def: WorkflowDefinition) {
-    this.draft = { ...def, steps: this.parseSteps(def.stepsJson) };
-    this.editing = true;
-  }
+  editDefinition(def: WorkflowDefinition) { this.draft = { ...def, steps: this.parseSteps(def.stepsJson) };
+    this.editing = true; }
 
   addStep() { this.draft.steps = [...this.draft.steps, { name: '', role: '', slaDays: 2 }]; }
   removeStep(i: number) { this.draft.steps = this.draft.steps.filter((_, idx) => idx !== i); }
 
-  saveDefinition() {
-    const body: WorkflowDefinition = {
-      ...this.draft,
-      stepsJson: JSON.stringify(this.draft.steps)
-    };
+  saveDefinition() { const body: WorkflowDefinition = { ...this.draft,
+      stepsJson: JSON.stringify(this.draft.steps) };
     const req = this.draft.id
       ? this.http.put<WorkflowDefinition>(`${this.api}/definitions/${this.draft.id}`, body)
       : this.http.post<WorkflowDefinition>(`${this.api}/definitions`, body);
-    req.subscribe({
-      next: () => { this.snack.open('Workflow saved', '', { duration: 2000 }); this.loadDefinitions(); this.editing = false; },
-      error: () => this.snack.open('Failed to save workflow', 'Close', { duration: 3000 })
-    });
-  }
+    req.subscribe({ next: () => { this.snack.open('Workflow saved', '', { duration: 2000 }); this.loadDefinitions(); this.editing = false; },
+      error: () => this.snack.open('Failed to save workflow', 'Close', { duration: 3000 }) }); }
 
-  approve(inst: WorkflowInstance) {
-    this.http.post(`${this.api}/instances/${inst.id}/approve`, { notes: null }).subscribe({
-      next: () => { this.snack.open('Step approved', '', { duration: 2000 }); this.loadInstances(); },
-      error: () => this.snack.open('Approval failed', 'Close', { duration: 3000 })
-    });
-  }
+  approve(inst: WorkflowInstance) { this.http.post(`${this.api}/instances/${inst.id}/approve`, { notes: null }).subscribe({ next: () => { this.snack.open('Step approved', '', { duration: 2000 }); this.loadInstances(); },
+      error: () => this.snack.open('Approval failed', 'Close', { duration: 3000 }) }); }
 
-  reject(inst: WorkflowInstance) {
-    this.http.post(`${this.api}/instances/${inst.id}/reject`, { notes: 'Rejected via console' }).subscribe({
-      next: () => { this.snack.open('Step rejected', '', { duration: 2000 }); this.loadInstances(); },
-      error: () => this.snack.open('Rejection failed', 'Close', { duration: 3000 })
-    });
-  }
+  reject(inst: WorkflowInstance) { this.http.post(`${this.api}/instances/${inst.id}/reject`, { notes: 'Rejected via console' }).subscribe({ next: () => { this.snack.open('Step rejected', '', { duration: 2000 }); this.loadInstances(); },
+      error: () => this.snack.open('Rejection failed', 'Close', { duration: 3000 }) }); }
 
-  stepsCount(def: WorkflowDefinition) {
-    try { return JSON.parse(def.stepsJson).length; } catch { return 0; }
-  }
+  stepsCount(def: WorkflowDefinition) { try { return JSON.parse(def.stepsJson).length; } catch { return 0; } }
 
-  statusClass(status: string) {
-    return {
-      'chip-green':  status === 'Approved',
+  statusClass(status: string) { return { 'chip-green':  status === 'Approved',
       'chip-red':    status === 'Rejected',
-      'chip-brand':  status === 'InProgress',
-    };
-  }
+      'chip-brand':  status === 'InProgress', }; }
 
-  private parseSteps(json: string): WorkflowStep[] {
-    try { return JSON.parse(json) as WorkflowStep[]; } catch { return []; }
-  }
+  private parseSteps(json: string): WorkflowStep[] { try { return JSON.parse(json) as WorkflowStep[]; } catch { return []; } }
 
-  private emptyDraft() {
-    return { id: undefined as any, name: '', entityType: '', stepsJson: '[]', isActive: true, steps: [] as WorkflowStep[] };
-  }
+  private emptyDraft() { return { id: undefined as any, name: '', entityType: '', stepsJson: '[]', isActive: true, steps: [] as WorkflowStep[] }; }
 }
+

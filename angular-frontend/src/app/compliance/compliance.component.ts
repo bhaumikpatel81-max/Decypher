@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-compliance',
+@Component({ selector: 'app-compliance',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -228,8 +227,7 @@ import { environment } from '../../environments/environment';
     .tr-hover:hover { background:var(--surface-alt); }
   `]
 })
-export class ComplianceComponent implements OnInit {
-  activeTab = 0;
+export class ComplianceComponent implements OnInit { activeTab = 0;
   auditLog: any[] = [];
   gdprCandidates: any[] = [];
   eeoReport: any = null;
@@ -240,84 +238,53 @@ export class ComplianceComponent implements OnInit {
 
   ngOnInit() { this.loadAuditLog(); this.loadGdprCandidates(); this.loadEeo(); }
 
-  loadAuditLog() {
-    this.http.get<any>(`${environment.apiUrl}/api/compliance/audit-log`).subscribe({
-      next: d => { this.auditLog = [...(d.items ?? [])]; },
-      error: () => {}
-    });
-  }
+  loadAuditLog() { this.http.get<any>(`${environment.apiUrl}/api/compliance/audit-log`).subscribe({ next: d => { this.auditLog = [...(d.items ?? [])]; },
+      error: () => {} }); }
 
-  loadGdprCandidates() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/compliance/gdpr/candidates`).subscribe({
-      next: d => { this.gdprCandidates = [...(d || [])]; },
-      error: () => {}
-    });
-  }
+  loadGdprCandidates() { this.http.get<any[]>(`${environment.apiUrl}/api/compliance/gdpr/candidates`).subscribe({ next: d => { this.gdprCandidates = [...(d || [])]; },
+      error: () => {} }); }
 
-  loadEeo() {
-    this.http.get<any>(`${environment.apiUrl}/api/compliance/eeo-report`).subscribe({
-      next: d => { this.eeoReport = d; },
-      error: () => {}
-    });
-  }
+  loadEeo() { this.http.get<any>(`${environment.apiUrl}/api/compliance/eeo-report`).subscribe({ next: d => { this.eeoReport = d; },
+      error: () => {} }); }
 
-  erase(id: string) {
-    this.http.post(`${environment.apiUrl}/api/compliance/gdpr/erase/${id}`, {}).subscribe({
-      next: () => { this.gdprCandidates = this.gdprCandidates.filter(c => c.id !== id); this.snack.open('Candidate data erased', '', { duration: 2000 }); },
-      error: () => this.snack.open('Failed to erase data', 'Close', { duration: 3000 })
-    });
-  }
+  erase(id: string) { this.http.post(`${environment.apiUrl}/api/compliance/gdpr/erase/${id}`, {}).subscribe({ next: () => { this.gdprCandidates = this.gdprCandidates.filter(c => c.id !== id); this.snack.open('Candidate data erased', '', { duration: 2000 }); },
+      error: () => this.snack.open('Failed to erase data', 'Close', { duration: 3000 }) }); }
 
-  get avgConfidence(): number {
-    if (!this.auditLog.length) return 0;
-    return Math.round(this.auditLog.reduce((s, a) => s + (a.confidence || 0), 0) / this.auditLog.length * 100);
-  }
+  get avgConfidence(): number { if (!this.auditLog.length) return 0;
+    return Math.round(this.auditLog.reduce((s, a) => s + (a.confidence || 0), 0) / this.auditLog.length * 100); }
 
-  get eventTypeStats(): [string, number][] {
-    const map: { [k: string]: number } = {};
+  get eventTypeStats(): [string, number][] { const map: { [k: string]: number } = {};
     this.auditLog.forEach(a => { map[a.eventType] = (map[a.eventType] || 0) + 1; });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  }
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6); }
 
   get maxEventCount(): number { return Math.max(...this.eventTypeStats.map(e => e[1]), 1); }
 
-  get agentStats(): [string, number, number][] {
-    const map: { [k: string]: { count: number; conf: number } } = {};
-    this.auditLog.forEach(a => {
-      if (!map[a.agentName]) map[a.agentName] = { count: 0, conf: 0 };
+  get agentStats(): [string, number, number][] { const map: { [k: string]: { count: number; conf: number } } = {};
+    this.auditLog.forEach(a => { if (!map[a.agentName]) map[a.agentName] = { count: 0, conf: 0 };
       map[a.agentName].count++;
-      map[a.agentName].conf += a.confidence || 0;
-    });
+      map[a.agentName].conf += a.confidence || 0; });
     return Object.entries(map)
       .map(([k, v]) => [k, v.count, Math.round((v.conf / v.count) * 100)] as [string, number, number])
-      .sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }
+      .sort((a, b) => b[1] - a[1]).slice(0, 5); }
 
   get maxAgentCount(): number { return Math.max(...this.agentStats.map(a => a[1]), 1); }
 
-  get confidenceBands(): { label: string; count: number; color: string }[] {
-    return [
+  get confidenceBands(): { label: string; count: number; color: string }[] { return [
       { label: 'High (≥90%)',    count: this.auditLog.filter(a => (a.confidence || 0) >= 0.9).length,                                                   color: '#10b981' },
       { label: 'Good (75–89%)',  count: this.auditLog.filter(a => (a.confidence || 0) >= 0.75 && (a.confidence || 0) < 0.9).length,  color: '#6b4df0' },
       { label: 'Fair (50–74%)',  count: this.auditLog.filter(a => (a.confidence || 0) >= 0.5  && (a.confidence || 0) < 0.75).length, color: '#f59e0b' },
       { label: 'Low (<50%)',     count: this.auditLog.filter(a => (a.confidence || 0) < 0.5).length,                                                     color: '#ef4444' },
-    ];
-  }
+    ]; }
 
-  get confidenceDonut(): string {
-    const total = this.auditLog.length || 1;
+  get confidenceDonut(): string { const total = this.auditLog.length || 1;
     let pct = 0;
-    const segs = this.confidenceBands.map(b => {
-      const p = (b.count / total) * 360;
+    const segs = this.confidenceBands.map(b => { const p = (b.count / total) * 360;
       const r = `${b.color} ${pct}deg ${pct + p}deg`;
       pct += p;
-      return r;
-    });
-    return `conic-gradient(${segs.length ? segs.join(', ') : 'var(--border) 0deg 360deg'})`;
-  }
+      return r; });
+    return `conic-gradient(${segs.length ? segs.join(', ') : 'var(--border) 0deg 360deg'})`; }
 
-  get genderSplit(): { label: string; count: number; pct: number; color: string }[] {
-    const total = this.eeoReport?.totalCandidates || 0;
+  get genderSplit(): { label: string; count: number; pct: number; color: string }[] { const total = this.eeoReport?.totalCandidates || 0;
     const male = Math.round(total * 0.58);
     const female = Math.round(total * 0.37);
     const other = total - male - female;
@@ -325,21 +292,17 @@ export class ComplianceComponent implements OnInit {
       { label: 'Male',   count: male,   pct: total ? Math.round((male   / total) * 100) : 0, color: '#3b82f6' },
       { label: 'Female', count: female, pct: total ? Math.round((female / total) * 100) : 0, color: '#ec4899' },
       { label: 'Other',  count: other,  pct: total ? Math.round((other  / total) * 100) : 0, color: '#8b5cf6' },
-    ];
-  }
+    ]; }
 
-  get genderParityScore(): number {
-    const total = this.eeoReport?.totalCandidates || 0;
+  get genderParityScore(): number { const total = this.eeoReport?.totalCandidates || 0;
     if (!total) return 0;
     const female = Math.round(total * 0.37);
-    return Math.round((female / total) * 100 * 2);
-  }
+    return Math.round((female / total) * 100 * 2); }
 
-  get diversityIndex(): string {
-    const score = this.genderParityScore;
+  get diversityIndex(): string { const score = this.genderParityScore;
     if (score >= 70) return 'Excellent';
     if (score >= 50) return 'Good';
     if (score >= 30) return 'Fair';
-    return 'Needs Work';
-  }
+    return 'Needs Work'; }
 }
+

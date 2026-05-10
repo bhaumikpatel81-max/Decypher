@@ -1,18 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
-import {
-  BudgetService, FiscalYear, DashboardKpi, Forecast, ForecastRow,
+import { BudgetService, FiscalYear, DashboardKpi, Forecast, ForecastRow,
   CostPerHire, VendorSpend, DepartmentBreakdown, TenantConfig,
   CostCategory, BudgetAllocation, BudgetActual
 } from './budget.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Component({
-  selector: 'app-budget',
+@Component({ selector: 'app-budget',
   template: `
 <div class="budget-shell">
 
@@ -958,32 +956,25 @@ import {
 </div>
   `,
   styles: [`
-    .budget-shell {
-      padding: 0;
-      height: 100%;
-    }
-    .budget-topbar {
-      display: flex;
+    .budget-shell { padding: 0;
+      height: 100%; }
+    .budget-topbar { display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 24px;
       background: var(--surface, #fff);
       border-bottom: 1px solid var(--border, #e2e8f0);
       gap: 16px;
-      flex-wrap: wrap;
-    }
+      flex-wrap: wrap; }
     .budget-topbar-left, .budget-topbar-right { display: flex; align-items: center; gap: 12px; }
     .fy-selector { display: flex; align-items: center; gap: 8px; }
     .fy-selector label { font-size: 12px; font-weight: 700; color: #64748b; white-space: nowrap; }
-    .budget-tabs {
-      display: flex;
+    .budget-tabs { display: flex;
       background: var(--surface, #fff);
       border-bottom: 2px solid #e2e8f0;
       padding: 0 24px;
-      overflow-x: auto;
-    }
-    .budget-tab {
-      padding: 12px 20px;
+      overflow-x: auto; }
+    .budget-tab { padding: 12px 20px;
       border: none;
       background: none;
       cursor: pointer;
@@ -993,26 +984,21 @@ import {
       border-bottom: 3px solid transparent;
       margin-bottom: -2px;
       white-space: nowrap;
-      transition: color .15s, border-color .15s;
-    }
+      transition: color .15s, border-color .15s; }
     .budget-tab.active { color: #1565C0; border-bottom-color: #1565C0; }
     .tab-icon { margin-right: 6px; }
     .tab-content { padding: 24px; overflow-y: auto; }
 
     /* KPI Cards */
-    .kpi-grid {
-      display: grid;
+    .kpi-grid { display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
-      margin-bottom: 24px;
-    }
-    .kpi-card {
-      background: #fff;
+      margin-bottom: 24px; }
+    .kpi-card { background: #fff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 18px 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); }
     .kpi-card--spent { border-left: 4px solid #1565C0; }
     .kpi-card--warn { border-left: 4px solid #f59e0b; }
     .kpi-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
@@ -1024,19 +1010,15 @@ import {
     .progress-bar--danger { background: #ef4444; }
 
     /* Charts */
-    .charts-grid {
-      display: grid;
+    .charts-grid { display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+      gap: 20px; }
     @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-    .chart-card {
-      background: #fff;
+    .chart-card { background: #fff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); }
     .chart-card--wide { grid-column: 1 / -1; }
     .chart-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
     .empty-chart { color: #94a3b8; font-size: 13px; text-align: center; padding: 32px; }
@@ -1086,11 +1068,9 @@ import {
     .tab-toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
     .forecast-table-wrap { overflow-x: auto; }
     .forecast-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .forecast-table th, .forecast-table td {
-      padding: 10px 12px;
+    .forecast-table th, .forecast-table td { padding: 10px 12px;
       border-bottom: 1px solid #e2e8f0;
-      text-align: left;
-    }
+      text-align: left; }
     .forecast-table th { background: #1565C0; color: #fff; font-weight: 600; font-size: 12px; }
     .forecast-table tbody tr:hover { background: #f8fafc; }
     .num-cell { text-align: right; font-variant-numeric: tabular-nums; }
@@ -1102,10 +1082,8 @@ import {
     .cell-input { width: 100%; border: 1px solid #1565C0; border-radius: 4px; padding: 4px 6px; font-size: 13px; }
     .line-item-row td { background: #f8fafc; }
     .line-item-panel { padding: 8px 0; }
-    .line-item-grid-header, .line-item-grid-row {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px;
-      padding: 4px 8px; font-size: 12px;
-    }
+    .line-item-grid-header, .line-item-grid-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px;
+      padding: 4px 8px; font-size: 12px; }
     .line-item-grid-header { font-weight: 700; color: #64748b; }
     .empty-line-items { color: #94a3b8; font-size: 12px; padding: 8px; }
 
@@ -1124,9 +1102,7 @@ import {
     .num-th { text-align: right; }
 
     /* Variance & Status */
-    .variance-pill {
-      display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;
-    }
+    .variance-pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
     .pill--green { background: #dcfce7; color: #166534; }
     .pill--red { background: #fee2e2; color: #991b1b; }
     .status-dot { font-size: 12px; }
@@ -1135,12 +1111,10 @@ import {
 
     /* Drawer */
     .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 100; }
-    .drawer {
-      position: fixed; right: 0; top: 0; bottom: 0; width: 380px;
+    .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 380px;
       background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,.1);
       z-index: 101; transform: translateX(100%); transition: transform .25s;
-      display: flex; flex-direction: column;
-    }
+      display: flex; flex-direction: column; }
     .drawer--open { transform: translateX(0); }
     .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; }
     .drawer-header h3 { margin: 0; font-size: 16px; }
@@ -1148,13 +1122,9 @@ import {
     .drawer-body label { font-size: 12px; font-weight: 700; color: #475569; }
 
     /* Reports */
-    .reports-tabs {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;
-    }
-    .report-tab {
-      padding: 6px 16px; border: 1px solid #e2e8f0; border-radius: 20px;
-      background: #f8fafc; cursor: pointer; font-size: 13px; font-weight: 600; color: #334155;
-    }
+    .reports-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+    .report-tab { padding: 6px 16px; border: 1px solid #e2e8f0; border-radius: 20px;
+      background: #f8fafc; cursor: pointer; font-size: 13px; font-weight: 600; color: #334155; }
     .report-tab.active { background: #1565C0; color: #fff; border-color: #1565C0; }
     .report-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .report-toolbar h3 { margin: 0; font-size: 16px; }
@@ -1208,13 +1178,11 @@ import {
     .btn-outline { border: 1px solid #e2e8f0; background: #fff; color: #334155; }
     .btn-outline:hover { background: #f8fafc; }
 
-    .budget-import-strip {
-      background: #f0f9ff;
+    .budget-import-strip { background: #f0f9ff;
       border: 1px solid #bae6fd;
       border-radius: 10px;
       margin: 12px 24px 4px;
-      padding: 14px 20px;
-    }
+      padding: 14px 20px; }
     .import-strip-body { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .import-strip-left { display: flex; align-items: center; gap: 12px; }
     .import-strip-title { font-size: 14px; font-weight: 700; color: #0c4a6e; }
@@ -1228,8 +1196,7 @@ import {
     .import-strip-result { margin-top: 8px; font-size: 13px; font-weight: 500; }
   `]
 })
-export class BudgetComponent implements OnInit {
-  activeTab: string = 'dashboard';
+export class BudgetComponent implements OnInit { activeTab: string = 'dashboard';
   selectedFyId: string = '';
   selectedFyLabel: string = '';
   loading = false;
@@ -1291,21 +1258,14 @@ export class BudgetComponent implements OnInit {
     { label:'Q4B', field:'q4Budget' }, { label:'Q4A', field:'q4Actual' }, { label:'Q4F', field:'q4Forecast' },
   ];
 
-  get filteredPlanItems(): any[] {
-    return this.planItems.filter(i => {
-      const matchCat  = !this.itemFilterCategory || i.category === this.itemFilterCategory;
+  get filteredPlanItems(): any[] { return this.planItems.filter(i => { const matchCat  = !this.itemFilterCategory || i.category === this.itemFilterCategory;
       const matchSrch = !this.itemSearch || (i.description || '').toLowerCase().includes(this.itemSearch.toLowerCase());
-      return matchCat && matchSrch;
-    });
-  }
+      return matchCat && matchSrch; }); }
 
-  get planMaxQ(): number {
-    if (!this.planSummary?.byQuarter?.length) return 1;
-    return Math.max(...this.planSummary.byQuarter.flatMap((q: any) => [q.budget, q.actual, q.forecast]), 1);
-  }
+  get planMaxQ(): number { if (!this.planSummary?.byQuarter?.length) return 1;
+    return Math.max(...this.planSummary.byQuarter.flatMap((q: any) => [q.budget, q.actual, q.forecast]), 1); }
 
-  get waterfallBars(): any[] {
-    if (!this.planSummary) return [];
+  get waterfallBars(): any[] { if (!this.planSummary) return [];
     const s = this.planSummary;
     const adj = s.totalForecast * this.scenarioMult;
     const maxVal = Math.max(s.totalBudget, s.totalActual + adj, 1);
@@ -1315,141 +1275,76 @@ export class BudgetComponent implements OnInit {
       { label: 'Actuals',     val: s.totalActual,             color: '#3bbdea', height: h(s.totalActual) },
       { label: 'Rem. Forecast', val: adj,                     color: '#a94ee6', height: h(adj) },
       { label: 'Projected YE', val: s.totalActual + adj,      color: s.totalActual+adj>s.totalBudget?'#dc2626':'#16a34a', height: h(s.totalActual+adj) },
-    ];
-  }
+    ]; }
 
   trackByIdx = (i: number) => i;
 
-  pctBar(val: number, max: number): number {
-    return Math.round(Math.max(val / (max || 1) * 100, 2));
-  }
+  pctBar(val: number, max: number): number { return Math.round(Math.max(val / (max || 1) * 100, 2)); }
 
-  planItemRowBg(item: any): string {
-    const actual = item.q1Actual + item.q2Actual + item.q3Actual + item.q4Actual;
+  planItemRowBg(item: any): string { const actual = item.q1Actual + item.q2Actual + item.q3Actual + item.q4Actual;
     const budget = item.q1Budget + item.q2Budget + item.q3Budget + item.q4Budget;
     const forecast = item.q1Forecast + item.q2Forecast + item.q3Forecast + item.q4Forecast;
     if (actual > budget) return '#fff1f2';
     if (forecast > budget) return '#fffbeb';
-    return '';
-  }
+    return ''; }
 
-  loadPlans() {
-    this.http.get<any>(`${environment.apiUrl}/api/budget/plans`).subscribe({
-      next: r => { this.plans = [...(r.data ?? r)]; },
-      error: () => {}
-    });
-  }
+  loadPlans() { this.http.get<any>(`${environment.apiUrl}/api/budget/plans`).subscribe({ next: r => { this.plans = [...(r.data ?? r)]; },
+      error: () => {} }); }
 
-  selectPlan(id: string) {
-    if (!id) { this.selectedPlan = null; this.planSummary = null; this.planItems = []; this.planVersions = []; return; }
+  selectPlan(id: string) { if (!id) { this.selectedPlan = null; this.planSummary = null; this.planItems = []; this.planVersions = []; return; }
     this.selectedPlan = this.plans.find(p => p.id === id) ?? null;
     this.loadPlanSummary(id);
     this.loadPlanItems(id);
-    this.loadPlanVersions(id);
-  }
+    this.loadPlanVersions(id); }
 
-  loadPlanSummary(id: string) {
-    this.planLoading = true;
-    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/summary`).subscribe({
-      next: r => { this.planSummary = { ...(r.data ?? r) }; this.planLoading = false; },
-      error: () => { this.planLoading = false; }
-    });
-  }
+  loadPlanSummary(id: string) { this.planLoading = true;
+    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/summary`).subscribe({ next: r => { this.planSummary = { ...(r.data ?? r) }; this.planLoading = false; },
+      error: () => { this.planLoading = false; } }); }
 
-  loadPlanItems(id: string) {
-    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/lineitems`).subscribe({
-      next: r => { this.planItems = [...(r.data ?? r)]; },
-      error: () => {}
-    });
-  }
+  loadPlanItems(id: string) { this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/lineitems`).subscribe({ next: r => { this.planItems = [...(r.data ?? r)]; },
+      error: () => {} }); }
 
-  loadPlanVersions(id: string) {
-    this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/versions`).subscribe({
-      next: r => { this.planVersions = [...(r.data ?? r)]; },
-      error: () => {}
-    });
-  }
+  loadPlanVersions(id: string) { this.http.get<any>(`${environment.apiUrl}/api/budget/plans/${id}/versions`).subscribe({ next: r => { this.planVersions = [...(r.data ?? r)]; },
+      error: () => {} }); }
 
-  createPlan() {
-    this.http.post<any>(`${environment.apiUrl}/api/budget/plans`, this.newPlanDraft).subscribe({
-      next: r => {
-        this.plans = [...this.plans, r.data ?? r];
+  createPlan() { this.http.post<any>(`${environment.apiUrl}/api/budget/plans`, this.newPlanDraft).subscribe({ next: r => { this.plans = [...this.plans, r.data ?? r];
         this.selectedPlanId = (r.data ?? r).id;
         this.selectedPlan   = (r.data ?? r);
         this.showNewPlanForm = false;
-        this.newPlanDraft   = { name:'', fiscalYear:'', department:'', planType:'AOP', currency:'INR', totalBudget:0 };
-      },
-      error: err => { this._snack.open(err?.error?.error ?? 'Create failed', 'Close', { duration: 3000 }); }
-    });
-  }
+        this.newPlanDraft   = { name:'', fiscalYear:'', department:'', planType:'AOP', currency:'INR', totalBudget:0 }; },
+      error: err => { this._snack.open(err?.error?.error ?? 'Create failed', 'Close', { duration: 3000 }); } }); }
 
-  updatePlanStatus(status: string) {
-    this.http.patch<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/status`, { status }).subscribe({
-      next: r => {
-        this.selectedPlan = { ...(r.data ?? r) };
-        this.plans = [...this.plans.map(p => p.id === this.selectedPlanId ? this.selectedPlan : p)];
-      },
-      error: err => { this._snack.open(err?.error?.error ?? 'Status update failed', 'Close', { duration: 3000 }); }
-    });
-  }
+  updatePlanStatus(status: string) { this.http.patch<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/status`, { status }).subscribe({ next: r => { this.selectedPlan = { ...(r.data ?? r) };
+        this.plans = [...this.plans.map(p => p.id === this.selectedPlanId ? this.selectedPlan : p)]; },
+      error: err => { this._snack.open(err?.error?.error ?? 'Status update failed', 'Close', { duration: 3000 }); } }); }
 
-  addPlanLineItem() {
-    const body = {
-      category: this.newItemDraft.category ?? 'Other',
+  addPlanLineItem() { const body = { category: this.newItemDraft.category ?? 'Other',
       subCategory: this.newItemDraft.subCategory ?? '',
       description: this.newItemDraft.description ?? '',
       q1Budget: +(this.newItemDraft.q1Budget || 0), q2Budget: +(this.newItemDraft.q2Budget || 0),
       q3Budget: +(this.newItemDraft.q3Budget || 0), q4Budget: +(this.newItemDraft.q4Budget || 0),
       q1Actual: 0, q2Actual: 0, q3Actual: 0, q4Actual: 0,
-      q1Forecast: 0, q2Forecast: 0, q3Forecast: 0, q4Forecast: 0, unit: 'Amount'
-    };
-    this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/lineitems`, body).subscribe({
-      next: () => { this.showAddItemForm = false; this.newItemDraft = { description:'', category:'Salary' }; this.loadPlanItems(this.selectedPlanId); this.loadPlanSummary(this.selectedPlanId); },
-      error: err => { this._snack.open(err?.error?.error ?? 'Add failed', 'Close', { duration: 3000 }); }
-    });
-  }
+      q1Forecast: 0, q2Forecast: 0, q3Forecast: 0, q4Forecast: 0, unit: 'Amount' };
+    this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/lineitems`, body).subscribe({ next: () => { this.showAddItemForm = false; this.newItemDraft = { description:'', category:'Salary' }; this.loadPlanItems(this.selectedPlanId); this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Add failed', 'Close', { duration: 3000 }); } }); }
 
-  savePlanLineItem(item: any) {
-    this.http.put<any>(`${environment.apiUrl}/api/budget/lineitems/${item.id}`, item).subscribe({
-      next: () => { this.editingPlanItemId = ''; this.loadPlanSummary(this.selectedPlanId); },
-      error: err => { this._snack.open(err?.error?.error ?? 'Save failed', 'Close', { duration: 3000 }); }
-    });
-  }
+  savePlanLineItem(item: any) { this.http.put<any>(`${environment.apiUrl}/api/budget/lineitems/${item.id}`, item).subscribe({ next: () => { this.editingPlanItemId = ''; this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Save failed', 'Close', { duration: 3000 }); } }); }
 
-  deletePlanLineItem(id: string) {
-    this.http.delete<any>(`${environment.apiUrl}/api/budget/lineitems/${id}`).subscribe({
-      next: () => { this.planItems = [...this.planItems.filter(i => i.id !== id)]; this.loadPlanSummary(this.selectedPlanId); },
-      error: err => { this._snack.open(err?.error?.error ?? 'Delete failed', 'Close', { duration: 3000 }); }
-    });
-  }
+  deletePlanLineItem(id: string) { this.http.delete<any>(`${environment.apiUrl}/api/budget/lineitems/${id}`).subscribe({ next: () => { this.planItems = [...this.planItems.filter(i => i.id !== id)]; this.loadPlanSummary(this.selectedPlanId); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Delete failed', 'Close', { duration: 3000 }); } }); }
 
-  snapshotVersion() {
-    this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/versions`, {}).subscribe({
-      next: () => { this.loadPlanVersions(this.selectedPlanId); this._snack.open('Snapshot saved', 'Close', { duration: 2000 }); },
-      error: err => { this._snack.open(err?.error?.error ?? 'Snapshot failed', 'Close', { duration: 3000 }); }
-    });
-  }
+  snapshotVersion() { this.http.post<any>(`${environment.apiUrl}/api/budget/plans/${this.selectedPlanId}/versions`, {}).subscribe({ next: () => { this.loadPlanVersions(this.selectedPlanId); this._snack.open('Snapshot saved', 'Close', { duration: 2000 }); },
+      error: err => { this._snack.open(err?.error?.error ?? 'Snapshot failed', 'Close', { duration: 3000 }); } }); }
 
-  viewVersion(v: any) {
-    this.http.get<any>(`${environment.apiUrl}/api/budget/versions/${v.id}`).subscribe({
-      next: r => { const json = (r.data ?? r).snapshotJson; const win = window.open('', '_blank'); win?.document.write('<pre style="font-family:monospace;padding:20px">' + JSON.stringify(JSON.parse(json || '{}'), null, 2) + '</pre>'); },
-      error: () => {}
-    });
-  }
+  viewVersion(v: any) { this.http.get<any>(`${environment.apiUrl}/api/budget/versions/${v.id}`).subscribe({ next: r => { const json = (r.data ?? r).snapshotJson; const win = window.open('', '_blank'); win?.document.write('<pre style="font-family:monospace;padding:20px">' + JSON.stringify(JSON.parse(json || '{}'), null, 2) + '</pre>'); },
+      error: () => {} }); }
 
-  exportPlanExcel(id: string) {
-    this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/excel`, { responseType: 'blob' }).subscribe(blob => {
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `budget-plan-${id}.xlsx`; a.click(); URL.revokeObjectURL(a.href);
-    });
-  }
+  exportPlanExcel(id: string) { this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/excel`, { responseType: 'blob' }).subscribe(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `budget-plan-${id}.xlsx`; a.click(); URL.revokeObjectURL(a.href); }); }
 
-  exportPlanPdf(id: string) {
-    this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/pdf`, { responseType: 'blob' }).subscribe(blob => {
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `budget-plan-${id}.pdf`; a.click(); URL.revokeObjectURL(a.href);
-    });
-  }
+  exportPlanPdf(id: string) { this.http.get(`${environment.apiUrl}/api/budget/plans/${id}/export/pdf`, { responseType: 'blob' }).subscribe(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `budget-plan-${id}.pdf`; a.click(); URL.revokeObjectURL(a.href); }); }
 
 
   reportTypes = [
@@ -1481,291 +1376,174 @@ export class BudgetComponent implements OnInit {
   newCat: any = { categoryName: '', categoryCode: '', defaultEstimatePerHire: null };
 
   // Chart scale helpers
-  get maxMonthly(): number {
-    if (!this.kpi?.monthlyTrend?.length) return 1;
-    return Math.max(...this.kpi.monthlyTrend.flatMap(m => [m.planned, m.actual]), 1);
-  }
-  get maxQuarterly(): number {
-    if (!this.kpi?.budgetByQuarter?.length) return 1;
-    return Math.max(...this.kpi.budgetByQuarter.flatMap(q => [q.planned, q.actual]), 1);
-  }
-  get maxVendorSpend(): number {
-    if (!this.kpi?.topVendorsBySpend?.length) return 1;
-    return Math.max(...this.kpi.topVendorsBySpend.map(v => v.totalSpend), 1);
-  }
+  get maxMonthly(): number { if (!this.kpi?.monthlyTrend?.length) return 1;
+    return Math.max(...this.kpi.monthlyTrend.flatMap(m => [m.planned, m.actual]), 1); }
+  get maxQuarterly(): number { if (!this.kpi?.budgetByQuarter?.length) return 1;
+    return Math.max(...this.kpi.budgetByQuarter.flatMap(q => [q.planned, q.actual]), 1); }
+  get maxVendorSpend(): number { if (!this.kpi?.topVendorsBySpend?.length) return 1;
+    return Math.max(...this.kpi.topVendorsBySpend.map(v => v.totalSpend), 1); }
 
-  scaleBar(value: number, max: number): number {
-    return max > 0 ? Math.round((value / max) * 120) : 0;
-  }
+  scaleBar(value: number, max: number): number { return max > 0 ? Math.round((value / max) * 120) : 0; }
   min100(v: number): number { return Math.min(v, 100); }
 
-  buildConicGradient(cats: { pct: number }[]): string {
-    let stops = '';
+  buildConicGradient(cats: { pct: number }[]): string { let stops = '';
     let cumulative = 0;
-    cats.forEach((c, i) => {
-      const color = this.categoryColors[i % this.categoryColors.length];
+    cats.forEach((c, i) => { const color = this.categoryColors[i % this.categoryColors.length];
       stops += `${color} ${cumulative}% ${cumulative + c.pct}%, `;
-      cumulative += c.pct;
-    });
-    return `conic-gradient(${stops.slice(0, -2)})`;
-  }
+      cumulative += c.pct; });
+    return `conic-gradient(${stops.slice(0, -2)})`; }
 
-  getVariance(actual: BudgetActual): number {
-    // Return allocated amount - actual (positive = under budget)
+  getVariance(actual: BudgetActual): number { // Return allocated amount - actual (positive = under budget)
     const allocation = this.allocations.find(a =>
       a.id === actual.allocationId || a.departmentName === actual.departmentName);
     if (!allocation) return 0;
-    return allocation.allottedAmount - actual.amount;
-  }
+    return allocation.allottedAmount - actual.amount; }
 
   constructor(private svc: BudgetService, private route: ActivatedRoute, private router: Router, private http: HttpClient, private _snack: MatSnackBar) {}
 
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      if (params['fy']) this.selectedFyId = params['fy'];
-      if (params['tab']) this.activeTab = params['tab'];
-    });
+  ngOnInit() { this.route.queryParams.subscribe(params => { if (params['fy']) this.selectedFyId = params['fy'];
+      if (params['tab']) this.activeTab = params['tab']; });
     this.loadFiscalYears();
     this.loadConfig();
     this.loadCostCategories();
-    this.loadPlans();
-  }
+    this.loadPlans(); }
 
-  setTab(tab: string) {
-    this.activeTab = tab;
+  setTab(tab: string) { this.activeTab = tab;
     this.router.navigate([], { queryParams: { tab, fy: this.selectedFyId || undefined }, queryParamsHandling: 'merge' });
-    this.loadTabData(tab);
-  }
+    this.loadTabData(tab); }
 
-  onFyChange() {
-    const fy = this.fiscalYears.find(f => f.id === this.selectedFyId);
+  onFyChange() { const fy = this.fiscalYears.find(f => f.id === this.selectedFyId);
     this.selectedFyLabel = fy?.fiscalYearLabel ?? '';
     this.router.navigate([], { queryParams: { fy: this.selectedFyId }, queryParamsHandling: 'merge' });
-    this.loadTabData(this.activeTab);
-  }
+    this.loadTabData(this.activeTab); }
 
-  loadTabData(tab: string) {
-    if (tab.startsWith('plans-') && this.selectedPlanId) {
-      if (tab === 'plans-overview')  this.loadPlanSummary(this.selectedPlanId);
+  loadTabData(tab: string) { if (tab.startsWith('plans-') && this.selectedPlanId) { if (tab === 'plans-overview')  this.loadPlanSummary(this.selectedPlanId);
       if (tab === 'plans-items')     this.loadPlanItems(this.selectedPlanId);
       if (tab === 'plans-scenarios') { this.loadPlanSummary(this.selectedPlanId); this.loadPlanVersions(this.selectedPlanId); }
-      return;
-    }
+      return; }
     if (!this.selectedFyId) return;
-    switch (tab) {
-      case 'dashboard': this.loadDashboard(); break;
+    switch (tab) { case 'dashboard': this.loadDashboard(); break;
       case 'forecast':  this.loadForecast();  break;
       case 'actuals':   this.loadActuals();   break;
-      case 'reports':   this.loadReportsData(); break;
-    }
-  }
+      case 'reports':   this.loadReportsData(); break; } }
 
-  loadFiscalYears() {
-    this.svc.getFiscalYears().subscribe(fys => {
-      this.fiscalYears = fys;
-      if (!this.selectedFyId && fys.length) {
-        const active = fys.find(f => f.status === 'Active') ?? fys[0];
+  loadFiscalYears() { this.svc.getFiscalYears().subscribe(fys => { this.fiscalYears = fys;
+      if (!this.selectedFyId && fys.length) { const active = fys.find(f => f.status === 'Active') ?? fys[0];
         this.selectedFyId = active.id;
         this.selectedFyLabel = active.fiscalYearLabel;
-        this.loadDashboard();
-      }
-    });
-  }
+        this.loadDashboard(); } }); }
 
-  loadDashboard() {
-    if (!this.selectedFyId) return;
+  loadDashboard() { if (!this.selectedFyId) return;
     this.loading = true;
-    this.svc.getDashboard(this.selectedFyId).subscribe({
-      next: kpi => { this.kpi = kpi; this.loading = false; },
-      error: () => this.loading = false
-    });
-  }
+    this.svc.getDashboard(this.selectedFyId).subscribe({ next: kpi => { this.kpi = kpi; this.loading = false; },
+      error: () => this.loading = false }); }
 
-  loadForecast() {
-    if (!this.selectedFyId) return;
+  loadForecast() { if (!this.selectedFyId) return;
     this.svc.getForecast(this.selectedFyId).subscribe(f => this.forecast = f);
-    this.svc.getAllocations(this.selectedFyId).subscribe(a => this.allocations = a);
-  }
+    this.svc.getAllocations(this.selectedFyId).subscribe(a => this.allocations = a); }
 
-  loadActuals() {
-    if (!this.selectedFyId) return;
-    this.svc.getActuals(this.selectedFyId).subscribe(a => {
-      this.actuals = a;
-      this.filteredActuals = [...a];
-    });
-    this.svc.getAllocations(this.selectedFyId).subscribe(a => this.allocations = a);
-  }
+  loadActuals() { if (!this.selectedFyId) return;
+    this.svc.getActuals(this.selectedFyId).subscribe(a => { this.actuals = a;
+      this.filteredActuals = [...a]; });
+    this.svc.getAllocations(this.selectedFyId).subscribe(a => this.allocations = a); }
 
-  loadReportsData() {
-    if (!this.selectedFyId) return;
+  loadReportsData() { if (!this.selectedFyId) return;
     if (!this.kpi) this.loadDashboard();
     this.svc.getCostPerHire(this.selectedFyId).subscribe(c => this.cph = c);
     this.svc.getVendorSpend(this.selectedFyId).subscribe(v => this.vendorSpend = v);
     this.svc.getDepartmentBreakdown(this.selectedFyId).subscribe(d => this.departments = d);
-    this.svc.getActuals(this.selectedFyId).subscribe(a => this.actuals = a);
-  }
+    this.svc.getActuals(this.selectedFyId).subscribe(a => this.actuals = a); }
 
-  loadConfig() {
-    this.svc.getConfig().subscribe(c => this.tenantConfig = c);
-  }
+  loadConfig() { this.svc.getConfig().subscribe(c => this.tenantConfig = c); }
 
-  loadCostCategories() {
-    this.svc.getCostCategories().subscribe(c => this.costCategories = c);
-  }
+  loadCostCategories() { this.svc.getCostCategories().subscribe(c => this.costCategories = c); }
 
-  filterActuals() {
-    this.filteredActuals = this.actuals.filter(a => {
-      if (this.actualsFilter.dept && (a.departmentName ?? '').toLowerCase().indexOf(this.actualsFilter.dept.toLowerCase()) < 0) return false;
+  filterActuals() { this.filteredActuals = this.actuals.filter(a => { if (this.actualsFilter.dept && (a.departmentName ?? '').toLowerCase().indexOf(this.actualsFilter.dept.toLowerCase()) < 0) return false;
       if (this.actualsFilter.category && a.spendCategory !== this.actualsFilter.category) return false;
       if (this.actualsFilter.from && a.spendDate < this.actualsFilter.from) return false;
       if (this.actualsFilter.to && a.spendDate > this.actualsFilter.to) return false;
-      return true;
-    });
-  }
+      return true; }); }
 
-  saveActual() {
-    const payload = { ...this.newActual, fiscalYearId: this.selectedFyId };
-    this.svc.createActual(payload).subscribe(() => {
-      this.showActualDrawer = false;
+  saveActual() { const payload = { ...this.newActual, fiscalYearId: this.selectedFyId };
+    this.svc.createActual(payload).subscribe(() => { this.showActualDrawer = false;
       this.newActual = { spendDate: new Date().toISOString().slice(0, 10), departmentName: '', spendCategory: 'Other', amount: 0 };
-      this.loadActuals();
-    });
-  }
+      this.loadActuals(); }); }
 
-  approveActual(actual: BudgetActual) {
-    this.svc.updateActual(actual.id, { isApproved: true }).subscribe(() => this.loadActuals());
-  }
+  approveActual(actual: BudgetActual) { this.svc.updateActual(actual.id, { isApproved: true }).subscribe(() => this.loadActuals()); }
 
-  deleteActualEntry(id: string) {
-    if (!confirm('Delete this actual entry?')) return;
-    this.svc.deleteActual(id).subscribe(() => this.loadActuals());
-  }
+  deleteActualEntry(id: string) { if (!confirm('Delete this actual entry?')) return;
+    this.svc.deleteActual(id).subscribe(() => this.loadActuals()); }
 
   openAddAllocationDrawer() { this.showAllocDrawer = true; }
 
-  saveAllocation() {
-    const payload = { ...this.newAlloc, fiscalYearId: this.selectedFyId, quarter: +this.newAlloc.quarter, category: +this.newAlloc.category };
-    this.svc.createAllocation(payload).subscribe(() => {
-      this.showAllocDrawer = false;
+  saveAllocation() { const payload = { ...this.newAlloc, fiscalYearId: this.selectedFyId, quarter: +this.newAlloc.quarter, category: +this.newAlloc.category };
+    this.svc.createAllocation(payload).subscribe(() => { this.showAllocDrawer = false;
       this.newAlloc = { departmentName: '', departmentCode: '', quarter: 0, category: 0, headcountPlanned: 1, allottedAmount: 0, notes: '' };
-      this.loadForecast();
-    });
-  }
+      this.loadForecast(); }); }
 
-  startEditCell(row: ForecastRow, quarter: 'Q1'|'Q2'|'Q3'|'Q4') {
-    this.editingRow[row.department + '_' + quarter] = true;
-  }
+  startEditCell(row: ForecastRow, quarter: 'Q1'|'Q2'|'Q3'|'Q4') { this.editingRow[row.department + '_' + quarter] = true; }
 
-  saveAllocationQuarter(row: ForecastRow, quarter: 'Q1'|'Q2'|'Q3'|'Q4', event: Event) {
-    this.editingRow[row.department + '_' + quarter] = false;
+  saveAllocationQuarter(row: ForecastRow, quarter: 'Q1'|'Q2'|'Q3'|'Q4', event: Event) { this.editingRow[row.department + '_' + quarter] = false;
     const value = +(event.target as HTMLInputElement).value;
     const alloc = this.allocations.find(a =>
       a.departmentName === row.department && a.quarter === quarter);
-    if (alloc) {
-      this.svc.updateAllocation(alloc.id, { allottedAmount: value }).subscribe(() => this.loadForecast());
-    } else {
-      this.svc.createAllocation({
-        fiscalYearId: this.selectedFyId, departmentName: row.department,
+    if (alloc) { this.svc.updateAllocation(alloc.id, { allottedAmount: value }).subscribe(() => this.loadForecast()); } else { this.svc.createAllocation({ fiscalYearId: this.selectedFyId, departmentName: row.department,
         quarter: ['Q1','Q2','Q3','Q4'].indexOf(quarter), category: 0,
-        headcountPlanned: row.headcountPlanned, allottedAmount: value
-      }).subscribe(() => this.loadForecast());
-    }
-  }
+        headcountPlanned: row.headcountPlanned, allottedAmount: value }).subscribe(() => this.loadForecast()); } }
 
-  toggleLineItems(dept: string) {
-    this.expandedDepts[dept] = !this.expandedDepts[dept];
-    if (this.expandedDepts[dept] && !this.lineItemsByDept[dept]) {
-      const alloc = this.allocations.find(a => a.departmentName === dept);
-      if (alloc) {
-        this.svc.getLineItems(alloc.id).subscribe(li => this.lineItemsByDept[dept] = li);
-      }
-    }
-  }
+  toggleLineItems(dept: string) { this.expandedDepts[dept] = !this.expandedDepts[dept];
+    if (this.expandedDepts[dept] && !this.lineItemsByDept[dept]) { const alloc = this.allocations.find(a => a.departmentName === dept);
+      if (alloc) { this.svc.getLineItems(alloc.id).subscribe(li => this.lineItemsByDept[dept] = li); } } }
 
-  addLineItemForDept(dept: string) {
-    const alloc = this.allocations.find(a => a.departmentName === dept);
+  addLineItemForDept(dept: string) { const alloc = this.allocations.find(a => a.departmentName === dept);
     if (!alloc) return;
     this.svc.createLineItem({ allocationId: alloc.id, lineItemType: 0, plannedAmount: 0 })
-      .subscribe(() => this.toggleLineItems(dept));
-  }
+      .subscribe(() => this.toggleLineItems(dept)); }
 
-  createFiscalYear() {
-    this.svc.createFiscalYear({
-      fiscalYearLabel: this.newFy.label,
+  createFiscalYear() { this.svc.createFiscalYear({ fiscalYearLabel: this.newFy.label,
       startDate: this.newFy.startDate,
       endDate: this.newFy.endDate,
       totalBudgetAmount: +this.newFy.totalBudgetAmount,
-      currency: this.tenantConfig?.defaultCurrency ?? 'USD'
-    }).subscribe(() => {
-      this.newFy = { label: '', startDate: '', endDate: '', totalBudgetAmount: 0 };
-      this.loadFiscalYears();
-    });
-  }
+      currency: this.tenantConfig?.defaultCurrency ?? 'USD' }).subscribe(() => { this.newFy = { label: '', startDate: '', endDate: '', totalBudgetAmount: 0 };
+      this.loadFiscalYears(); }); }
 
-  lockFY(fy: FiscalYear) {
-    if (!confirm(`Lock ${fy.fiscalYearLabel}? No further edits will be allowed.`)) return;
-    this.svc.lockFiscalYear(fy.id).subscribe(() => this.loadFiscalYears());
-  }
+  lockFY(fy: FiscalYear) { if (!confirm(`Lock ${fy.fiscalYearLabel}? No further edits will be allowed.`)) return;
+    this.svc.lockFiscalYear(fy.id).subscribe(() => this.loadFiscalYears()); }
 
-  cloneFY(fy: FiscalYear) {
-    this.svc.cloneFiscalYear(fy.id).subscribe(() => this.loadFiscalYears());
-  }
+  cloneFY(fy: FiscalYear) { this.svc.cloneFiscalYear(fy.id).subscribe(() => this.loadFiscalYears()); }
 
-  saveConfig() {
-    if (!this.tenantConfig) return;
-    this.svc.updateConfig(this.tenantConfig).subscribe(c => this.tenantConfig = c);
-  }
+  saveConfig() { if (!this.tenantConfig) return;
+    this.svc.updateConfig(this.tenantConfig).subscribe(c => this.tenantConfig = c); }
 
-  saveCostCategory(cat: CostCategory) {
-    this.svc.updateCostCategory(cat.id, cat).subscribe();
-  }
+  saveCostCategory(cat: CostCategory) { this.svc.updateCostCategory(cat.id, cat).subscribe(); }
 
-  addCostCategory() {
-    const order = this.costCategories.length + 1;
+  addCostCategory() { const order = this.costCategories.length + 1;
     this.svc.createCostCategory({ ...this.newCat, displayOrder: order, isActive: true })
-      .subscribe(() => {
-        this.newCat = { categoryName: '', categoryCode: '', defaultEstimatePerHire: null };
-        this.loadCostCategories();
-      });
-  }
+      .subscribe(() => { this.newCat = { categoryName: '', categoryCode: '', defaultEstimatePerHire: null };
+        this.loadCostCategories(); }); }
 
-  exportExcel(reportType = 'all') {
-    if (!this.selectedFyId) return;
-    this.svc.exportExcel(this.selectedFyId, reportType).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
+  exportExcel(reportType = 'all') { if (!this.selectedFyId) return;
+    this.svc.exportExcel(this.selectedFyId, reportType).subscribe(blob => { const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url;
       a.download = `Budget_${this.selectedFyLabel}_${reportType}.xlsx`;
-      a.click(); URL.revokeObjectURL(url);
-    });
-  }
+      a.click(); URL.revokeObjectURL(url); }); }
 
-  exportPpt() {
-    if (!this.selectedFyId) return;
-    this.svc.exportPpt(this.selectedFyId).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
+  exportPpt() { if (!this.selectedFyId) return;
+    this.svc.exportPpt(this.selectedFyId).subscribe(blob => { const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url;
       a.download = `Budget_${this.selectedFyLabel}.pptx`;
-      a.click(); URL.revokeObjectURL(url);
-    });
-  }
+      a.click(); URL.revokeObjectURL(url); }); }
 
-  downloadBudgetTemplate() {
-    const apiUrl = environment.apiUrl;
-    this.http.get(`${apiUrl}/api/budget/import-template`, { responseType: 'blob' }).subscribe(blob => {
-      const a = document.createElement('a');
+  downloadBudgetTemplate() { const apiUrl = environment.apiUrl;
+    this.http.get(`${apiUrl}/api/budget/import-template`, { responseType: 'blob' }).subscribe(blob => { const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'Budget_Import_Template.xlsx';
       a.click();
-      URL.revokeObjectURL(a.href);
-    });
-  }
+      URL.revokeObjectURL(a.href); }); }
 
-  downloadBudgetSample() {
-    this.downloadBudgetTemplate();
-  }
+  downloadBudgetSample() { this.downloadBudgetTemplate(); }
 
-  onBudgetExcelUpload(event: Event) {
-    const input = event.target as HTMLInputElement;
+  onBudgetExcelUpload(event: Event) { const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
@@ -1773,20 +1551,12 @@ export class BudgetComponent implements OnInit {
     fd.append('file', file);
 
     const apiUrl = environment.apiUrl;
-    this.http.post<any>(`${apiUrl}/api/budget/import-excel`, fd).subscribe({
-      next: res => {
-        this.budgetImportResult = res;
-        this.loadFiscalYears();
-      },
-      error: err => {
-        this.importErrMsg = 'Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000);
-      }
-    });
-    input.value = '';
-  }
+    this.http.post<any>(`${apiUrl}/api/budget/import-excel`, fd).subscribe({ next: res => { this.budgetImportResult = res;
+        this.loadFiscalYears(); },
+      error: err => { this.importErrMsg = 'Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000); } });
+    input.value = ''; }
 
-  onBudgetCsvUpload(event: Event) {
-    const input = event.target as HTMLInputElement;
+  onBudgetCsvUpload(event: Event) { const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
@@ -1794,28 +1564,18 @@ export class BudgetComponent implements OnInit {
     fd.append('file', file);
 
     const apiUrl = environment.apiUrl;
-    this.http.post<any>(`${apiUrl}/api/budget/import-csv`, fd).subscribe({
-      next: res => {
-        this.budgetImportResult = res;
-        this.loadFiscalYears();
-      },
-      error: err => {
-        this.importErrMsg = 'CSV Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000);
-      }
-    });
-    input.value = '';
-  }
+    this.http.post<any>(`${apiUrl}/api/budget/import-csv`, fd).subscribe({ next: res => { this.budgetImportResult = res;
+        this.loadFiscalYears(); },
+      error: err => { this.importErrMsg = 'CSV Import failed: ' + (err?.error?.error ?? 'Unknown error'); setTimeout(() => this.importErrMsg = '', 5000); } });
+    input.value = ''; }
 
-  exportCsv(type: 'allocations' | 'actuals') {
-    const apiUrl = environment.apiUrl;
+  exportCsv(type: 'allocations' | 'actuals') { const apiUrl = environment.apiUrl;
     const fyParam = this.selectedFyId ? `&fiscalYearId=${this.selectedFyId}` : '';
-    this.http.get(`${apiUrl}/api/budget/export-csv?type=${type}${fyParam}`, { responseType: 'blob' }).subscribe(blob => {
-      const label = this.selectedFyId ? (this.fiscalYears.find((f: any) => f.id === this.selectedFyId)?.fiscalYearLabel || '') : 'All';
+    this.http.get(`${apiUrl}/api/budget/export-csv?type=${type}${fyParam}`, { responseType: 'blob' }).subscribe(blob => { const label = this.selectedFyId ? (this.fiscalYears.find((f: any) => f.id === this.selectedFyId)?.fiscalYearLabel || '') : 'All';
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `Budget_${type}_${label}_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
-      URL.revokeObjectURL(a.href);
-    });
-  }
+      URL.revokeObjectURL(a.href); }); }
 }
+

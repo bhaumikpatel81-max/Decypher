@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-platform-admin',
+@Component({ selector: 'app-platform-admin',
   template: `
     <div style="display:flex;min-height:100vh;background:var(--bg,#0f0f14);">
       <!-- Sidebar -->
@@ -177,8 +176,7 @@ import { environment } from '../../environments/environment';
     </div>
   `
 })
-export class PlatformAdminComponent implements OnInit {
-  tab = 'overview';
+export class PlatformAdminComponent implements OnInit { tab = 'overview';
   navItems = [
     { id: 'overview', icon: '📊', label: 'Overview' },
     { id: 'tenants',  icon: '🏢', label: 'Tenants' },
@@ -194,102 +192,71 @@ export class PlatformAdminComponent implements OnInit {
   showCreate = false;
   createError = '';
 
-  newTenant = {
-    companyName: '', industry: '', adminEmail: '', adminPassword: '',
-    adminFirstName: '', adminLastName: '', subscriptionPlan: 'Free', employeeCount: 0
-  };
+  newTenant = { companyName: '', industry: '', adminEmail: '', adminPassword: '',
+    adminFirstName: '', adminLastName: '', subscriptionPlan: 'Free', employeeCount: 0 };
 
   currentUser: any = null;
   private api = `${environment.apiUrl}/api/platform`;
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  ngOnInit() {
-    const user = localStorage.getItem('platform_user');
+  ngOnInit() { const user = localStorage.getItem('platform_user');
     if (!user) { this.router.navigate(['/platform-login']); return; }
     this.currentUser = JSON.parse(user);
     this.loadStats();
-    this.loadTenants();
-  }
+    this.loadTenants(); }
 
-  private get headers() {
-    const token = localStorage.getItem('platform_token') ?? '';
-    return new HttpHeaders({ Authorization: `Bearer ${token}` });
-  }
+  private get headers() { const token = localStorage.getItem('platform_token') ?? '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` }); }
 
-  loadStats() {
-    this.http.get<any>(`${this.api}/stats`, { headers: this.headers }).subscribe(s => {
-      this.kpis = [
+  loadStats() { this.http.get<any>(`${this.api}/stats`, { headers: this.headers }).subscribe(s => { this.kpis = [
         { label: 'Total Tenants',    value: s.totalTenants },
         { label: 'Active',           value: s.activeTenants },
         { label: 'Suspended',        value: s.suspendedTenants },
         { label: 'Total Users',      value: s.totalUsers },
         { label: 'New This Month',   value: s.newThisMonth },
         { label: 'Paid Plans',       value: s.paidTenants },
-      ];
-    });
-  }
+      ]; }); }
 
-  loadTenants() {
-    const params = new URLSearchParams();
+  loadTenants() { const params = new URLSearchParams();
     if (this.tenantSearch) params.set('search', this.tenantSearch);
     if (this.tenantStatus) params.set('status', this.tenantStatus);
     if (this.tenantPlan)   params.set('plan', this.tenantPlan);
     this.http.get<any[]>(`${this.api}/tenants?${params}`, { headers: this.headers })
-      .subscribe(t => this.tenants = t);
-  }
+      .subscribe(t => this.tenants = t); }
 
-  loadUsers() {
-    const params = new URLSearchParams();
+  loadUsers() { const params = new URLSearchParams();
     if (this.userSearch) params.set('search', this.userSearch);
     this.http.get<any[]>(`${this.api}/users?${params}`, { headers: this.headers })
-      .subscribe(u => this.platformUsers = u);
-  }
+      .subscribe(u => this.platformUsers = u); }
 
-  createTenant() {
-    this.createError = '';
-    const body = {
-      companyName:    this.newTenant.companyName,
+  createTenant() { this.createError = '';
+    const body = { companyName:    this.newTenant.companyName,
       industry:       this.newTenant.industry,
       adminEmail:     this.newTenant.adminEmail,
       adminPassword:  this.newTenant.adminPassword,
       adminFirstName: this.newTenant.adminFirstName,
       adminLastName:  this.newTenant.adminLastName,
       subscriptionPlan: this.newTenant.subscriptionPlan,
-      employeeCount:  this.newTenant.employeeCount
-    };
-    this.http.post<any>(`${this.api}/tenants`, body, { headers: this.headers }).subscribe({
-      next: () => {
-        this.showCreate = false;
+      employeeCount:  this.newTenant.employeeCount };
+    this.http.post<any>(`${this.api}/tenants`, body, { headers: this.headers }).subscribe({ next: () => { this.showCreate = false;
         this.newTenant = { companyName:'',industry:'',adminEmail:'',adminPassword:'',adminFirstName:'',adminLastName:'',subscriptionPlan:'Free',employeeCount:0 };
-        this.loadTenants(); this.loadStats();
-      },
-      error: err => this.createError = err.error?.error ?? err.error?.errors?.[0] ?? 'Failed to create tenant.'
-    });
-  }
+        this.loadTenants(); this.loadStats(); },
+      error: err => this.createError = err.error?.error ?? err.error?.errors?.[0] ?? 'Failed to create tenant.' }); }
 
-  suspendTenant(t: any) {
-    this.http.patch(`${this.api}/tenants/${t.id}/status`, { isActive: false }, { headers: this.headers })
-      .subscribe(() => { t.isActive = false; });
-  }
+  suspendTenant(t: any) { this.http.patch(`${this.api}/tenants/${t.id}/status`, { isActive: false }, { headers: this.headers })
+      .subscribe(() => { t.isActive = false; }); }
 
-  activateTenant(t: any) {
-    this.http.patch(`${this.api}/tenants/${t.id}/status`, { isActive: true }, { headers: this.headers })
-      .subscribe(() => { t.isActive = true; });
-  }
+  activateTenant(t: any) { this.http.patch(`${this.api}/tenants/${t.id}/status`, { isActive: true }, { headers: this.headers })
+      .subscribe(() => { t.isActive = true; }); }
 
-  toggleUser(u: any) {
-    this.http.patch(`${this.api}/users/${u.id}/status`, { isActive: !u.isActive }, { headers: this.headers })
-      .subscribe(() => { u.isActive = !u.isActive; });
-  }
+  toggleUser(u: any) { this.http.patch(`${this.api}/users/${u.id}/status`, { isActive: !u.isActive }, { headers: this.headers })
+      .subscribe(() => { u.isActive = !u.isActive; }); }
 
-  planColor(plan: string) {
-    return plan === 'Enterprise' ? 'rgba(139,92,246,.2)' : plan === 'Growth' ? 'rgba(34,197,94,.15)' : 'rgba(156,163,175,.15)';
-  }
+  planColor(plan: string) { return plan === 'Enterprise' ? 'rgba(139,92,246,.2)' : plan === 'Growth' ? 'rgba(34,197,94,.15)' : 'rgba(156,163,175,.15)'; }
 
-  logout() {
-    localStorage.removeItem('platform_token');
+  logout() { localStorage.removeItem('platform_token');
     localStorage.removeItem('platform_user');
-    this.router.navigate(['/platform-login']);
-  }
+    this.router.navigate(['/platform-login']); }
 }
+

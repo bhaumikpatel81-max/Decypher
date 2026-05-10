@@ -1,19 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 
-export interface RecruiterPerformance {
-  id: string;
+export interface RecruiterPerformance { id: string;
   name: string;
   placements: number;
   offers: number;
   acceptanceRate: number;
   avgTimeToClose: number;
   month: string;
-  rank: number;
-}
+  rank: number; }
 
-@Component({
-  selector: 'app-recruiters',
+@Component({ selector: 'app-recruiters',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -220,36 +217,23 @@ export interface RecruiterPerformance {
     </section>
   `,
   styles: [`
-    .rec-rank {
-      display:inline-flex; align-items:center; justify-content:center;
-      width:24px; height:24px; border-radius:6px; font-weight:700; font-size:12px; flex-shrink:0;
-    }
-    .recruiters-container {
-      padding: 24px;
-    }
-    .page-header {
-      display: flex;
+    .rec-rank { display:inline-flex; align-items:center; justify-content:center;
+      width:24px; height:24px; border-radius:6px; font-weight:700; font-size:12px; flex-shrink:0; }
+    .recruiters-container { padding: 24px; }
+    .page-header { display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 32px;
-    }
-    .header-controls {
-      display: flex;
-      gap: 8px;
-    }
-    .btn.active {
-      background-color: var(--violet-600);
-      color: white;
-    }
-    .podium {
-      display: grid;
+      margin-bottom: 32px; }
+    .header-controls { display: flex;
+      gap: 8px; }
+    .btn.active { background-color: var(--violet-600);
+      color: white; }
+    .podium { display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-bottom: 32px;
-      align-items: flex-end;
-    }
-    .podium-item {
-      background: var(--white);
+      align-items: flex-end; }
+    .podium-item { background: var(--white);
       border: 2px solid var(--gray-200);
       border-radius: 8px;
       padding: 20px;
@@ -257,22 +241,17 @@ export interface RecruiterPerformance {
       height: 200px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-    }
-    .podium-1st {
-      border-color: var(--yellow-400);
-      height: 240px;
-    }
+      justify-content: space-between; }
+    .podium-1st { border-color: var(--yellow-400);
+      height: 240px; }
     .podium-2nd { border-color: var(--gray-400); height: 200px; }
     .podium-3rd { border-color: var(--amber-600); height: 160px; }
     .podium-medal { font-size: 48px; margin: 10px 0; }
     .podium-name { font-weight: 600; font-size: 16px; }
-    .rank-badge {
-      padding: 4px 12px;
+    .rank-badge { padding: 4px 12px;
       background: var(--gray-100);
       border-radius: 4px;
-      font-weight: 600;
-    }
+      font-weight: 600; }
     .rank-1 { background-color: rgba(251, 191, 36, 0.2); color: var(--yellow-600); }
     .rank-2 { background-color: rgba(156, 163, 175, 0.2); color: var(--gray-700); }
     .rank-3 { background-color: rgba(217, 119, 6, 0.2); color: var(--amber-700); }
@@ -280,22 +259,18 @@ export interface RecruiterPerformance {
     .table-row:hover { background-color: var(--gray-50); }
     .attention-card { margin-top: 24px; }
     .attention-list { display: flex; flex-direction: column; gap: 12px; }
-    .attention-item {
-      display: flex;
+    .attention-item { display: flex;
       gap: 12px;
       align-items: center;
       padding: 12px;
       background: rgba(251, 146, 60, 0.05);
       border-left: 3px solid var(--orange-500);
-      border-radius: 4px;
-    }
+      border-radius: 4px; }
     .attention-icon { font-size: 20px; }
     .attention-title { font-weight: 600; font-size: 14px; }
     .attention-description { font-size: 12px; color: var(--gray-600); }
-  `]
-})
-export class RecruitersComponent implements OnInit {
-  activeTab = 0;
+  `] })
+export class RecruitersComponent implements OnInit { activeTab = 0;
   recruiters: RecruiterPerformance[] = [];
   topRecruiter: RecruiterPerformance | null = null;
   top2Recruiter: RecruiterPerformance | null = null;
@@ -307,84 +282,50 @@ export class RecruitersComponent implements OnInit {
 
   get totalPlacements() { return this.recruiters.reduce((s, r) => s + r.placements, 0); }
   get maxPlacements()   { return Math.max(...this.recruiters.map(r => r.placements), 1); }
-  get avgAcceptance()   {
-    return this.recruiters.length
+  get avgAcceptance()   { return this.recruiters.length
       ? Math.round(this.recruiters.reduce((s, r) => s + r.acceptanceRate, 0) / this.recruiters.length)
-      : 0;
-  }
-  get avgTimeClose()    {
-    return this.recruiters.length
+      : 0; }
+  get avgTimeClose()    { return this.recruiters.length
       ? Math.round(this.recruiters.reduce((s, r) => s + r.avgTimeToClose, 0) / this.recruiters.length)
-      : 0;
-  }
+      : 0; }
 
-  get acceptanceSegments(): {color: string, dash: number, offset: number}[] {
-    const colors = ['#7c3aed', '#06b6d4', '#10b981', '#6366f1', '#f59e0b'];
+  get acceptanceSegments(): {color: string, dash: number, offset: number}[] { const colors = ['#7c3aed', '#06b6d4', '#10b981', '#6366f1', '#f59e0b'];
     const total = this.recruiters.reduce((s, r) => s + r.acceptanceRate, 0) || 1;
     let offset = 0;
-    return this.recruiters.map((r, i) => {
-      const dash = (r.acceptanceRate / total) * 283;
+    return this.recruiters.map((r, i) => { const dash = (r.acceptanceRate / total) * 283;
       const seg = { color: colors[i % 5], dash, offset };
       offset += dash;
-      return seg;
-    });
-  }
+      return seg; }); }
 
-  get recLinePts(): string {
-    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get recAreaPts(): string {
-    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+  get recLinePts(): string { const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get recAreaPts(): string { const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get recDotPts(): {x: number, y: number}[] {
-    const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return `0,90 ${line} 500,90`; }
+  get recDotPts(): {x: number, y: number}[] { const pts = this.recTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
   attentionItems = [
-    {
-      title: 'Raj has low acceptance rate',
-      description: '22% acceptance rate this quarter, investigation recommended'
-    },
-    {
-      title: 'Priya exceeding targets',
-      description: 'Consider for bonus or promotion - 145% of quota'
-    },
-    {
-      title: 'Pipeline bottleneck',
-      description: 'Avg time to close increased by 5 days - check process'
-    }
+    { title: 'Raj has low acceptance rate',
+      description: '22% acceptance rate this quarter, investigation recommended' },
+    { title: 'Priya exceeding targets',
+      description: 'Consider for bonus or promotion - 145% of quota' },
+    { title: 'Pipeline bottleneck',
+      description: 'Avg time to close increased by 5 days - check process' }
   ];
 
   constructor(private dashboardService: DashboardService) {}
 
-  ngOnInit(): void {
-    this.loadRecruiterPerformance();
-  }
+  ngOnInit(): void { this.loadRecruiterPerformance(); }
 
-  loadRecruiterPerformance(): void {
-    const tenantId = this.getTenantId();
-    this.dashboardService.getRecruiterPerformance(tenantId).subscribe({
-      next: (recruiters) => {
-        this.recruiters = recruiters.sort((a, b) => b.placements - a.placements);
-        if (this.recruiters.length > 0) {
-          this.topRecruiter = this.recruiters[0];
+  loadRecruiterPerformance(): void { const tenantId = this.getTenantId();
+    this.dashboardService.getRecruiterPerformance(tenantId).subscribe({ next: (recruiters) => { this.recruiters = recruiters.sort((a, b) => b.placements - a.placements);
+        if (this.recruiters.length > 0) { this.topRecruiter = this.recruiters[0];
           this.top2Recruiter = this.recruiters[1];
-          this.top3Recruiter = this.recruiters[2];
-        }
-      },
-      error: (error) => console.error('Failed to load recruiter performance', error)
-    });
-  }
+          this.top3Recruiter = this.recruiters[2]; } },
+      error: (error) => console.error('Failed to load recruiter performance', error) }); }
 
-  setPeriod(period: 'month' | 'quarter' | 'year'): void {
-    this.selectedPeriod = period;
-    this.loadRecruiterPerformance();
-  }
+  setPeriod(period: 'month' | 'quarter' | 'year'): void { this.selectedPeriod = period;
+    this.loadRecruiterPerformance(); }
 
-  private getTenantId(): string {
-    return localStorage.getItem('tenantId') || 'default';
-  }
-}
+  private getTenantId(): string { return localStorage.getItem('tenantId') || 'default'; } }
+

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
@@ -69,8 +69,7 @@ import { environment } from '../../environments/environment';
     </div>
   </div>
 </div>`, styles:[`.overall-card{text-align:center}.review-card{padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}.review-card.negative{border-color:#fca5a5;background:rgba(239,68,68,.02)}.our-row{background:rgba(107,77,240,.04)}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;font-size:13px}`] })
-export class EmployerReviewsComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/branding`;
+export class EmployerReviewsComponent implements OnInit { private api = `${environment.apiUrl}/api/branding`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   filterPlatform = ''; selectedReview: any = null; response = ''; loading = false;
   overall: any = { rating: 0, breakdown: [] };
@@ -79,51 +78,31 @@ export class EmployerReviewsComponent implements OnInit {
 
   ngOnInit() { this.loadReviews(); this.loadCompetitors(); }
 
-  loadReviews() {
-    this.loading = true;
-    this.http.get<any>(`${this.api}/reviews`).subscribe({
-      next: result => {
-        this.loading = false;
+  loadReviews() { this.loading = true;
+    this.http.get<any>(`${this.api}/reviews`).subscribe({ next: result => { this.loading = false;
         const data = Array.isArray(result) ? result : (result?.reviews || []);
-        this.reviews = [...data.map((r: any) => ({
-          id: r.id, rating: r.rating || 0,
+        this.reviews = [...data.map((r: any) => ({ id: r.id, rating: r.rating || 0,
           role: r.reviewerRole || r.role || 'Employee',
           platform: r.platform || 'Glassdoor',
           date: r.reviewDate?.slice(0, 10) || r.date?.slice(0, 10) || '',
-          pros: r.pros || '', cons: r.cons || '', responded: !!r.response
-        }))];
+          pros: r.pros || '', cons: r.cons || '', responded: !!r.response }))];
         const summary = result?.summary;
-        if (summary) {
-          this.overall = { ...summary, breakdown: [...(summary.breakdown || [])] };
-        } else if (this.reviews.length) {
-          const avg = this.reviews.reduce((s, r) => s + r.rating, 0) / this.reviews.length;
-          this.overall = { rating: +avg.toFixed(1), breakdown: [] };
-        }
-      },
-      error: () => { this.loading = false; this.snack.open('Failed to load reviews', 'Close', { duration: 3000 }); }
-    });
-  }
+        if (summary) { this.overall = { ...summary, breakdown: [...(summary.breakdown || [])] }; } else if (this.reviews.length) { const avg = this.reviews.reduce((s, r) => s + r.rating, 0) / this.reviews.length;
+          this.overall = { rating: +avg.toFixed(1), breakdown: [] }; } },
+      error: () => { this.loading = false; this.snack.open('Failed to load reviews', 'Close', { duration: 3000 }); } }); }
 
-  loadCompetitors() {
-    this.http.get<any[]>(`${this.api}/competitor-ratings`).subscribe({
-      next: data => { this.competitors = [...(data || [])]; },
-      error: () => { this.competitors = []; }
-    });
-  }
+  loadCompetitors() { this.http.get<any[]>(`${this.api}/competitor-ratings`).subscribe({ next: data => { this.competitors = [...(data || [])]; },
+      error: () => { this.competitors = []; } }); }
 
   get filteredReviews() { return this.reviews.filter(r => !this.filterPlatform || r.platform === this.filterPlatform); }
 
   respond(r: any) { this.selectedReview = r; this.response = ''; }
 
-  submitResponse() {
-    if (!this.selectedReview || !this.response) return;
-    this.http.post(`${this.api}/reviews/${this.selectedReview.id}/respond`, { response: this.response }).subscribe({
-      next: () => {
-        this.reviews = this.reviews.map(r => r.id === this.selectedReview.id ? { ...r, responded: true } : r);
+  submitResponse() { if (!this.selectedReview || !this.response) return;
+    this.http.post(`${this.api}/reviews/${this.selectedReview.id}/respond`, { response: this.response }).subscribe({ next: () => { this.reviews = this.reviews.map(r => r.id === this.selectedReview.id ? { ...r, responded: true } : r);
         this.snack.open('Response submitted', '', { duration: 2000 });
-        this.response = ''; this.selectedReview = null;
-      },
-      error: () => this.snack.open('Failed to submit response', 'Close', { duration: 3000 })
-    });
-  }
+        this.response = ''; this.selectedReview = null; },
+      error: () => this.snack.open('Failed to submit response', 'Close', { duration: 3000 }) }); }
 }
+
+

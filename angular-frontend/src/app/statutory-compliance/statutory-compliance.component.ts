@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
@@ -54,8 +54,7 @@ import { environment } from '../../environments/environment';
     </table>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.comp-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}.comp-card.filed{border-color:#10b981;background:rgba(16,185,129,.03)}.comp-card.overdue{border-color:#ef4444;background:rgba(239,68,68,.03)}.status-dot{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}.status-dot.filed{background:#d1fae5;color:#065f46}.status-dot.overdue{background:#fee2e2;color:#991b1b}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}`] })
-export class StatutoryComplianceComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/hr-compliance`;
+export class StatutoryComplianceComponent implements OnInit { private api = `${environment.apiUrl}/api/hr-compliance`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   showUpload = false; loading = false;
   compTypes = ['PF', 'ESI', 'PT', 'TDS', 'LWF'];
@@ -66,27 +65,18 @@ export class StatutoryComplianceComponent implements OnInit {
 
   ngOnInit() { this.loadFilings(); }
 
-  loadFilings() {
-    this.loading = true;
-    this.http.get<any[]>(`${this.api}/statutory`).subscribe({
-      next: data => {
-        this.loading = false;
+  loadFilings() { this.loading = true;
+    this.http.get<any[]>(`${this.api}/statutory`).subscribe({ next: data => { this.loading = false;
         const filings = data || [];
-        this.history = [...filings.filter(f => f.status === 'Filed').map(f => ({
-          type: f.complianceType || '', month: f.period || '',
-          amount: f.amount || 0, filedOn: f.filedDate?.slice(0, 10) || '', ref: f.referenceNumber || ''
-        }))];
+        this.history = [...filings.filter(f => f.status === 'Filed').map(f => ({ type: f.complianceType || '', month: f.period || '',
+          amount: f.amount || 0, filedOn: f.filedDate?.slice(0, 10) || '', ref: f.referenceNumber || '' }))];
         // Build current status per compliance type from most recent filing per type
         const byType: Record<string, any> = {};
-        filings.forEach(f => {
-          const t = f.complianceType;
-          if (!byType[t] || new Date(f.dueDate) > new Date(byType[t].dueDate)) byType[t] = f;
-        });
-        this.compStatus = [...this.compTypes.map(t => {
-          const f = byType[t];
+        filings.forEach(f => { const t = f.complianceType;
+          if (!byType[t] || new Date(f.dueDate) > new Date(byType[t].dueDate)) byType[t] = f; });
+        this.compStatus = [...this.compTypes.map(t => { const f = byType[t];
           return f ? { type: t, dueDate: f.dueDate?.slice(0, 10) || '', lastFiled: f.filedDate?.slice(0, 10) || '—', amount: f.amount?.toLocaleString('en-IN') || '0', status: f.status || 'Pending' }
-                   : { type: t, dueDate: '—', lastFiled: '—', amount: '0', status: 'Pending' };
-        })];
+                   : { type: t, dueDate: '—', lastFiled: '—', amount: '0', status: 'Pending' }; })];
         const filed = this.compStatus.filter(c => c.status === 'Filed').length;
         const overdue = this.compStatus.filter(c => c.status === 'Overdue').length;
         const totalPaid = filings.filter(f => f.status === 'Filed').reduce((s: number, f: any) => s + (f.amount || 0), 0);
@@ -95,29 +85,18 @@ export class StatutoryComplianceComponent implements OnInit {
           { val: overdue, lbl: 'Overdue', color: '#ef4444' },
           { val: '₹' + (totalPaid >= 100000 ? (totalPaid / 100000).toFixed(1) + 'L' : totalPaid.toLocaleString('en-IN')), lbl: 'Total Paid', color: '#6b4df0' },
           { val: this.compStatus.filter(c => c.status === 'Pending').length, lbl: 'Pending', color: '#f59e0b' }
-        ];
-      },
-      error: () => {
-        this.loading = false;
-        this.snack.open('Failed to load statutory compliance data', 'Close', { duration: 3000 });
-      }
-    });
-  }
+        ]; },
+      error: () => { this.loading = false;
+        this.snack.open('Failed to load statutory compliance data', 'Close', { duration: 3000 }); } }); }
 
-  upload() {
-    if (!this.draft.month || !this.draft.amount) return;
+  upload() { if (!this.draft.month || !this.draft.amount) return;
     const payload = { complianceType: this.draft.type, period: this.draft.month, amount: +this.draft.amount, referenceNumber: this.draft.ref, status: 'Filed', filedDate: new Date().toISOString().slice(0, 10) };
-    this.http.post<any>(`${this.api}/statutory`, payload).subscribe({
-      next: () => { this.loadFilings(); this.showUpload = false; this.snack.open('Challan uploaded successfully', '', { duration: 2000 }); },
-      error: err => this.snack.open(err?.error?.message || 'Upload failed', 'Close', { duration: 3000 })
-    });
-  }
+    this.http.post<any>(`${this.api}/statutory`, payload).subscribe({ next: () => { this.loadFilings(); this.showUpload = false; this.snack.open('Challan uploaded successfully', '', { duration: 2000 }); },
+      error: err => this.snack.open(err?.error?.message || 'Upload failed', 'Close', { duration: 3000 }) }); }
 
-  markFiled(c: any) {
-    if (!c) return;
-    this.http.patch<any>(`${this.api}/statutory-filings/${c.id}/status`, { status: 'Filed' }).subscribe({
-      next: () => { this.loadFilings(); this.snack.open(`${c.type} marked as filed`, '', { duration: 2000 }); },
-      error: () => { c.status = 'Filed'; this.snack.open(`${c.type} marked as filed (pending sync)`, '', { duration: 2000 }); }
-    });
-  }
+  markFiled(c: any) { if (!c) return;
+    this.http.patch<any>(`${this.api}/statutory-filings/${c.id}/status`, { status: 'Filed' }).subscribe({ next: () => { this.loadFilings(); this.snack.open(`${c.type} marked as filed`, '', { duration: 2000 }); },
+      error: () => { c.status = 'Filed'; this.snack.open(`${c.type} marked as filed (pending sync)`, '', { duration: 2000 }); } }); }
 }
+
+

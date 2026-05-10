@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
@@ -46,8 +46,7 @@ import { environment } from '../../environments/environment';
     </table>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}.skill-chip{display:inline-block;padding:1px 6px;background:rgba(107,77,240,.08);color:#6b4df0;border-radius:4px;font-size:10px;margin:1px}.seg-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#e0e7ff;color:#3730a3}`] })
-export class TalentCommunityComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/branding`;
+export class TalentCommunityComponent implements OnInit { private api = `${environment.apiUrl}/api/branding`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   search='';filterSeg='';showAlert=false;
   segments=['Technology','Product','Sales','HR','Finance','Leadership'];
@@ -55,43 +54,31 @@ export class TalentCommunityComponent implements OnInit {
   kpis=[{val:0,lbl:'Community Size',color:'#6b4df0'},{val:0,lbl:'New This Month',color:'#10b981'},{val:'0%',lbl:'Conversion Rate',color:'#f59e0b'},{val:0,lbl:'Hired from Community',color:'#2563eb'}];
   members:any[]=[];
   ngOnInit(){ this.loadMembers(); }
-  loadMembers() {
-    this.http.get<any[]>(`${this.api}/talent-community`).subscribe({
-      next: data => {
-        this.members = [...(data || []).map(m => ({
-          name: m.name || m.candidateName || '',
+  loadMembers() { this.http.get<any[]>(`${this.api}/talent-community`).subscribe({ next: data => { this.members = [...(data || []).map(m => ({ name: m.name || m.candidateName || '',
           email: m.email || '',
           skills: Array.isArray(m.skills) ? m.skills : (m.skills || '').split(',').map((s: string) => s.trim()).filter(Boolean),
           role: m.desiredRole || m.role || '',
           location: m.location || '',
           segment: m.segment || m.category || '',
-          joined: m.joinedDate?.slice(0, 10) || m.createdDate?.slice(0, 10) || ''
-        }))];
+          joined: m.joinedDate?.slice(0, 10) || m.createdDate?.slice(0, 10) || '' }))];
         const total = this.members.length;
         const hired = (data || []).filter(m => m.status === 'Hired').length;
-        const newThisMonth = (data || []).filter(m => {
-          const d = new Date(m.joinedDate || m.createdDate || '');
+        const newThisMonth = (data || []).filter(m => { const d = new Date(m.joinedDate || m.createdDate || '');
           const now = new Date();
-          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-        }).length;
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); }).length;
         this.kpis = [
           { val: total, lbl: 'Community Size', color: '#6b4df0' },
           { val: newThisMonth, lbl: 'New This Month', color: '#10b981' },
           { val: total ? `${((hired / total) * 100).toFixed(1)}%` : '0%', lbl: 'Conversion Rate', color: '#f59e0b' },
           { val: hired, lbl: 'Hired from Community', color: '#2563eb' },
-        ];
-      },
-      error: () => this.snack.open('Failed to load talent community', 'Close', { duration: 3000 })
-    });
-  }
+        ]; },
+      error: () => this.snack.open('Failed to load talent community', 'Close', { duration: 3000 }) }); }
   get filtered(){return this.members.filter(c=>(!this.search||(c.name+c.skills.join('')+c.role).toLowerCase().includes(this.search.toLowerCase()))&&(!this.filterSeg||c.segment===this.filterSeg));}
   get targetCount(){return this.alert.segment?this.members.filter(c=>c.segment===this.alert.segment).length:this.members.length;}
-  sendAlert(){
-    const payload = { segment: this.alert.segment, role: this.alert.role, location: this.alert.location, message: this.alert.message };
-    this.http.post(`${this.api}/talent-community/alert`, payload).subscribe({
-      next: () => { this.snack.open(`Job alert sent to ${this.targetCount} candidates for "${this.alert.role||'General Roles'}"`, '', { duration: 3000 }); this.showAlert = false; },
-      error: () => { this.snack.open(`Alert queued for ${this.targetCount} candidates`, '', { duration: 3000 }); this.showAlert = false; }
-    });
-  }
+  sendAlert(){ const payload = { segment: this.alert.segment, role: this.alert.role, location: this.alert.location, message: this.alert.message };
+    this.http.post(`${this.api}/talent-community/alert`, payload).subscribe({ next: () => { this.snack.open(`Job alert sent to ${this.targetCount} candidates for "${this.alert.role||'General Roles'}"`, '', { duration: 3000 }); this.showAlert = false; },
+      error: () => { this.snack.open(`Alert queued for ${this.targetCount} candidates`, '', { duration: 3000 }); this.showAlert = false; } }); }
   match(c:any){ this.snack.open(`Matching open roles for ${c.name}…`, '', { duration: 2500 }); }
 }
+
+

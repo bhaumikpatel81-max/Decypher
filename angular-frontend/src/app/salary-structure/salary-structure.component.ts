@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-salary-structure',
+@Component({ selector: 'app-salary-structure',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -154,8 +153,7 @@ import { environment } from '../../environments/environment';
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class SalaryStructureComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class SalaryStructureComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
   tab = 'grades';
   previewCTC = 1200000;
@@ -189,27 +187,14 @@ export class SalaryStructureComponent implements OnInit {
 
   ngOnInit() { this.calcPreview(); this.loadEmployees(); this.loadComponents(); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.empList = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.empList = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim()); }); }
 
-  loadComponents() {
-    this.http.get<any[]>(`${this.api}/salary-components`).subscribe(data => {
-      if (data && data.length) {
-        this.components = data.map(c => ({
-          name: c.name, value: c.percentage || c.fixedAmount || 0,
+  loadComponents() { this.http.get<any[]>(`${this.api}/salary-components`).subscribe(data => { if (data && data.length) { this.components = data.map(c => ({ name: c.name, value: c.percentage || c.fixedAmount || 0,
           min: 0, max: c.type === 'deduction' ? 30 : 70, step: 1,
           fixed: !!c.fixedAmount && !c.percentage, type: c.componentType?.toLowerCase() || 'earning',
-          desc: c.description || ''
-        }));
-      }
-    });
-  }
+          desc: c.description || '' })); } }); }
 
-  calcPreview() {
-    if (!this.previewCTC) return;
+  calcPreview() { if (!this.previewCTC) return;
     const ctc = this.previewCTC;
     const basic = ctc * 0.5 / 12;
     const hra = ctc * 0.20 / 12;
@@ -230,31 +215,19 @@ export class SalaryStructureComponent implements OnInit {
       { label: 'Professional Tax', monthly: pt, annual: pt * 12, type: 'deduction' },
       { label: 'TDS', monthly: tds, annual: tds * 12, type: 'deduction' },
       { label: 'Net Take Home', monthly: net, annual: net * 12, type: 'total' },
-    ];
-  }
+    ]; }
 
-  saveComponents() {
-    const payload = this.components.map(c => ({
-      name: c.name, componentType: c.type,
+  saveComponents() { const payload = this.components.map(c => ({ name: c.name, componentType: c.type,
       percentage: c.fixed ? null : c.value,
-      fixedAmount: c.fixed ? c.value : null
-    }));
-    this.http.post(`${this.api}/salary-components`, payload).subscribe({
-      next: () => { this.ssMsg = 'Salary structure saved'; setTimeout(() => this.ssMsg = '', 3000); },
-      error: err => { this.ssMsg = err?.error?.message || 'Failed to save'; }
-    });
-  }
+      fixedAmount: c.fixed ? c.value : null }));
+    this.http.post(`${this.api}/salary-components`, payload).subscribe({ next: () => { this.ssMsg = 'Salary structure saved'; setTimeout(() => this.ssMsg = '', 3000); },
+      error: err => { this.ssMsg = err?.error?.message || 'Failed to save'; } }); }
 
   ssMsg = '';
 
-  assignStructure() {
-    if (!this.assignForm.emp || !this.assignForm.grade) { this.ssMsg = 'Fill all fields'; return; }
-    this.http.post(`${this.api}/employee-salary/assign`, {
-      employeeName: this.assignForm.emp, grade: this.assignForm.grade,
-      annualCtc: this.assignForm.ctc, effectiveDate: this.assignForm.date
-    }).subscribe({
-      next: () => { this.ssMsg = `Salary structure assigned to ${this.assignForm.emp}`; this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; setTimeout(() => this.ssMsg = '', 3000); },
-      error: err => { this.ssMsg = err?.error?.message || 'Failed to assign'; }
-    });
-  }
+  assignStructure() { if (!this.assignForm.emp || !this.assignForm.grade) { this.ssMsg = 'Fill all fields'; return; }
+    this.http.post(`${this.api}/employee-salary/assign`, { employeeName: this.assignForm.emp, grade: this.assignForm.grade,
+      annualCtc: this.assignForm.ctc, effectiveDate: this.assignForm.date }).subscribe({ next: () => { this.ssMsg = `Salary structure assigned to ${this.assignForm.emp}`; this.assignForm = { emp: '', grade: '', ctc: 0, date: '' }; setTimeout(() => this.ssMsg = '', 3000); },
+      error: err => { this.ssMsg = err?.error?.message || 'Failed to assign'; } }); }
 }
+

@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-feedback-360',
+@Component({ selector: 'app-feedback-360',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -181,8 +180,7 @@ import { environment } from '../../environments/environment';
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:14px; }
   `]
 })
-export class Feedback360Component implements OnInit {
-  private api = `${environment.apiUrl}/api/performance`;
+export class Feedback360Component implements OnInit { private api = `${environment.apiUrl}/api/performance`;
   constructor(private http: HttpClient) {}
   tab = 'requests';
   blindMode = true;
@@ -204,82 +202,49 @@ export class Feedback360Component implements OnInit {
   get pendingResponses() { return this.requests.reduce((s, r) => s + (r.reviewers.length - r.completed), 0); }
   get avgResultScore() { const vals = Object.values(this.resultScores); return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0; }
 
-  get radarPoints(): string {
-    return this.feedCategories.map((cat, i) => {
-      const score = this.resultScores[cat] || 0;
+  get radarPoints(): string { return this.feedCategories.map((cat, i) => { const score = this.resultScores[cat] || 0;
       const angle = i * 72 * Math.PI / 180 - Math.PI / 2;
       const r = (score / 5) * 90;
-      return `${r * Math.cos(angle)},${r * Math.sin(angle)}`;
-    }).join(' ');
-  }
+      return `${r * Math.cos(angle)},${r * Math.sin(angle)}`; }).join(' '); }
 
   ngOnInit() { this.loadEmployees(); this.loadRequests(); }
 
-  loadRequests() {
-    this.http.get<any[]>(`${this.api}/feedback/requests`).subscribe(data => {
-      this.requests = (data || []).map(r => ({
-        id: r.id, requesteeId: r.requesteeId,
+  loadRequests() { this.http.get<any[]>(`${this.api}/feedback/requests`).subscribe(data => { this.requests = (data || []).map(r => ({ id: r.id, requesteeId: r.requesteeId,
         subject: r.requesteeName || r.subject,
         due: r.dueDate?.slice(0,10) || '',
         completed: r.responses?.length || 0,
-        reviewers: (r.reviewers || [{ name: r.reviewerName || '', done: r.status === 'Completed' }])
-      }));
-      if (this.requests.length && !this.selectedSubject) {
-        this.selectedSubject = this.requests[0].subject;
-        this.loadResultScores(this.selectedSubject);
-      }
-    });
-  }
+        reviewers: (r.reviewers || [{ name: r.reviewerName || '', done: r.status === 'Completed' }]) }));
+      if (this.requests.length && !this.selectedSubject) { this.selectedSubject = this.requests[0].subject;
+        this.loadResultScores(this.selectedSubject); } }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
-      (data || []).forEach((e: any) => { this.employeeMap[`${e.firstName} ${e.lastName}`.trim()] = e.id; });
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => `${e.firstName} ${e.lastName}`.trim());
+      (data || []).forEach((e: any) => { this.employeeMap[`${e.firstName} ${e.lastName}`.trim()] = e.id; }); }); }
 
-  loadResultScores(subjectName: string) {
-    const req = this.requests.find(r => r.subject === subjectName);
+  loadResultScores(subjectName: string) { const req = this.requests.find(r => r.subject === subjectName);
     const id = req?.requesteeId || this.employeeMap[subjectName];
     if (!id) return;
-    this.http.get<any>(`${this.api}/feedback/summary/${id}`).subscribe(data => {
-      if (data?.categoryScores) {
-        this.resultScores = data.categoryScores;
-      } else if (Array.isArray(data?.scores)) {
-        this.resultScores = {};
-        (data.scores as any[]).forEach((s: any) => { this.resultScores[s.category] = s.avgScore || s.score || 0; });
-      }
-    });
-  }
+    this.http.get<any>(`${this.api}/feedback/summary/${id}`).subscribe(data => { if (data?.categoryScores) { this.resultScores = data.categoryScores; } else if (Array.isArray(data?.scores)) { this.resultScores = {};
+        (data.scores as any[]).forEach((s: any) => { this.resultScores[s.category] = s.avgScore || s.score || 0; }); } }); }
 
-  toggleReviewer(e: string) {
-    const idx = this.newReq.reviewers.indexOf(e);
+  toggleReviewer(e: string) { const idx = this.newReq.reviewers.indexOf(e);
     if (idx > -1) this.newReq.reviewers.splice(idx, 1);
-    else this.newReq.reviewers.push(e);
-  }
+    else this.newReq.reviewers.push(e); }
 
-  createRequest() {
-    this.reqError = '';
+  createRequest() { this.reqError = '';
     if (!this.newReq.subject || this.newReq.reviewers.length === 0) { this.reqError = 'Select subject and at least one reviewer'; return; }
     const localReq = { subject: this.newReq.subject, due: this.newReq.due, completed: 0, reviewers: this.newReq.reviewers.map(n => ({ name: n, done: false })) };
     const reviewerIds = this.newReq.reviewers.map(n => this.employeeMap[n]).filter(Boolean);
     const payload = { requesteeId: this.employeeMap[this.newReq.subject], reviewerIds, dueDate: this.newReq.due };
-    this.http.post<any>(`${this.api}/feedback/requests`, payload).subscribe({
-      next: res => { this.requests.push({ ...localReq, id: res.id, requesteeId: res.requesteeId }); },
-      error: () => { this.requests.push(localReq); }
-    });
-    this.newReq = { subject: '', reviewers: [], due: '' };
-  }
+    this.http.post<any>(`${this.api}/feedback/requests`, payload).subscribe({ next: res => { this.requests.push({ ...localReq, id: res.id, requesteeId: res.requesteeId }); },
+      error: () => { this.requests.push(localReq); } });
+    this.newReq = { subject: '', reviewers: [], due: '' }; }
 
-  submitFeedback() {
-    if (!this.feedForm.subject) { this.feedMsg = 'Select employee to review'; return; }
+  submitFeedback() { if (!this.feedForm.subject) { this.feedMsg = 'Select employee to review'; return; }
     const req = this.requests.find(r => r.subject === this.feedForm.subject);
-    if (req?.id) {
-      const payload = { strengths: this.feedForm.strengths, improvements: this.feedForm.improvements, categoryRatings: this.feedForm.ratings };
-      this.http.post(`${this.api}/feedback/requests/${req.id}/respond`, payload).subscribe();
-    }
+    if (req?.id) { const payload = { strengths: this.feedForm.strengths, improvements: this.feedForm.improvements, categoryRatings: this.feedForm.ratings };
+      this.http.post(`${this.api}/feedback/requests/${req.id}/respond`, payload).subscribe(); }
     this.feedMsg = 'Feedback submitted successfully';
     this.feedForm = { subject: '', ratings: {}, strengths: '', improvements: '' };
-    setTimeout(() => this.feedMsg = '', 3000);
-  }
+    setTimeout(() => this.feedMsg = '', 3000); }
 }
+

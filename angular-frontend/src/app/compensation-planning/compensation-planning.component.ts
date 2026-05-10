@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface RevisionRecord {
-  id: number; employee: string; empId: string; dept: string;
+interface RevisionRecord { id: number; employee: string; empId: string; dept: string;
   currentCTC: number; proposedCTC: number; hike: number;
   reason: string; effectiveDate: string; status: string;
 }
 
-@Component({
-  selector: 'app-compensation-planning',
+@Component({ selector: 'app-compensation-planning',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -165,8 +163,7 @@ interface RevisionRecord {
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:14px; }
   `]
 })
-export class CompensationPlanningComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class CompensationPlanningComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'cycles';
   revMsg = '';
@@ -189,77 +186,40 @@ export class CompensationPlanningComponent implements OnInit {
 
   ngOnInit() { this.loadRevisions(); this.loadEmployees(); }
 
-  loadRevisions() {
-    this.http.get<any[]>(`${this.api}/compensation/reviews`).subscribe({
-      next: data => {
-        this.revisions = [...(data || []).map(r => ({
-          id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '', dept: r.department || '',
+  loadRevisions() { this.http.get<any[]>(`${this.api}/compensation/reviews`).subscribe({ next: data => { this.revisions = [...(data || []).map(r => ({ id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '', dept: r.department || '',
           currentCTC: r.currentCTC || 0, proposedCTC: r.proposedCTC || 0, hike: r.hikePercentage || 0,
-          reason: r.reason || '', effectiveDate: r.effectiveDate?.slice(0, 10) || '', status: r.status || 'Pending'
-        }))];
-      },
-      error: () => this.snack.open('Failed to load revision data', 'Close', { duration: 3000 })
-    });
-  }
+          reason: r.reason || '', effectiveDate: r.effectiveDate?.slice(0, 10) || '', status: r.status || 'Pending' }))]; },
+      error: () => this.snack.open('Failed to load revision data', 'Close', { duration: 3000 }) }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: data => {
-        this.employees = [...(data || []).map(e => ({
-          empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
-          dept: e.department || '', ctc: e.salary || 0
-        }))];
-      },
-      error: () => {}
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({ next: data => { this.employees = [...(data || []).map(e => ({ empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+          dept: e.department || '', ctc: e.salary || 0 }))]; },
+      error: () => {} }); }
 
-  onEmpChange() {
-    const emp = this.employees.find(e => e.empId === this.revForm.empId);
-    if (emp) { this.revForm.currentCTC = emp.ctc; this.revForm.proposedCTC = 0; this.revForm.hike = 0; }
-  }
+  onEmpChange() { const emp = this.employees.find(e => e.empId === this.revForm.empId);
+    if (emp) { this.revForm.currentCTC = emp.ctc; this.revForm.proposedCTC = 0; this.revForm.hike = 0; } }
 
-  calcHike() {
-    if (this.revForm.currentCTC > 0 && this.revForm.proposedCTC > 0)
-      this.revForm.hike = Math.round(((this.revForm.proposedCTC - this.revForm.currentCTC) / this.revForm.currentCTC) * 1000) / 10;
-  }
+  calcHike() { if (this.revForm.currentCTC > 0 && this.revForm.proposedCTC > 0)
+      this.revForm.hike = Math.round(((this.revForm.proposedCTC - this.revForm.currentCTC) / this.revForm.currentCTC) * 1000) / 10; }
 
-  submitRevision() {
-    if (!this.revForm.empId || !this.revForm.proposedCTC) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
+  submitRevision() { if (!this.revForm.empId || !this.revForm.proposedCTC) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const emp = this.employees.find(e => e.empId === this.revForm.empId);
     const payload = { employeeCode: this.revForm.empId, employeeName: emp?.name, department: emp?.dept, currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hikePercentage: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate };
-    this.http.post<any>(`${this.api}/compensation/reviews`, payload).subscribe({
-      next: res => {
-        this.revisions = [...this.revisions, { id: res.id, employee: emp?.name || '', empId: this.revForm.empId, dept: emp?.dept || '', currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hike: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate, status: 'Pending' }];
+    this.http.post<any>(`${this.api}/compensation/reviews`, payload).subscribe({ next: res => { this.revisions = [...this.revisions, { id: res.id, employee: emp?.name || '', empId: this.revForm.empId, dept: emp?.dept || '', currentCTC: this.revForm.currentCTC, proposedCTC: this.revForm.proposedCTC, hike: this.revForm.hike, reason: this.revForm.reason, effectiveDate: this.revForm.effectiveDate, status: 'Pending' }];
         this.snack.open('Revision submitted for approval', '', { duration: 2000 });
-        this.revForm = { empId: '', currentCTC: 0, proposedCTC: 0, hike: 0, reason: '', effectiveDate: '' };
-      },
-      error: err => this.snack.open(err?.error?.message || 'Failed to submit revision', 'Close', { duration: 3000 })
-    });
-  }
+        this.revForm = { empId: '', currentCTC: 0, proposedCTC: 0, hike: 0, reason: '', effectiveDate: '' }; },
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit revision', 'Close', { duration: 3000 }) }); }
 
-  createCycle() {
-    if (!this.newCycle.name) { this.snack.open('Enter a cycle name', 'Close', { duration: 3000 }); return; }
+  createCycle() { if (!this.newCycle.name) { this.snack.open('Enter a cycle name', 'Close', { duration: 3000 }); return; }
     const payload = { name: this.newCycle.name, year: +this.newCycle.year || new Date().getFullYear(), budgetPercentage: this.newCycle.budget };
-    this.http.post<any>(`${this.api}/compensation/cycles`, payload).subscribe({
-      next: res => {
-        this.cycles = [...this.cycles, { name: res.name || this.newCycle.name, year: res.year || this.newCycle.year, budget: res.budgetPercentage || this.newCycle.budget, eligible: 0, approved: 0, pending: 0, active: true }];
+    this.http.post<any>(`${this.api}/compensation/cycles`, payload).subscribe({ next: res => { this.cycles = [...this.cycles, { name: res.name || this.newCycle.name, year: res.year || this.newCycle.year, budget: res.budgetPercentage || this.newCycle.budget, eligible: 0, approved: 0, pending: 0, active: true }];
         this.snack.open('Revision cycle created', '', { duration: 2000 });
-        this.newCycle = { name: '', year: '', budget: 10 };
-      },
-      error: () => {
-        this.cycles = [...this.cycles, { name: this.newCycle.name, year: +this.newCycle.year, budget: this.newCycle.budget, eligible: 0, approved: 0, pending: 0, active: true }];
+        this.newCycle = { name: '', year: '', budget: 10 }; },
+      error: () => { this.cycles = [...this.cycles, { name: this.newCycle.name, year: +this.newCycle.year, budget: this.newCycle.budget, eligible: 0, approved: 0, pending: 0, active: true }];
         this.snack.open('Cycle saved locally — backend sync pending', '', { duration: 3000 });
-        this.newCycle = { name: '', year: '', budget: 10 };
-      }
-    });
-  }
+        this.newCycle = { name: '', year: '', budget: 10 }; } }); }
 
-  generateLetter(r: RevisionRecord) {
-    window.open(`${this.api}/compensation/reviews/${r.id}/letter`, '_blank');
-  }
+  generateLetter(r: RevisionRecord) { window.open(`${this.api}/compensation/reviews/${r.id}/letter`, '_blank'); }
 
-  exportRevisions() {
-    window.open(`${this.api}/compensation/reviews/export/excel`, '_blank');
-  }
+  exportRevisions() { window.open(`${this.api}/compensation/reviews/export/excel`, '_blank'); }
 }
+

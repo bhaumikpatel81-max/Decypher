@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface ReviewRecord {
-  id: string; employee: string; empId: string; reviewer: string; dept: string;
+interface ReviewRecord { id: string; employee: string; empId: string; reviewer: string; dept: string;
   ratings: { [competency: string]: number }; overall: number; status: string; cycle: string;
 }
 
-@Component({
-  selector: 'app-performance-reviews',
+@Component({ selector: 'app-performance-reviews',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -192,8 +190,7 @@ interface ReviewRecord {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class PerformanceReviewsComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/performance`;
+export class PerformanceReviewsComponent implements OnInit { private api = `${environment.apiUrl}/api/performance`;
   constructor(private http: HttpClient) {}
   tab = 'reviews';
   activeCycle = '';
@@ -215,118 +212,77 @@ export class PerformanceReviewsComponent implements OnInit {
   cycleForm = { name: '', startDate: '', endDate: '' };
   form: any = { employee: '', reviewer: '', ratings: {} };
 
-  get filteredReviews() {
-    return this.reviews.filter(r =>
+  get filteredReviews() { return this.reviews.filter(r =>
       (!this.search || r.employee.toLowerCase().includes(this.search.toLowerCase())) &&
       (!this.filterStatus || r.status === this.filterStatus)
-    );
-  }
+    ); }
 
-  get formOverall(): number {
-    const vals = Object.values(this.form.ratings).filter((v: any) => v > 0) as number[];
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-  }
+  get formOverall(): number { const vals = Object.values(this.form.ratings).filter((v: any) => v > 0) as number[];
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0; }
 
   ratingLabel(r: number) { return ['', 'Poor', 'Below Expectations', 'Meets Expectations', 'Exceeds Expectations', 'Exceptional'][r] || ''; }
 
   ngOnInit() { this.loadCycles(); this.loadReviews(); }
 
-  loadCycles() {
-    this.http.get<any[]>(`${this.api}/cycles`).subscribe(data => {
-      this.cycles = (data || []).map(c => c.name || c);
-      if (this.cycles.length) this.activeCycle = this.cycles[0];
-    });
-  }
+  loadCycles() { this.http.get<any[]>(`${this.api}/cycles`).subscribe(data => { this.cycles = (data || []).map(c => c.name || c);
+      if (this.cycles.length) this.activeCycle = this.cycles[0]; }); }
 
-  loadReviews() {
-    this.http.get<any[]>(`${this.api}/reviews`).subscribe(data => {
-      this.reviews = (data || []).map(r => ({
-        id: r.id, employee: r.revieweeName || r.employeeName || '',
+  loadReviews() { this.http.get<any[]>(`${this.api}/reviews`).subscribe(data => { this.reviews = (data || []).map(r => ({ id: r.id, employee: r.revieweeName || r.employeeName || '',
         empId: r.revieweeCode || r.employeeCode || '',
         reviewer: r.reviewerName || '', dept: r.department || '',
         ratings: {}, overall: r.overallRating || r.finalRating || 0,
-        status: r.status || 'Not Started', cycle: r.cycleName || ''
-      }));
+        status: r.status || 'Not Started', cycle: r.cycleName || '' }));
       const statuses = ['Not Started', 'Pending', 'Submitted', 'Acknowledged'];
       const colors = ['#94a3b8', '#f59e0b', '#6b4df0', '#10b981'];
-      this.statusSummary = statuses.map((s, i) => ({
-        label: s, count: this.reviews.filter(r => r.status === s).length, color: colors[i]
-      }));
+      this.statusSummary = statuses.map((s, i) => ({ label: s, count: this.reviews.filter(r => r.status === s).length, color: colors[i] }));
       const submitted = this.reviews.filter(r => r.overall > 0);
-      this.bellData = [1,2,3,4,5].map(v => ({
-        label: `${v}`, count: submitted.filter(r => Math.round(r.overall) === v).length,
+      this.bellData = [1,2,3,4,5].map(v => ({ label: `${v}`, count: submitted.filter(r => Math.round(r.overall) === v).length,
         pct: submitted.length ? Math.round(submitted.filter(r => Math.round(r.overall) === v).length / submitted.length * 100) : 0,
-        color: ['#ef4444','#f97316','#6b4df0','#10b981','#f59e0b'][v-1]
-      }));
-    });
-  }
+        color: ['#ef4444','#f97316','#6b4df0','#10b981','#f59e0b'][v-1] })); }); }
 
-  openReview(r: ReviewRecord) {
-    this.form.employee = r.employee;
+  openReview(r: ReviewRecord) { this.form.employee = r.employee;
     this.form.reviewer = r.reviewer;
     this.form.ratings = { ...r.ratings };
     this.submitError = '';
     this.submitOk = false;
-    this.tab = 'form';
-  }
+    this.tab = 'form'; }
 
-  submitReview() {
-    if (!this.form.employee) {
-      this.submitError = 'Please select an employee.';
-      return;
-    }
+  submitReview() { if (!this.form.employee) { this.submitError = 'Please select an employee.';
+      return; }
     this.submitting = true;
     this.submitError = '';
     this.submitOk = false;
     const review = this.reviews.find(r => r.employee === this.form.employee);
-    const payload = {
-      overallRating: this.formOverall,
+    const payload = { overallRating: this.formOverall,
       reviewerComments: '',
-      status: 'Submitted'
-    };
+      status: 'Submitted' };
     const endpoint = review?.id
       ? `${this.api}/reviews/${review.id}/submit`
       : `${this.api}/reviews`;
-    this.http.post(endpoint, payload).subscribe({
-      next: () => {
-        if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
+    this.http.post(endpoint, payload).subscribe({ next: () => { if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
         this.submitOk = true;
         this.submitting = false;
         this.form = { employee: '', reviewer: '', ratings: {} };
         setTimeout(() => { this.submitOk = false; this.tab = 'reviews'; }, 2000);
-        this.loadReviews();
-      },
-      error: () => {
-        if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
+        this.loadReviews(); },
+      error: () => { if (review) { review.overall = this.formOverall; review.status = 'Submitted'; }
         this.submitOk = true;
         this.submitting = false;
         this.form = { employee: '', reviewer: '', ratings: {} };
-        setTimeout(() => { this.submitOk = false; this.tab = 'reviews'; }, 2000);
-      }
-    });
-  }
+        setTimeout(() => { this.submitOk = false; this.tab = 'reviews'; }, 2000); } }); }
 
-  createCycle() {
-    if (!this.cycleForm.name) { this.cycleError = 'Cycle name is required.'; return; }
+  createCycle() { if (!this.cycleForm.name) { this.cycleError = 'Cycle name is required.'; return; }
     this.cycleError = '';
-    const payload = {
-      name: this.cycleForm.name,
+    const payload = { name: this.cycleForm.name,
       startDate: this.cycleForm.startDate || new Date().toISOString(),
-      endDate: this.cycleForm.endDate || new Date(Date.now() + 90*24*60*60*1000).toISOString()
-    };
-    this.http.post<any>(`${this.api}/cycles`, payload).subscribe({
-      next: res => {
-        this.cycles.unshift(res.name || this.cycleForm.name);
+      endDate: this.cycleForm.endDate || new Date(Date.now() + 90*24*60*60*1000).toISOString() };
+    this.http.post<any>(`${this.api}/cycles`, payload).subscribe({ next: res => { this.cycles.unshift(res.name || this.cycleForm.name);
         this.activeCycle = this.cycles[0];
         this.showCycleForm = false;
-        this.cycleForm = { name: '', startDate: '', endDate: '' };
-      },
-      error: () => {
-        this.cycles.unshift(this.cycleForm.name);
+        this.cycleForm = { name: '', startDate: '', endDate: '' }; },
+      error: () => { this.cycles.unshift(this.cycleForm.name);
         this.activeCycle = this.cycles[0];
         this.showCycleForm = false;
-        this.cycleForm = { name: '', startDate: '', endDate: '' };
-      }
-    });
-  }
+        this.cycleForm = { name: '', startDate: '', endDate: '' }; } }); }
 }
+

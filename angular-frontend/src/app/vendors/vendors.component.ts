@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { VendorService } from '../services/vendor.service';
 
-@Component({
-  selector: 'app-vendors',
+@Component({ selector: 'app-vendors',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -262,8 +261,7 @@ import { VendorService } from '../services/vendor.service';
     .pm-l { font-size:10px;color:var(--text-3); }
   `]
 })
-export class VendorsComponent implements OnInit {
-  activeTab = 0;
+export class VendorsComponent implements OnInit { activeTab = 0;
   vendors: any[] = [];
   filteredVendors: any[] = [];
   avgQualityScore = 0;
@@ -273,45 +271,27 @@ export class VendorsComponent implements OnInit {
 
   constructor(private vendorService: VendorService, private http: HttpClient, private snack: MatSnackBar) {}
 
-  ngOnInit(): void {
-    this.loadVendors();
-    this.vendorService.getVendorPerformanceMetrics('default').subscribe({
-      next: m => { this.avgQualityScore = m.avgQualityScore || 0; this.submissionsThisMonth = m.submissionsThisMonth || 0; },
-      error: () => {}
-    });
-  }
+  ngOnInit(): void { this.loadVendors();
+    this.vendorService.getVendorPerformanceMetrics('default').subscribe({ next: m => { this.avgQualityScore = m.avgQualityScore || 0; this.submissionsThisMonth = m.submissionsThisMonth || 0; },
+      error: () => {} }); }
 
-  loadVendors(): void {
-    this.vendorService.getAllVendors('default').subscribe({
-      next: v => {
-        this.vendors = [...(v || [])];
+  loadVendors(): void { this.vendorService.getAllVendors('default').subscribe({ next: v => { this.vendors = [...(v || [])];
         this.filteredVendors = [...this.vendors];
-        if (!this.avgQualityScore && this.vendors.length) {
-          const scores = this.vendors.map(x => x.qualityScore || 0).filter(Boolean);
-          this.avgQualityScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-        }
-      },
-      error: () => this.snack.open('Failed to load vendors', 'Close', { duration: 3000 })
-    });
-  }
+        if (!this.avgQualityScore && this.vendors.length) { const scores = this.vendors.map(x => x.qualityScore || 0).filter(Boolean);
+          this.avgQualityScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0; } },
+      error: () => this.snack.open('Failed to load vendors', 'Close', { duration: 3000 }) }); }
 
-  applyFilters(): void {
-    const term = this.searchTerm.toLowerCase();
+  applyFilters(): void { const term = this.searchTerm.toLowerCase();
     this.filteredVendors = this.vendors.filter(v =>
       (!term || v.name.toLowerCase().includes(term) || (v.email || '').toLowerCase().includes(term)) &&
       (!this.statusFilter || v.status === this.statusFilter)
-    );
-  }
+    ); }
 
-  fillRate(v: any): number {
-    const s = v.submissions || v.totalSubmissions || 0;
+  fillRate(v: any): number { const s = v.submissions || v.totalSubmissions || 0;
     const j = v.joinings || v.successfulPlacements || 0;
-    return s ? Math.round((j / s) * 100) : 0;
-  }
+    return s ? Math.round((j / s) * 100) : 0; }
 
-  compositeScore(v: any): number {
-    return Math.round(((v.qualityScore || 0) + (v.slaScore || 0) + this.fillRate(v)) / 3);
-  }
+  compositeScore(v: any): number { return Math.round(((v.qualityScore || 0) + (v.slaScore || 0) + this.fillRate(v)) / 3); }
 
   get sortedByFill(): any[] { return [...this.vendors].sort((a, b) => this.fillRate(b) - this.fillRate(a)); }
   get top5(): any[] { return this.sortedByFill.slice(0, 5); }
@@ -323,50 +303,35 @@ export class VendorsComponent implements OnInit {
   get totalOffers(): number { return Math.round(this.totalSubmissions * 0.35); }
   get overallConversion(): number { return this.totalSubmissions ? Math.round((this.totalJoinings / this.totalSubmissions) * 100) : 0; }
 
-  get avgFillRate(): number {
-    if (!this.vendors.length) return 0;
-    return Math.round(this.vendors.reduce((acc, v) => acc + this.fillRate(v), 0) / this.vendors.length);
-  }
+  get avgFillRate(): number { if (!this.vendors.length) return 0;
+    return Math.round(this.vendors.reduce((acc, v) => acc + this.fillRate(v), 0) / this.vendors.length); }
 
-  get avgTTH(): number {
-    const vals = this.vendors.map(v => v.avgTimeToHire || v.timeToHire || 0).filter(Boolean);
-    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 28;
-  }
+  get avgTTH(): number { const vals = this.vendors.map(v => v.avgTimeToHire || v.timeToHire || 0).filter(Boolean);
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 28; }
 
   get topVendor(): any { return this.sortedByFill[0] || null; }
   get topVendorFillRate(): number { return this.topVendor ? this.fillRate(this.topVendor) : 0; }
 
-  get avgSla(): number {
-    const vals = this.vendors.map(v => v.slaScore || 0).filter(Boolean);
-    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
-  }
+  get avgSla(): number { const vals = this.vendors.map(v => v.slaScore || 0).filter(Boolean);
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0; }
 
-  get qualityBands(): { label: string; count: number; color: string }[] {
-    return [
+  get qualityBands(): { label: string; count: number; color: string }[] { return [
       { label: 'Excellent (≥80%)', count: this.vendors.filter(v => (v.qualityScore || 0) >= 80).length, color: '#10b981' },
       { label: 'Good (60–79%)',    count: this.vendors.filter(v => (v.qualityScore || 0) >= 60 && (v.qualityScore || 0) < 80).length, color: '#6b4df0' },
       { label: 'Average (40–59%)', count: this.vendors.filter(v => (v.qualityScore || 0) >= 40 && (v.qualityScore || 0) < 60).length, color: '#f59e0b' },
       { label: 'Poor (<40%)',      count: this.vendors.filter(v => (v.qualityScore || 0) < 40).length, color: '#ef4444' },
-    ];
-  }
+    ]; }
 
-  get qualityDonut(): string {
-    const total = this.vendors.length || 1;
+  get qualityDonut(): string { const total = this.vendors.length || 1;
     let pct = 0;
-    const segs = this.qualityBands.map(q => {
-      const p = (q.count / total) * 360;
+    const segs = this.qualityBands.map(q => { const p = (q.count / total) * 360;
       const r = `${q.color} ${pct}deg ${pct + p}deg`;
       pct += p;
-      return r;
-    });
-    return `conic-gradient(${segs.join(', ')})`;
-  }
+      return r; });
+    return `conic-gradient(${segs.join(', ')})`; }
 
-  rankBg(i: number): string {
-    return ['rgba(251,191,36,.2)', 'rgba(192,192,192,.2)', 'rgba(205,127,50,.2)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)'][i] ?? 'var(--surface-alt)';
-  }
+  rankBg(i: number): string { return ['rgba(251,191,36,.2)', 'rgba(192,192,192,.2)', 'rgba(205,127,50,.2)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)', 'var(--surface-alt)'][i] ?? 'var(--surface-alt)'; }
 
-  rankColor(i: number): string {
-    return ['#b45309', '#6b7280', '#92400e', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)'][i] ?? 'var(--text-3)';
-  }
+  rankColor(i: number): string { return ['#b45309', '#6b7280', '#92400e', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)', 'var(--text-3)'][i] ?? 'var(--text-3)'; }
 }
+

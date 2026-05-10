@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-recruitment-dashboard',
+@Component({ selector: 'app-recruitment-dashboard',
   template: `
     <section class="dash">
 
@@ -235,26 +234,20 @@ import { environment } from '../../environments/environment';
   styles: [`
     .dash { display: flex; flex-direction: column; gap: 18px; }
 
-    @keyframes kpiPulse {
-      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(107,77,240,0); }
-      50%       { opacity: 0.82; transform: scale(0.91); box-shadow: 0 0 0 6px rgba(107,77,240,0); }
-    }
+    @keyframes kpiPulse { 0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(107,77,240,0); }
+      50%       { opacity: 0.82; transform: scale(0.91); box-shadow: 0 0 0 6px rgba(107,77,240,0); } }
 
     /* ── KPI STRIP ── */
     .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-    .kpi-card {
-      background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
+    .kpi-card { background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
       padding: 16px; display: flex; flex-direction: column; gap: 6px;
       box-shadow: 0 1px 3px rgba(17,20,45,.05);
-      transition: box-shadow 180ms, transform 180ms;
-    }
+      transition: box-shadow 180ms, transform 180ms; }
     .kpi-card:hover { box-shadow: 0 6px 20px rgba(107,77,240,.13); transform: translateY(-1px); }
-    .kpi-icon {
-      width: 40px; height: 40px; border-radius: 10px;
+    .kpi-icon { width: 40px; height: 40px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; flex-shrink: 0;
-      animation: kpiPulse 2.4s ease-in-out infinite;
-    }
+      animation: kpiPulse 2.4s ease-in-out infinite; }
     .kpi-body { flex: 1; min-width: 0; }
     .kpi-label { font-size: 10px; font-weight: 700; color: #6e7686; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .kpi-value { font-size: 28px; font-weight: 800; color: #0f1320; line-height: 1.05; margin: 2px 0 4px; }
@@ -265,19 +258,13 @@ import { environment } from '../../environments/environment';
     .kpi-sub { font-size: 11px; color: #9aa2b2; }
 
     /* ── LAYOUT ── */
-    .card {
-      background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
-      padding: 20px; box-shadow: 0 1px 3px rgba(17,20,45,.05);
-    }
-    .card-head {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px;
-    }
+    .card { background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
+      padding: 20px; box-shadow: 0 1px 3px rgba(17,20,45,.05); }
+    .card-head { display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; }
     .card-head h3 { margin: 0; font-size: 14px; font-weight: 700; color: #0f1320; }
-    .tag {
-      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-      color: #5C5C99; background: rgba(92,92,153,.1); padding: 3px 8px; border-radius: 99px;
-    }
+    .tag { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: #5C5C99; background: rgba(92,92,153,.1); padding: 3px 8px; border-radius: 99px; }
 
     .row-2col { display: grid; gap: 14px; }
     .wide-left { grid-template-columns: 1fr 260px; }
@@ -287,10 +274,8 @@ import { environment } from '../../environments/environment';
     /* ── SVG TREND CHART ── */
     .chart-wrap { position: relative; }
     .trend-svg { width: 100%; height: 160px; display: block; }
-    .chart-x-labels {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: #9aa2b2; margin-top: 6px; padding: 0 2px;
-    }
+    .chart-x-labels { display: flex; justify-content: space-between;
+      font-size: 11px; color: #9aa2b2; margin-top: 6px; padding: 0 2px; }
     .legend-row { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6e7686; }
     .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .leg-text { margin-right: 2px; }
@@ -349,11 +334,9 @@ import { environment } from '../../environments/environment';
     /* ── RECRUITER TABLE ── */
     .table-scroll { overflow-x: auto; }
     .perf-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .perf-tbl th {
-      padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700;
+    .perf-tbl th { padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700;
       text-transform: uppercase; letter-spacing: .06em; color: #6e7686;
-      border-bottom: 2px solid #e1e4eb; white-space: nowrap;
-    }
+      border-bottom: 2px solid #e1e4eb; white-space: nowrap; }
     .perf-tbl td { padding: 9px 10px; border-bottom: 1px solid #f6f7fa; color: #0f1320; }
     .perf-tbl tbody tr:last-child td { border-bottom: none; }
     .perf-tbl tbody tr:hover td { background: #f6f7fa; }
@@ -375,18 +358,13 @@ import { environment } from '../../environments/environment';
     .act-text { display: block; font-size: 13px; color: #343a48; line-height: 1.4; }
     .act-time { font-size: 11px; color: #9aa2b2; }
 
-    @media (max-width: 1200px) {
-      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 1200px) { .kpi-row { grid-template-columns: repeat(3, 1fr); }
       .row-2col.wide-left { grid-template-columns: 1fr; }
-      .row-3col { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 860px) {
-      .kpi-row, .row-2col, .row-3col { grid-template-columns: 1fr; }
-    }
+      .row-3col { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 860px) { .kpi-row, .row-2col, .row-3col { grid-template-columns: 1fr; } }
   `]
 })
-export class RecruitmentDashboardComponent implements OnInit {
-  kpis: any[] = [];
+export class RecruitmentDashboardComponent implements OnInit { kpis: any[] = [];
   funnel: any[] = [];
   topVendors: any[] = [];
   enrichedRecruiters: any[] = [];
@@ -415,11 +393,9 @@ export class RecruitmentDashboardComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.buildSvgChart();
+  ngOnInit() { this.buildSvgChart();
 
-    this.http.get<any>(`${environment.apiUrl}/api/dashboard/metrics`).subscribe(metrics => {
-      this.selectionRate   = metrics.selectionRate   || 0;
+    this.http.get<any>(`${environment.apiUrl}/api/dashboard/metrics`).subscribe(metrics => { this.selectionRate   = metrics.selectionRate   || 0;
       this.totalCandidates = metrics.totalCandidates || 0;
       this.openReqs        = metrics.totalJobs        || 0;
 
@@ -439,57 +415,36 @@ export class RecruitmentDashboardComponent implements OnInit {
       ];
 
       const maxCount = Math.max(...(metrics.hiringFunnel || [1]).map((f: any) => f.count || 1));
-      this.funnel = (metrics.hiringFunnel || []).map((f: any) => ({
-        ...f,
-        pct: Math.max(8, ((f.count || 0) / maxCount) * 100),
-      }));
+      this.funnel = (metrics.hiringFunnel || []).map((f: any) => ({ ...f,
+        pct: Math.max(8, ((f.count || 0) / maxCount) * 100), }));
 
       this.topVendors = metrics.topVendors || [];
 
-      const skillActivity = (metrics.topSkills || []).map((s: any) => ({
-        action: `${s.skill}: ${s.count} CV(s)`, time: 'Top skill'
-      }));
-      this.activity = [...skillActivity, ...(metrics.recentActivity || [])];
-    });
+      const skillActivity = (metrics.topSkills || []).map((s: any) => ({ action: `${s.skill}: ${s.count} CV(s)`, time: 'Top skill' }));
+      this.activity = [...skillActivity, ...(metrics.recentActivity || [])]; });
 
-    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/monthly-trend`).subscribe(trend => {
-      this.monthlyTrend = (trend || []).map((t: any) => ({
-        month: t.month, submitted: t.submitted || 0, joined: t.joined || 0
-      }));
-      this.buildSvgChart();
-    });
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/monthly-trend`).subscribe(trend => { this.monthlyTrend = (trend || []).map((t: any) => ({ month: t.month, submitted: t.submitted || 0, joined: t.joined || 0 }));
+      this.buildSvgChart(); });
 
-    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/top-skills`).subscribe(skills => {
-      this.topSkills = skills || [];
-    });
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/top-skills`).subscribe(skills => { this.topSkills = skills || []; });
 
-    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/time-to-fill`).subscribe(ttf => {
-      this.timeToFill = ttf || [];
-    });
+    this.http.get<any[]>(`${environment.apiUrl}/api/dashboard/time-to-fill`).subscribe(ttf => { this.timeToFill = ttf || []; });
 
-    this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => {
-      const colors = ['#6b4df0', '#a94ee6', '#3bbdea', '#16a34a', '#e8912a'];
-      this.enrichedRecruiters = (data || []).map((r: any, i: number) => ({
-        ...r,
+    this.http.get<any[]>(`${environment.apiUrl}/api/recruiters`).subscribe(data => { const colors = ['#6b4df0', '#a94ee6', '#3bbdea', '#16a34a', '#e8912a'];
+      this.enrichedRecruiters = (data || []).map((r: any, i: number) => ({ ...r,
         shortlisted: Math.round((r.submissions || 0) * 0.42),
         color: colors[i % colors.length],
-        grade: r.selectionRatio >= 40 ? 'A' : r.selectionRatio >= 25 ? 'B' : 'C',
-      }));
-    });
-  }
+        grade: r.selectionRatio >= 40 ? 'A' : r.selectionRatio >= 25 ? 'B' : 'C', })); }); }
 
-  buildSvgChart() {
-    if (this.monthlyTrend.length < 2) return;
+  buildSvgChart() { if (this.monthlyTrend.length < 2) return;
     const W = this.svgW, H = this.svgH, PAD = 18;
     const sub = this.monthlyTrend.map(m => m.submitted);
     const joi = this.monthlyTrend.map(m => m.joined);
     const maxV = Math.max(...sub, 1);
     const n = sub.length;
 
-    const pt = (v: number, i: number) => ({
-      x: PAD + (i / (n - 1)) * (W - PAD * 2),
-      y: H - PAD - (v / maxV) * (H - PAD * 2),
-    });
+    const pt = (v: number, i: number) => ({ x: PAD + (i / (n - 1)) * (W - PAD * 2),
+      y: H - PAD - (v / maxV) * (H - PAD * 2), });
 
     const sP = sub.map((v, i) => pt(v, i));
     const jP = joi.map((v, i) => pt(v, i));
@@ -507,6 +462,6 @@ export class RecruitmentDashboardComponent implements OnInit {
     this.submitArea = areaPath(sP);
     this.joinArea   = areaPath(jP);
 
-    this.yGrids = [H * 0.2, H * 0.5, H * 0.8].map(v => +v.toFixed(1));
-  }
+    this.yGrids = [H * 0.2, H * 0.5, H * 0.8].map(v => +v.toFixed(1)); }
 }
+

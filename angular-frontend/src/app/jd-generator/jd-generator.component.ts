@@ -1,21 +1,17 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-jd-generator',
+@Component({ selector: 'app-jd-generator',
   templateUrl: './jd-generator.component.html'
 })
-export class JdGeneratorComponent {
-  form = {
-    jobTitle: '',
+export class JdGeneratorComponent { form = { jobTitle: '',
     department: '',
     requiredSkillsText: '',
     minYearsExperience: 2,
     maxYearsExperience: 5,
     employmentType: 'Full-time',
-    additionalContext: ''
-  };
+    additionalContext: '' };
 
   isGenerating = false;
   result: any = null;
@@ -25,18 +21,14 @@ export class JdGeneratorComponent {
 
   constructor(private http: HttpClient) {}
 
-  generate(): void {
-    if (!this.form.jobTitle.trim()) {
-      this.errorMessage = 'Job Title is required.';
-      return;
-    }
+  generate(): void { if (!this.form.jobTitle.trim()) { this.errorMessage = 'Job Title is required.';
+      return; }
 
     this.isGenerating = true;
     this.result = null;
     this.errorMessage = '';
 
-    const payload = {
-      jobTitle: this.form.jobTitle,
+    const payload = { jobTitle: this.form.jobTitle,
       department: this.form.department,
       requiredSkills: this.form.requiredSkillsText
         .split(',')
@@ -45,24 +37,15 @@ export class JdGeneratorComponent {
       minYearsExperience: this.form.minYearsExperience,
       maxYearsExperience: this.form.maxYearsExperience,
       employmentType: this.form.employmentType,
-      additionalContext: this.form.additionalContext || null
-    };
+      additionalContext: this.form.additionalContext || null };
 
     this.http.post<any>(`${environment.apiUrl}/api/aiagents/generate-jd`, payload)
-      .subscribe({
-        next: res => {
-          this.result = res;
-          this.isGenerating = false;
-        },
-        error: err => {
-          this.errorMessage = err?.error?.error ?? 'JD generation failed. Please try again.';
-          this.isGenerating = false;
-        }
-      });
-  }
+      .subscribe({ next: res => { this.result = res;
+          this.isGenerating = false; },
+        error: err => { this.errorMessage = err?.error?.error ?? 'JD generation failed. Please try again.';
+          this.isGenerating = false; } }); }
 
-  copyToClipboard(): void {
-    if (!this.result?.data) return;
+  copyToClipboard(): void { if (!this.result?.data) return;
     const d = this.result.data;
     const text = [
       `# ${d.title}`,
@@ -75,16 +58,12 @@ export class JdGeneratorComponent {
       `**Experience:** ${d.experienceRange}`
     ].join('\n');
 
-    navigator.clipboard.writeText(text);
-  }
+    navigator.clipboard.writeText(text); }
 
-  reset(): void {
-    this.result = null;
+  reset(): void { this.result = null;
     this.errorMessage = '';
-    this.form = {
-      jobTitle: '', department: '', requiredSkillsText: '',
+    this.form = { jobTitle: '', department: '', requiredSkillsText: '',
       minYearsExperience: 2, maxYearsExperience: 5,
-      employmentType: 'Full-time', additionalContext: ''
-    };
-  }
+      employmentType: 'Full-time', additionalContext: '' }; }
 }
+

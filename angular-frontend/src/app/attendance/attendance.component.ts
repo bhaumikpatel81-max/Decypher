@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface AttendanceRecord {
-  id: number; employee: string; empId: string;
+interface AttendanceRecord { id: number; employee: string; empId: string;
   date: string; punchIn: string; punchOut: string;
   method: string; status: string;
   inLat: number; inLng: number; outLat: number; outLng: number;
@@ -11,8 +10,7 @@ interface AttendanceRecord {
   withinFence: boolean; doorGranted: boolean;
 }
 
-@Component({
-  selector: 'app-attendance',
+@Component({ selector: 'app-attendance',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -386,8 +384,7 @@ interface AttendanceRecord {
     .door-denied { color:#ef4444; font-weight:700; font-size:12px; }
   `]
 })
-export class AttendanceComponent implements OnInit, OnDestroy {
-  private api = `${environment.apiUrl}/api/attendance`;
+export class AttendanceComponent implements OnInit, OnDestroy { private api = `${environment.apiUrl}/api/attendance`;
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLCanvasElement>;
 
@@ -459,48 +456,33 @@ export class AttendanceComponent implements OnInit, OnDestroy {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.clockTimer = setInterval(() => this.now = new Date(), 1000);
+  ngOnInit() { this.clockTimer = setInterval(() => this.now = new Date(), 1000);
     this.getLocation();
     this.loadDailySummary();
     this.loadRecords();
     this.loadEmployees();
-    this.loadPolicy();
-  }
+    this.loadPolicy(); }
 
-  loadPolicy() {
-    this.http.get<any>(`${this.api}/policy`).subscribe({
-      next: p => {
-        if (!p) return;
+  loadPolicy() { this.http.get<any>(`${this.api}/policy`).subscribe({ next: p => { if (!p) return;
         this.fence.name   = p.geoFenceName   ?? p.name ?? '';
         this.fence.lat    = p.geoFenceLat    ?? 0;
         this.fence.lng    = p.geoFenceLng    ?? 0;
         this.fence.radius = p.geoFenceRadiusMeters ?? 200;
         this.fence.strict = p.strictGeoFence ?? false;
         this.bio.lateThreshold = p.graceMinutes ?? 15;
-        this.bio.startTime = p.shiftStartTime ?? '09:00:00';
-      },
-      error: () => {}
-    });
-  }
+        this.bio.startTime = p.shiftStartTime ?? '09:00:00'; },
+      error: () => {} }); }
 
-  loadDailySummary() {
-    this.http.get<any>(`${this.api}/daily-summary`).subscribe(s => {
-      if (!s) return;
+  loadDailySummary() { this.http.get<any>(`${this.api}/daily-summary`).subscribe(s => { if (!s) return;
       this.kpis = [
         { val: String(s.present ?? '—'), lbl: 'Present Today', color: '#10b981' },
         { val: String(s.absent ?? '—'), lbl: 'Absent', color: '#ef4444' },
         { val: String(s.late ?? '—'), lbl: 'Late Arrivals', color: '#f59e0b' },
         { val: s.attendanceRate != null ? s.attendanceRate.toFixed(1) + '%' : '—', lbl: 'Attendance Rate', color: '#6b4df0' },
-      ];
-    });
-  }
+      ]; }); }
 
-  loadRecords() {
-    const today = this.today();
-    this.http.get<any[]>(`${this.api}/records`, { params: { from: today, to: today } }).subscribe(data => {
-      this.records = (data || []).map(r => ({
-        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+  loadRecords() { const today = this.today();
+    this.http.get<any[]>(`${this.api}/records`, { params: { from: today, to: today } }).subscribe(data => { this.records = (data || []).map(r => ({ id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
         date: r.date?.slice(0, 10) || today,
         punchIn: r.punchInTime?.slice(11, 16) || '',
         punchOut: r.punchOutTime?.slice(11, 16) || '',
@@ -508,229 +490,139 @@ export class AttendanceComponent implements OnInit, OnDestroy {
         inLat: r.inLatitude || 0, inLng: r.inLongitude || 0,
         outLat: r.outLatitude || 0, outLng: r.outLongitude || 0,
         inAddress: r.inAddress || '', outAddress: r.outAddress || '',
-        withinFence: r.isWithinFence ?? true, doorGranted: r.isDoorGranted ?? false
-      }));
-    });
-  }
+        withinFence: r.isWithinFence ?? true, doorGranted: r.isDoorGranted ?? false })); }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({
-        id: e.id, empId: e.employeeCode || '', cardId: '',
-        name: `${e.firstName || ''} ${e.lastName || ''}`.trim()
-      }));
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ id: e.id, empId: e.employeeCode || '', cardId: '',
+        name: `${e.firstName || ''} ${e.lastName || ''}`.trim() })); }); }
 
-  ngOnDestroy() {
-    clearInterval(this.clockTimer);
+  ngOnDestroy() { clearInterval(this.clockTimer);
     clearTimeout(this.scanTimeout);
     clearTimeout(this.doorTimer);
-    this.stopCamera();
-  }
+    this.stopCamera(); }
 
-  selectMethod(m: string) {
-    this.selectedMethod = m as any;
+  selectMethod(m: string) { this.selectedMethod = m as any;
     this.resetBio();
-    if (m !== 'face') this.stopCamera();
-  }
+    if (m !== 'face') this.stopCamera(); }
 
   // ---- FACE ----
-  async startCamera() {
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
-      if (this.videoEl?.nativeElement) {
-        this.videoEl.nativeElement.srcObject = this.stream;
-        this.cameraActive = true;
-      }
-    } catch {
-      this.punchError = 'Camera access denied. Please allow camera permissions and try again.';
-      setTimeout(() => this.punchError = '', 5000);
-    }
-  }
+  async startCamera() { try { this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+      if (this.videoEl?.nativeElement) { this.videoEl.nativeElement.srcObject = this.stream;
+        this.cameraActive = true; } } catch { this.punchError = 'Camera access denied. Please allow camera permissions and try again.';
+      setTimeout(() => this.punchError = '', 5000); } }
 
-  scanFace() {
-    if (!this.cameraActive) return;
+  scanFace() { if (!this.cameraActive) return;
     this.faceScanning = true;
     this.faceResult = 'idle';
     // Capture frame for "verification"
-    this.scanTimeout = setTimeout(() => {
-      if (this.canvasEl?.nativeElement && this.videoEl?.nativeElement) {
-        const ctx = this.canvasEl.nativeElement.getContext('2d')!;
-        ctx.drawImage(this.videoEl.nativeElement, 0, 0, 640, 480);
-      }
+    this.scanTimeout = setTimeout(() => { if (this.canvasEl?.nativeElement && this.videoEl?.nativeElement) { const ctx = this.canvasEl.nativeElement.getContext('2d')!;
+        ctx.drawImage(this.videoEl.nativeElement, 0, 0, 640, 480); }
       this.faceScanning = false;
       // Simulate: if employee selected, pass
       this.faceResult = this.punchEmpId ? 'success' : 'fail';
-      if (this.faceResult === 'success') { this.authPassed = true; this.stopCamera(); }
-    }, 2500);
-  }
+      if (this.faceResult === 'success') { this.authPassed = true; this.stopCamera(); } }, 2500); }
 
-  stopCamera() {
-    this.stream?.getTracks().forEach(t => t.stop());
+  stopCamera() { this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null;
-    this.cameraActive = false;
-  }
+    this.cameraActive = false; }
 
   // ---- FINGERPRINT (WebAuthn) ----
-  async scanFingerprint() {
-    this.fpScanning = true;
+  async scanFingerprint() { this.fpScanning = true;
     this.fpResult = 'idle';
-    try {
-      if (window.PublicKeyCredential) {
-        // Try WebAuthn get (uses device biometric if enrolled)
+    try { if (window.PublicKeyCredential) { // Try WebAuthn get (uses device biometric if enrolled)
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
-        await navigator.credentials.get({
-          publicKey: {
-            challenge,
+        await navigator.credentials.get({ publicKey: { challenge,
             timeout: 60000,
             userVerification: 'required',
-            rpId: window.location.hostname || 'localhost',
-          }
-        } as any);
+            rpId: window.location.hostname || 'localhost', } } as any);
         this.fpScanning = false;
         this.fpResult = 'success';
-        this.authPassed = true;
-      } else {
-        throw new Error('WebAuthn not supported');
-      }
-    } catch (err: any) {
-      this.fpScanning = false;
-      if (err?.name === 'NotAllowedError') {
-        // User cancelled — simulate success for demo
+        this.authPassed = true; } else { throw new Error('WebAuthn not supported'); } } catch (err: any) { this.fpScanning = false;
+      if (err?.name === 'NotAllowedError') { // User cancelled — simulate success for demo
         this.fpResult = this.punchEmpId ? 'success' : 'fail';
-        if (this.fpResult === 'success') this.authPassed = true;
-      } else {
-        // Fallback: simulate for devices without enrolled credentials
-        this.scanTimeout = setTimeout(() => {
-          this.fpResult = this.punchEmpId ? 'success' : 'fail';
+        if (this.fpResult === 'success') this.authPassed = true; } else { // Fallback: simulate for devices without enrolled credentials
+        this.scanTimeout = setTimeout(() => { this.fpResult = this.punchEmpId ? 'success' : 'fail';
           this.fpScanning = false;
-          if (this.fpResult === 'success') this.authPassed = true;
-        }, 2000);
-      }
-    }
-  }
+          if (this.fpResult === 'success') this.authPassed = true; }, 2000); } } }
 
   // ---- CARD ----
-  scanCard() {
-    if (!this.cardNumber.trim()) return;
+  scanCard() { if (!this.cardNumber.trim()) return;
     this.cardScanning = true;
     this.cardResult = 'idle';
-    this.scanTimeout = setTimeout(() => {
-      const valid = this.employees.some(e => e.cardId === this.cardNumber.toUpperCase() || e.empId === this.cardNumber.toUpperCase());
+    this.scanTimeout = setTimeout(() => { const valid = this.employees.some(e => e.cardId === this.cardNumber.toUpperCase() || e.empId === this.cardNumber.toUpperCase());
       this.cardScanning = false;
       this.cardResult = valid ? 'success' : 'fail';
-      if (valid) { this.authPassed = true; if (!this.punchEmpId) { const emp = this.employees.find(e => e.cardId === this.cardNumber.toUpperCase()); if (emp) this.punchEmpId = emp.empId; } }
-    }, 1500);
-  }
+      if (valid) { this.authPassed = true; if (!this.punchEmpId) { const emp = this.employees.find(e => e.cardId === this.cardNumber.toUpperCase()); if (emp) this.punchEmpId = emp.empId; } } }, 1500); }
 
   // ---- GEO ----
-  getLocation() {
-    this.geoStatus = 'checking';
+  getLocation() { this.geoStatus = 'checking';
     if (!navigator.geolocation) { this.geoStatus = 'error'; return; }
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        this.currentLat = pos.coords.latitude;
+      pos => { this.currentLat = pos.coords.latitude;
         this.currentLng = pos.coords.longitude;
         this.geoAccuracy = pos.coords.accuracy;
         this.geoStatus = 'acquired';
         this.checkFence();
-        this.reverseGeocode(this.currentLat, this.currentLng);
-      },
-      () => {
-        this.geoStatus = 'error';
-        this.currentAddress = 'Location access denied — please enable GPS and try again.';
-      }
-    );
-  }
+        this.reverseGeocode(this.currentLat, this.currentLng); },
+      () => { this.geoStatus = 'error';
+        this.currentAddress = 'Location access denied — please enable GPS and try again.'; }
+    ); }
 
-  checkFence() {
-    const dist = this.haversine(this.currentLat, this.currentLng, this.fence.lat, this.fence.lng);
-    this.withinFence = dist <= this.fence.radius;
-  }
+  checkFence() { const dist = this.haversine(this.currentLat, this.currentLng, this.fence.lat, this.fence.lng);
+    this.withinFence = dist <= this.fence.radius; }
 
-  haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371000;
+  haversine(lat1: number, lng1: number, lat2: number, lng2: number): number { const R = 6371000;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
     const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); }
 
-  reverseGeocode(lat: number, lng: number) {
-    // Use Nominatim (OpenStreetMap) for reverse geocoding — no API key needed
+  reverseGeocode(lat: number, lng: number) { // Use Nominatim (OpenStreetMap) for reverse geocoding — no API key needed
     fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
       .then(r => r.json())
       .then(data => { this.currentAddress = data.display_name?.split(',').slice(0,3).join(',') || `${lat.toFixed(4)}, ${lng.toFixed(4)}`; })
-      .catch(() => { this.currentAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; });
-  }
+      .catch(() => { this.currentAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }); }
 
   // ---- DOOR ----
-  requestDoorAccess() {
-    if (!this.authPassed || this.withinFence !== true) return;
+  requestDoorAccess() { if (!this.authPassed || this.withinFence !== true) return;
     this.doorStatus = 'open';
     this.doorStatusMsg = `Access granted to ${this.empName} via ${this.methodLabel(this.selectedMethod)} at ${new Date().toLocaleTimeString()}`;
     clearTimeout(this.doorTimer);
-    this.doorTimer = setTimeout(() => {
-      this.doorStatus = 'idle';
-      this.doorStatusMsg = 'Door closed. Biometric + geo required for next access.';
-    }, 5000);
-  }
+    this.doorTimer = setTimeout(() => { this.doorStatus = 'idle';
+      this.doorStatusMsg = 'Door closed. Biometric + geo required for next access.'; }, 5000); }
 
   // ---- PUNCH ----
-  punch(type: 'in' | 'out') {
-    if (!this.authPassed || !this.punchEmpId) return;
+  punch(type: 'in' | 'out') { if (!this.authPassed || !this.punchEmpId) return;
     const emp = this.employees.find(e => e.empId === this.punchEmpId);
     if (!emp?.id) { this.punchError = 'Employee not found in system'; setTimeout(() => this.punchError = '', 4000); return; }
     const timeStr = new Date().toTimeString().slice(0, 5);
     const endpoint = type === 'in' ? 'punch-in' : 'punch-out';
-    this.http.post<any>(`${this.api}/${endpoint}`, { employeeId: emp.id, notes: `Via ${this.methodLabel(this.selectedMethod)}` }).subscribe({
-      next: () => {
-        this.lastPunch = { type, time: timeStr, method: this.methodLabel(this.selectedMethod), geo: this.withinFence ? '📍 Inside fence' : '⚠️ Outside fence' };
+    this.http.post<any>(`${this.api}/${endpoint}`, { employeeId: emp.id, notes: `Via ${this.methodLabel(this.selectedMethod)}` }).subscribe({ next: () => { this.lastPunch = { type, time: timeStr, method: this.methodLabel(this.selectedMethod), geo: this.withinFence ? '📍 Inside fence' : '⚠️ Outside fence' };
         if (this.bio.doorAuto && type === 'in') this.requestDoorAccess();
         this.loadRecords();
-        this.loadDailySummary();
-      },
-      error: err => { this.punchError = err?.error?.message || `Punch ${type} failed`; setTimeout(() => this.punchError = '', 4000); }
-    });
+        this.loadDailySummary(); },
+      error: err => { this.punchError = err?.error?.message || `Punch ${type} failed`; setTimeout(() => this.punchError = '', 4000); } });
     this.authPassed = false;
     this.faceResult = 'idle';
     this.fpResult = 'idle';
     this.cardResult = 'idle';
-    this.cardNumber = '';
-  }
+    this.cardNumber = ''; }
 
   resetBio() { this.faceResult = 'idle'; this.fpResult = 'idle'; this.cardResult = 'idle'; this.cardScanning = false; this.faceScanning = false; this.fpScanning = false; this.authPassed = false; this.cardNumber = ''; this.stopCamera(); }
   methodLabel(m: string): string { return m === 'face' ? 'Face Scan' : m === 'finger' ? 'Fingerprint' : 'ID Card'; }
   get empName(): string { return this.employees.find(e => e.empId === this.punchEmpId)?.name || 'Employee'; }
   today(): string { return new Date().toISOString().slice(0,10); }
 
-  get filteredRecords() {
-    return this.records.filter(r => {
-      const matchSearch = !this.recSearch || r.employee.toLowerCase().includes(this.recSearch.toLowerCase()) || r.empId.toLowerCase().includes(this.recSearch.toLowerCase());
+  get filteredRecords() { return this.records.filter(r => { const matchSearch = !this.recSearch || r.employee.toLowerCase().includes(this.recSearch.toLowerCase()) || r.empId.toLowerCase().includes(this.recSearch.toLowerCase());
       const matchDate = !this.recDate || r.date === this.recDate;
       const matchStatus = !this.recStatus || r.status === this.recStatus;
-      return matchSearch && matchDate && matchStatus;
-    });
-  }
+      return matchSearch && matchDate && matchStatus; }); }
 
-  saveFenceSettings() {
-    this.http.post<any>(`${this.api}/policy`, {
-      geoFenceName: this.fence.name, geoFenceLat: this.fence.lat,
+  saveFenceSettings() { this.http.post<any>(`${this.api}/policy`, { geoFenceName: this.fence.name, geoFenceLat: this.fence.lat,
       geoFenceLng: this.fence.lng, geoFenceRadiusMeters: this.fence.radius,
-      strictGeoFence: this.fence.strict, geoFenceEnabled: true
-    }).subscribe({
-      next: () => { this.settingsMsg = 'Geo fence saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
-      error: () => { this.settingsMsg = 'Save failed.'; setTimeout(() => this.settingsMsg = '', 3000); }
-    });
-  }
-  saveBioSettings() {
-    this.http.post<any>(`${this.api}/policy`, {
-      biometricEnabled: true, graceMinutes: this.bio.lateThreshold
-    }).subscribe({
-      next: () => { this.settingsMsg = 'Biometric settings saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
-      error: () => {}
-    });
-  }
+      strictGeoFence: this.fence.strict, geoFenceEnabled: true }).subscribe({ next: () => { this.settingsMsg = 'Geo fence saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
+      error: () => { this.settingsMsg = 'Save failed.'; setTimeout(() => this.settingsMsg = '', 3000); } }); }
+  saveBioSettings() { this.http.post<any>(`${this.api}/policy`, { biometricEnabled: true, graceMinutes: this.bio.lateThreshold }).subscribe({ next: () => { this.settingsMsg = 'Biometric settings saved.'; setTimeout(() => this.settingsMsg = '', 3000); },
+      error: () => {} }); }
 }
+

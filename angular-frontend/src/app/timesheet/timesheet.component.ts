@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-timesheet',
+@Component({ selector: 'app-timesheet',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -176,8 +175,7 @@ import { environment } from '../../environments/environment';
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:14px; }
   `]
 })
-export class TimesheetComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/attendance`;
+export class TimesheetComponent implements OnInit { private api = `${environment.apiUrl}/api/attendance`;
   constructor(private http: HttpClient) {}
   tab = 'weekly';
   timesheetStatus = 'Draft';
@@ -195,83 +193,48 @@ export class TimesheetComponent implements OnInit {
 
   ngOnInit() { this.loadProjects(); this.loadTimesheets(); }
 
-  buildWeekDays() {
-    const today = new Date();
+  buildWeekDays() { const today = new Date();
     const dow = today.getDay();
     const monday = new Date(today);
     monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    return days.map((name, i) => {
-      const d = new Date(monday);
+    return days.map((name, i) => { const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      return { name, date: `${d.toLocaleString('default',{month:'short'})} ${d.getDate()}` };
-    });
-  }
+      return { name, date: `${d.toLocaleString('default',{month:'short'})} ${d.getDate()}` }; }); }
 
-  loadProjects() {
-    this.http.get<any[]>(`${this.api}/projects`).subscribe(data => {
-      this.projects = (data || []).map(p => ({
-        id: p.id, name: p.projectName || p.name, client: p.clientName || p.client || '',
+  loadProjects() { this.http.get<any[]>(`${this.api}/projects`).subscribe(data => { this.projects = (data || []).map(p => ({ id: p.id, name: p.projectName || p.name, client: p.clientName || p.client || '',
         type: p.projectType || p.type || 'Internal',
         logged: p.loggedHours || p.logged || 0,
-        budget: p.budgetHours || p.budget || 0
-      }));
-      if (this.timesheetGrid.length === 0) {
-        this.timesheetGrid = this.projects.map(p => ({ project: p.name, task: '', hours: [0,0,0,0,0,0,0] }));
-        this.recalcTotals();
-      }
-    });
-  }
+        budget: p.budgetHours || p.budget || 0 }));
+      if (this.timesheetGrid.length === 0) { this.timesheetGrid = this.projects.map(p => ({ project: p.name, task: '', hours: [0,0,0,0,0,0,0] }));
+        this.recalcTotals(); } }); }
 
-  loadTimesheets() {
-    this.http.get<any[]>(`${this.api}/timesheets`).subscribe(data => {
-      const entries = data || [];
-      this.logEntries = entries.map(e => ({
-        id: e.id, project: e.projectName || e.project || '',
+  loadTimesheets() { this.http.get<any[]>(`${this.api}/timesheets`).subscribe(data => { const entries = data || [];
+      this.logEntries = entries.map(e => ({ id: e.id, project: e.projectName || e.project || '',
         task: e.taskName || e.task || '', date: e.workDate?.slice(0,10) || e.date?.slice(0,10) || '',
-        hours: e.hoursLogged || e.hours || 0, description: e.description || ''
-      }));
+        hours: e.hoursLogged || e.hours || 0, description: e.description || '' }));
       this.billableHours = entries.filter(e => e.billable).reduce((s: number, e: any) => s + (e.hoursLogged || e.hours || 0), 0);
-      if (entries.length) {
-        this.timesheetId = entries[0].timesheetId || null;
-        this.timesheetStatus = entries[0].status || 'Draft';
-      }
-    });
-  }
+      if (entries.length) { this.timesheetId = entries[0].timesheetId || null;
+        this.timesheetStatus = entries[0].status || 'Draft'; } }); }
 
-  recalcTotals() {
-    this.dailyTotals = this.weekDays.map((_, di) => this.timesheetGrid.reduce((sum, r) => sum + (r.hours[di] || 0), 0));
-  }
+  recalcTotals() { this.dailyTotals = this.weekDays.map((_, di) => this.timesheetGrid.reduce((sum, r) => sum + (r.hours[di] || 0), 0)); }
 
   get totalWeekHours() { return this.dailyTotals.reduce((a, b) => a + b, 0); }
   rowTotal(hrs: number[]) { return hrs.reduce((a, b) => a + b, 0); }
 
-  addLog() {
-    if (!this.logForm.project || !this.logForm.task) { this.tsMsg = 'Select project and task'; return; }
+  addLog() { if (!this.logForm.project || !this.logForm.task) { this.tsMsg = 'Select project and task'; return; }
     const payload = { projectName: this.logForm.project, taskName: this.logForm.task, workDate: this.logForm.date, hoursLogged: this.logForm.hours, billable: this.logForm.billable, description: this.logForm.description };
-    this.http.post<any>(`${this.api}/timesheets`, payload).subscribe({
-      next: res => {
-        this.logEntries.unshift({ id: res.id, ...this.logForm });
-        this.logForm = { project: '', date: '', task: '', hours: 1, billable: true, description: '' };
-      },
-      error: () => {
-        this.logEntries.unshift({ ...this.logForm });
-        this.logForm = { project: '', date: '', task: '', hours: 1, billable: true, description: '' };
-      }
-    });
-  }
+    this.http.post<any>(`${this.api}/timesheets`, payload).subscribe({ next: res => { this.logEntries.unshift({ id: res.id, ...this.logForm });
+        this.logForm = { project: '', date: '', task: '', hours: 1, billable: true, description: '' }; },
+      error: () => { this.logEntries.unshift({ ...this.logForm });
+        this.logForm = { project: '', date: '', task: '', hours: 1, billable: true, description: '' }; } }); }
 
-  saveTimesheet() {
-    const payload = { entries: this.timesheetGrid, status: 'Draft' };
+  saveTimesheet() { const payload = { entries: this.timesheetGrid, status: 'Draft' };
     this.http.post(`${this.api}/timesheets/save`, payload).subscribe({ error: () => {} });
-    this.tsMsg = 'Timesheet saved as draft'; setTimeout(() => this.tsMsg = '', 3000);
-  }
+    this.tsMsg = 'Timesheet saved as draft'; setTimeout(() => this.tsMsg = '', 3000); }
 
-  submitTimesheet() {
-    const endpoint = this.timesheetId ? `${this.api}/timesheets/${this.timesheetId}/submit` : `${this.api}/timesheets/submit`;
-    this.http.patch(endpoint, {}).subscribe({
-      next: () => { this.timesheetStatus = 'Submitted'; },
-      error: () => { this.timesheetStatus = 'Submitted'; }
-    });
-  }
+  submitTimesheet() { const endpoint = this.timesheetId ? `${this.api}/timesheets/${this.timesheetId}/submit` : `${this.api}/timesheets/submit`;
+    this.http.patch(endpoint, {}).subscribe({ next: () => { this.timesheetStatus = 'Submitted'; },
+      error: () => { this.timesheetStatus = 'Submitted'; } }); }
 }
+

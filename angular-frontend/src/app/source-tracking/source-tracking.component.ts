@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-source-tracking',
+@Component({ selector: 'app-source-tracking',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -181,8 +180,7 @@ import { environment } from '../../environments/environment';
     </section>
   `
 })
-export class SourceTrackingComponent implements OnInit {
-  activeTab = 0;
+export class SourceTrackingComponent implements OnInit { activeTab = 0;
   summary: any[] = [];
   baseUrl = '';
   utmSource = 'LinkedIn';
@@ -192,35 +190,26 @@ export class SourceTrackingComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/source-tracking/summary`)
-      .subscribe({ next: d => this.summary = d, error: () => {} });
-  }
+  ngOnInit() { this.http.get<any[]>(`${environment.apiUrl}/api/source-tracking/summary`)
+      .subscribe({ next: d => this.summary = d, error: () => {} }); }
 
-  generateLink() {
-    if (!this.baseUrl.trim()) return;
+  generateLink() { if (!this.baseUrl.trim()) return;
     const sep = this.baseUrl.includes('?') ? '&' : '?';
-    this.generatedLink = `${this.baseUrl}${sep}utm_source=${encodeURIComponent(this.utmSource)}&utm_medium=job_post&utm_campaign=decypher`;
-  }
+    this.generatedLink = `${this.baseUrl}${sep}utm_source=${encodeURIComponent(this.utmSource)}&utm_medium=job_post&utm_campaign=decypher`; }
 
   get totalApplicants() { return this.summary.reduce((s, r) => s + (r.applicants || 0), 0); }
   get totalHires()      { return this.summary.reduce((s, r) => s + (r.hires || 0), 0); }
   get maxApplicants()   { return Math.max(...this.summary.map(r => r.applicants || 0), 1); }
   get bestSource()      { return [...this.summary].sort((a, b) => (b.hires||0) - (a.hires||0))[0]?.source || '—'; }
-  get overallConversion() {
-    const t = this.totalApplicants;
-    return t ? Math.round(this.totalHires / t * 100) : 0;
-  }
+  get overallConversion() { const t = this.totalApplicants;
+    return t ? Math.round(this.totalHires / t * 100) : 0; }
 
-  get pieSegments(): {color: string, dash: number, offset: number, label: string, applicants: number}[] {
-    const total = this.totalApplicants || 1;
+  get pieSegments(): {color: string, dash: number, offset: number, label: string, applicants: number}[] { const total = this.totalApplicants || 1;
     const circ = 283;
     let offset = 0;
-    return this.summary.map((r, i) => {
-      const dash = (r.applicants / total) * circ;
+    return this.summary.map((r, i) => { const dash = (r.applicants / total) * circ;
       const seg = { color: this.sourceColors[i % 5], dash, offset, label: r.source, applicants: r.applicants };
       offset += dash;
-      return seg;
-    });
-  }
+      return seg; }); }
 }
+

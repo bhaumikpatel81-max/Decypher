@@ -1,19 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface KeyResult {
-  id?: string; text: string; target: number; current: number; unit: string;
+interface KeyResult { id?: string; text: string; target: number; current: number; unit: string;
 }
 
-interface OKR {
-  id: string; objective: string; owner: string; dept: string;
+interface OKR { id: string; objective: string; owner: string; dept: string;
   quarter: string; year: number; status: string;
   keyResults: KeyResult[];
 }
 
-@Component({
-  selector: 'app-goals-okr',
+@Component({ selector: 'app-goals-okr',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -168,8 +165,7 @@ interface OKR {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class GoalsOkrComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/performance`;
+export class GoalsOkrComponent implements OnInit { private api = `${environment.apiUrl}/api/performance`;
   tab = 'view';
   filterOwner = '';
   filterQuarter = '';
@@ -191,63 +187,40 @@ export class GoalsOkrComponent implements OnInit {
 
   get achievedCount() { return this.allOKRs.filter(o => o.status === 'Achieved').length; }
   get atRiskCount() { return this.allOKRs.filter(o => o.status === 'At Risk').length; }
-  get avgProgress() {
-    let total = 0, count = 0;
+  get avgProgress() { let total = 0, count = 0;
     this.allOKRs.forEach(o => o.keyResults.forEach(kr => { total += (kr.current / kr.target) * 100; count++; }));
-    return count ? Math.round(total / count) : 0;
-  }
+    return count ? Math.round(total / count) : 0; }
 
-  filteredOKRs(type: string): OKR[] {
-    return this.allOKRs.filter(o => {
-      const matchType = !type || o.dept === type;
+  filteredOKRs(type: string): OKR[] { return this.allOKRs.filter(o => { const matchType = !type || o.dept === type;
       const matchOwner = !this.filterOwner || o.owner === this.filterOwner;
       const matchQ = !this.filterQuarter || o.quarter === this.filterQuarter;
       const matchStatus = !this.filterStatus || o.status === this.filterStatus;
-      return matchType && matchOwner && matchQ && matchStatus;
-    });
-  }
+      return matchType && matchOwner && matchQ && matchStatus; }); }
 
   chipClass(status: string) { return { 'On Track': 'ontrack', 'At Risk': 'atrisk', 'Achieved': 'achieved', 'Not Started': 'notstarted' }[status] || ''; }
   addKR() { this.newOKR.keyResults.push({ text: '', target: 100, unit: '%' }); }
 
   ngOnInit() { this.loadGoals(); this.loadSummary(); }
 
-  loadGoals() {
-    this.http.get<any[]>(`${this.api}/goals`).subscribe(data => {
-      this.allOKRs = (data || []).map(g => ({
-        id: g.id, objective: g.title, owner: g.ownerName || '', dept: g.type || 'Individual',
+  loadGoals() { this.http.get<any[]>(`${this.api}/goals`).subscribe(data => { this.allOKRs = (data || []).map(g => ({ id: g.id, objective: g.title, owner: g.ownerName || '', dept: g.type || 'Individual',
         quarter: g.quarter ? `Q${g.quarter}` : 'Q1', year: g.year || new Date().getFullYear(),
-        status: g.status, keyResults: (g.keyResults || []).map((kr: any) => ({
-          id: kr.id, text: kr.title, target: kr.targetValue || 100, current: kr.currentValue || 0, unit: kr.unit || '%'
-        }))
-      }));
-      this.owners = [...new Set(this.allOKRs.map(o => o.owner))];
-    });
-  }
+        status: g.status, keyResults: (g.keyResults || []).map((kr: any) => ({ id: kr.id, text: kr.title, target: kr.targetValue || 100, current: kr.currentValue || 0, unit: kr.unit || '%' })) }));
+      this.owners = [...new Set(this.allOKRs.map(o => o.owner))]; }); }
 
-  loadSummary() {
-    this.http.get<any>(`${this.api}/goals/summary`).subscribe(s => { this.summary = s || {}; });
-  }
+  loadSummary() { this.http.get<any>(`${this.api}/goals/summary`).subscribe(s => { this.summary = s || {}; }); }
 
   createError = '';
 
-  createOKR() {
-    if (!this.newOKR.objective) { this.createError = 'Objective is required.'; return; }
+  createOKR() { if (!this.newOKR.objective) { this.createError = 'Objective is required.'; return; }
     this.createError = '';
     const quarterNum = parseInt((this.newOKR.quarter || 'Q2').replace('Q', ''));
-    const payload = {
-      title: this.newOKR.objective, type: this.newOKR.dept || 'Individual',
+    const payload = { title: this.newOKR.objective, type: this.newOKR.dept || 'Individual',
       year: this.newOKR.year, quarter: quarterNum,
-      keyResults: this.newOKR.keyResults.map((kr: any) => ({ title: kr.text, targetValue: kr.target, unit: kr.unit }))
-    };
-    this.http.post<any>(`${this.api}/goals`, payload).subscribe({
-      next: () => { this.loadGoals(); this.loadSummary(); this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] }; this.tab = 'view'; },
-      error: () => {}
-    });
-  }
+      keyResults: this.newOKR.keyResults.map((kr: any) => ({ title: kr.text, targetValue: kr.target, unit: kr.unit })) };
+    this.http.post<any>(`${this.api}/goals`, payload).subscribe({ next: () => { this.loadGoals(); this.loadSummary(); this.newOKR = { objective: '', owner: '', dept: '', quarter: 'Q2', year: new Date().getFullYear(), keyResults: [{ text: '', target: 100, unit: '%' }] }; this.tab = 'view'; },
+      error: () => {} }); }
 
-  updateKeyResultProgress(kr: KeyResult) {
-    if (!kr.id) return;
-    this.http.patch(`${this.api}/goals/key-results/${kr.id}/progress`, { progress: kr.current, notes: null }).subscribe();
-  }
+  updateKeyResultProgress(kr: KeyResult) { if (!kr.id) return;
+    this.http.patch(`${this.api}/goals/key-results/${kr.id}/progress`, { progress: kr.current, notes: null }).subscribe(); }
 }
+

@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
-interface ModuleCard {
-  icon: string;
+interface ModuleCard { icon: string;
   label: string;
   route: string;
   color: string;
@@ -12,8 +11,7 @@ interface ModuleCard {
   loading: boolean;
 }
 
-@Component({
-  selector: 'app-dashboard',
+@Component({ selector: 'app-dashboard',
   template: `
     <section class="hrms-dash">
 
@@ -369,53 +367,41 @@ interface ModuleCard {
     .hrms-dash { display: flex; flex-direction: column; gap: 20px; }
 
     /* Welcome Banner */
-    .welcome-banner {
-      background: linear-gradient(135deg, #1e1b4b, #2d1b69, #4c1d95);
+    .welcome-banner { background: linear-gradient(135deg, #1e1b4b, #2d1b69, #4c1d95);
       border-radius: 14px; padding: 24px 28px;
       display: flex; justify-content: space-between; align-items: center;
-      color: #fff;
-    }
+      color: #fff; }
     .welcome-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
     .welcome-sub { font-size: 13px; color: rgba(255,255,255,.65); }
     .welcome-meta { display: flex; gap: 10px; flex-wrap: wrap; }
-    .meta-pill {
-      display: flex; align-items: center; gap: 6px;
+    .meta-pill { display: flex; align-items: center; gap: 6px;
       background: rgba(255,255,255,.12); border-radius: 20px;
-      padding: 5px 12px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9);
-    }
+      padding: 5px 12px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9); }
     .meta-icon { font-size: 14px; }
 
     /* Top KPI Strip */
     .top-kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
-    .top-kpi {
-      background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
+    .top-kpi { background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
       padding: 14px 16px; display: flex; align-items: center; gap: 12px;
       box-shadow: 0 1px 3px rgba(17,20,45,.05);
       transition: transform 160ms, box-shadow 160ms;
-      cursor: default;
-    }
+      cursor: default; }
     .top-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(107,77,240,.12); }
-    .top-kpi-icon {
-      width: 38px; height: 38px; border-radius: 9px;
+    .top-kpi-icon { width: 38px; height: 38px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px; flex-shrink: 0;
-    }
+      font-size: 17px; flex-shrink: 0; }
     .top-kpi-val { font-size: 22px; font-weight: 800; color: #0f1320; line-height: 1; }
     .top-kpi-lbl { font-size: 10px; font-weight: 700; color: #6e7686; text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
 
     /* Module Cards Grid */
     .modules-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    .mod-card {
-      background: #fff; border: 1px solid #e1e4eb; border-radius: 14px;
+    .mod-card { background: #fff; border: 1px solid #e1e4eb; border-radius: 14px;
       overflow: hidden; cursor: pointer;
       box-shadow: 0 1px 3px rgba(17,20,45,.05);
-      transition: transform 160ms, box-shadow 160ms;
-    }
+      transition: transform 160ms, box-shadow 160ms; }
     .mod-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(17,20,45,.1); }
-    .mod-header {
-      padding: 14px 16px; display: flex; align-items: center; gap: 10px;
-      color: #fff;
-    }
+    .mod-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+      color: #fff; }
     .mod-icon { font-size: 20px; }
     .mod-title { flex: 1; font-size: 13px; font-weight: 700; }
     .mod-arrow { font-size: 16px; opacity: .7; transition: transform 160ms; }
@@ -425,27 +411,19 @@ interface ModuleCard {
     .mk-val { font-size: 18px; font-weight: 800; color: #0f1320; }
     .mk-val.loading { color: #d1d5db; animation: shimmer 1.4s ease-in-out infinite; }
     .mk-lbl { font-size: 9px; font-weight: 700; color: #9aa2b2; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
-    .mod-progress-bar {
-      height: 3px; background: #f3f4f6; margin: 0 12px 12px;
-      border-radius: 99px; overflow: hidden; position: relative;
-    }
-    .mod-progress-bar::after {
-      content: ''; position: absolute; left: 0; top: 0; height: 100%;
+    .mod-progress-bar { height: 3px; background: #f3f4f6; margin: 0 12px 12px;
+      border-radius: 99px; overflow: hidden; position: relative; }
+    .mod-progress-bar::after { content: ''; position: absolute; left: 0; top: 0; height: 100%;
       width: calc(var(--pct, 0) * 1%);
       background: var(--col, #6b4df0);
-      border-radius: 99px; transition: width 900ms ease-out;
-    }
+      border-radius: 99px; transition: width 900ms ease-out; }
 
-    @keyframes shimmer {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
+    @keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
     /* Bottom row */
     .bottom-row { display: grid; grid-template-columns: 1fr 320px; gap: 14px; }
-    .card {
-      background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
-      padding: 20px; box-shadow: 0 1px 3px rgba(17,20,45,.05);
-    }
+    .card { background: #fff; border: 1px solid #e1e4eb; border-radius: 12px;
+      padding: 20px; box-shadow: 0 1px 3px rgba(17,20,45,.05); }
     .sec-title { font-size: 14px; font-weight: 700; color: #0f1320; margin-bottom: 14px; }
 
     /* Activity Feed */
@@ -461,13 +439,11 @@ interface ModuleCard {
 
     /* Quick Actions */
     .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .quick-btn {
-      display: flex; align-items: center; gap: 10px;
+    .quick-btn { display: flex; align-items: center; gap: 10px;
       padding: 10px 12px; border: 1px solid #e1e4eb; border-radius: 10px;
       background: #fff; cursor: pointer; text-align: left;
       transition: background 140ms, border-color 140ms;
-      font-size: 12px; font-weight: 600; color: #343a48;
-    }
+      font-size: 12px; font-weight: 600; color: #343a48; }
     .quick-btn:hover { background: #f8f7ff; border-color: #6b4df0; color: #6b4df0; }
     .quick-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .quick-label { line-height: 1.3; }
@@ -477,8 +453,7 @@ interface ModuleCard {
     @media (max-width: 860px)  { .top-kpi-row { grid-template-columns: repeat(2, 1fr); } .modules-grid { grid-template-columns: 1fr; } .bottom-row { grid-template-columns: 1fr; } .welcome-banner { flex-direction: column; gap: 14px; } }
   `]
 })
-export class DashboardComponent implements OnInit {
-  greeting = 'morning';
+export class DashboardComponent implements OnInit { greeting = 'morning';
   userName = '';
   today = '';
 
@@ -498,43 +473,40 @@ export class DashboardComponent implements OnInit {
   exitLoading    = true;
   lmsLoading     = true;
 
-  recruit = { openReqs: '—', candidates: '—', selectionRate: 0 };
-  payroll = { processed: '—', pending: '—', totalAmount: '—', pct: 0 };
-  attend  = { present: '—', absent: '—', late: '—', pct: 0 };
-  leave   = { pending: '—', approved: '—', balance: '—', pct: 0 };
-  emp     = { total: '—', active: '—', onLeave: '—', pct: 0 };
-  perf    = { reviews: '—', completed: '—', avgScore: '—', pct: 0 };
-  comp    = { compliant: '—', violations: '—', pending: '—', pct: 0 };
-  hd      = { open: '—', inProgress: '—', resolved: '—', pct: 0 };
-  audit   = { today: '—', week: '—', critical: '—' };
-  budget  = { utilized: 0, plans: '—', variance: 0 };
-  exit    = { active: '—', pending: '—', completed: '—', pct: 0 };
-  lms     = { courses: '—', completed: '—', enrolled: '—', pct: 0 };
+  recruit: any = { openReqs: '—', candidates: '—', selectionRate: 0 };
+  payroll: any = { processed: '—', pending: '—', totalAmount: '—', pct: 0 };
+  attend:  any = { present: '—', absent: '—', late: '—', pct: 0 };
+  leave:   any = { pending: '—', approved: '—', balance: '—', pct: 0 };
+  emp:     any = { total: '—', active: '—', onLeave: '—', pct: 0 };
+  perf:    any = { reviews: '—', completed: '—', avgScore: '—', pct: 0 };
+  comp:    any = { compliant: '—', violations: '—', pending: '—', pct: 0 };
+  hd:      any = { open: '—', inProgress: '—', resolved: '—', pct: 0 };
+  audit:   any = { today: '—', week: '—', critical: '—' };
+  budget:  any = { utilized: 0, plans: '—', variance: 0 };
+  exit:    any = { active: '—', pending: '—', completed: '—', pct: 0 };
+  lms:     any = { courses: '—', completed: '—', enrolled: '—', pct: 0 };
 
   recentActivity: { module: string; message: string; time: string; color: string }[] = [];
 
   quickActions = [
     { icon: '📝', label: 'New Requisition',   route: '/requisitions',       color: 'rgba(107,77,240,.12)' },
-    { icon: '👤', label: 'Add Employee',       route: '/employee-directory', color: 'rgba(22,163,74,.12)'  },
-    { icon: '💰', label: 'Run Payroll',         route: '/payroll',            color: 'rgba(5,150,105,.12)'  },
+    { icon: '👤', label: 'Add Employee',       route: '/employee-directory', color: 'rgba(22,163,74,.12)' },
+    { icon: '💰', label: 'Run Payroll',         route: '/payroll',            color: 'rgba(5,150,105,.12)' },
     { icon: '📋', label: 'View Reports',        route: '/reports',            color: 'rgba(59,130,246,.12)' },
     { icon: '🛡️', label: 'Compliance Check',   route: '/compliance',         color: 'rgba(107,114,128,.12)'},
     { icon: '🎧', label: 'Helpdesk Tickets',   route: '/helpdesk',           color: 'rgba(20,184,166,.12)' },
     { icon: '📚', label: 'Training Courses',   route: '/learning-management',color: 'rgba(139,92,246,.12)' },
-    { icon: '📊', label: 'Budget Overview',    route: '/budget',             color: 'rgba(5,150,105,.12)'  },
+    { icon: '📊', label: 'Budget Overview',    route: '/budget',             color: 'rgba(5,150,105,.12)' },
   ];
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  ngOnInit() {
-    const h = new Date().getHours();
+  ngOnInit() { const h = new Date().getHours();
     this.greeting = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
     this.today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const stored = localStorage.getItem('currentUser');
-    if (stored) {
-      try { const u = JSON.parse(stored); this.userName = u.name || u.firstName || u.username || ''; } catch {}
-    }
+    if (stored) { try { const u = JSON.parse(stored); this.userName = u.name || u.firstName || u.username || ''; } catch {} }
 
     this.metaPills = [
       { icon: '📅', label: this.today.split(',')[0] },
@@ -552,174 +524,102 @@ export class DashboardComponent implements OnInit {
     this.loadAudit();
     this.loadBudget();
     this.loadExits();
-    this.loadLms();
-  }
+    this.loadLms(); }
 
   go(route: string) { this.router.navigate([route]); }
 
-  private loadRecruitment() {
-    this.http.get<any>(`${environment.apiUrl}/api/dashboard/metrics`).subscribe({
-      next: m => {
-        this.recruit = { openReqs: m.totalJobs ?? 0, candidates: m.totalCandidates ?? 0, selectionRate: m.selectionRate ?? 0 };
+  private loadRecruitment() { this.http.get<any>(`${environment.apiUrl}/api/dashboard/metrics`).subscribe({ next: m => { this.recruit = { openReqs: m.totalJobs ?? 0, candidates: m.totalCandidates ?? 0, selectionRate: m.selectionRate ?? 0 };
         this.topKpis = [
           { icon: '👥', label: 'Employees',    value: '—',                    color: 'rgba(107,77,240,.15)' },
           { icon: '📌', label: 'Open Reqs',    value: m.totalJobs ?? 0,       color: 'rgba(232,145,42,.15)' },
           { icon: '🎯', label: 'Candidates',   value: m.totalCandidates ?? 0, color: 'rgba(59,189,234,.15)' },
-          { icon: '🏢', label: 'Vendors',      value: m.activeVendors ?? 0,   color: 'rgba(22,163,74,.15)'  },
-          { icon: '💰', label: 'Payroll',      value: '—',                    color: 'rgba(5,150,105,.15)'  },
+          { icon: '🏢', label: 'Vendors',      value: m.activeVendors ?? 0,   color: 'rgba(22,163,74,.15)' },
+          { icon: '💰', label: 'Payroll',      value: '—',                    color: 'rgba(5,150,105,.15)' },
           { icon: '🎧', label: 'Tickets',      value: '—',                    color: 'rgba(20,184,166,.15)' },
         ];
-        this.recruitLoading = false;
-      },
-      error: () => { this.recruitLoading = false; }
-    });
-  }
+        this.recruitLoading = false; },
+      error: () => { this.recruitLoading = false; } }); }
 
-  private loadPayroll() {
-    this.http.get<any>(`${environment.apiUrl}/api/payroll/summary`).subscribe({
-      next: d => {
-        const processed = d?.processedCount ?? d?.processed ?? 0;
+  private loadPayroll() { this.http.get<any>(`${environment.apiUrl}/api/payroll/summary`).subscribe({ next: d => { const processed = d?.processedCount ?? d?.processed ?? 0;
         const pending   = d?.pendingCount   ?? d?.pending   ?? 0;
         const total     = d?.totalDisbursed ?? d?.totalAmount ?? 0;
         const pct       = processed + pending > 0 ? Math.round(processed / (processed + pending) * 100) : 0;
         this.payroll = { processed, pending, totalAmount: total ? `₹${(total / 100000).toFixed(1)}L` : '₹0', pct };
         if (this.topKpis[4]) this.topKpis[4].value = `₹${(total / 100000).toFixed(1)}L`;
-        this.payrollLoading = false;
-      },
-      error: () => { this.payroll = { processed: 0, pending: 0, totalAmount: '₹0', pct: 0 }; this.payrollLoading = false; }
-    });
-  }
+        this.payrollLoading = false; },
+      error: () => { this.payroll = { processed: 0, pending: 0, totalAmount: '₹0', pct: 0 }; this.payrollLoading = false; } }); }
 
-  private loadAttendance() {
-    this.http.get<any>(`${environment.apiUrl}/api/attendance/today`).subscribe({
-      next: d => {
-        const present = d?.present ?? 0;
+  private loadAttendance() { this.http.get<any>(`${environment.apiUrl}/api/attendance/today`).subscribe({ next: d => { const present = d?.present ?? 0;
         const total   = (d?.present ?? 0) + (d?.absent ?? 0);
         this.attend = { present, absent: d?.absent ?? 0, late: d?.late ?? 0, pct: total > 0 ? Math.round(present / total * 100) : 0 };
-        this.attendLoading = false;
-      },
-      error: () => { this.attend = { present: 0, absent: 0, late: 0, pct: 0 }; this.attendLoading = false; }
-    });
-  }
+        this.attendLoading = false; },
+      error: () => { this.attend = { present: 0, absent: 0, late: 0, pct: 0 }; this.attendLoading = false; } }); }
 
-  private loadLeave() {
-    this.http.get<any>(`${environment.apiUrl}/api/leave/summary`).subscribe({
-      next: d => {
-        const approved = d?.approved ?? 0;
+  private loadLeave() { this.http.get<any>(`${environment.apiUrl}/api/leave/summary`).subscribe({ next: d => { const approved = d?.approved ?? 0;
         const pending  = d?.pending  ?? 0;
         const total    = approved + pending;
         this.leave = { pending, approved, balance: d?.averageBalance ?? d?.avgBalance ?? '—', pct: total > 0 ? Math.round(approved / total * 100) : 0 };
-        this.leaveLoading = false;
-      },
-      error: () => { this.leave = { pending: 0, approved: 0, balance: '—', pct: 0 }; this.leaveLoading = false; }
-    });
-  }
+        this.leaveLoading = false; },
+      error: () => { this.leave = { pending: 0, approved: 0, balance: '—', pct: 0 }; this.leaveLoading = false; } }); }
 
-  private loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: list => {
-        const data  = Array.isArray(list) ? list : (list as any)?.data ?? [];
+  private loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({ next: list => { const data  = Array.isArray(list) ? list : (list as any)?.data ?? [];
         const total  = data.length;
         const active = data.filter((e: any) => (e.status || '').toLowerCase() === 'active').length || total;
         const onLeave= data.filter((e: any) => (e.status || '').toLowerCase() === 'on leave').length;
         this.emp = { total, active, onLeave, pct: total > 0 ? Math.round(active / total * 100) : 0 };
         if (this.topKpis[0]) this.topKpis[0].value = total;
-        this.empLoading = false;
-      },
-      error: () => { this.emp = { total: 0, active: 0, onLeave: 0, pct: 0 }; this.empLoading = false; }
-    });
-  }
+        this.empLoading = false; },
+      error: () => { this.emp = { total: 0, active: 0, onLeave: 0, pct: 0 }; this.empLoading = false; } }); }
 
-  private loadPerformance() {
-    this.http.get<any>(`${environment.apiUrl}/api/performance/summary`).subscribe({
-      next: d => {
-        const reviews   = d?.pendingReviews  ?? d?.reviewsDue   ?? 0;
+  private loadPerformance() { this.http.get<any>(`${environment.apiUrl}/api/performance/summary`).subscribe({ next: d => { const reviews   = d?.pendingReviews  ?? d?.reviewsDue   ?? 0;
         const completed = d?.completedReviews ?? d?.completed    ?? 0;
         const avgScore  = d?.averageScore     ?? d?.avgScore     ?? '—';
         const total = reviews + completed;
         this.perf = { reviews, completed, avgScore, pct: total > 0 ? Math.round(completed / total * 100) : 0 };
-        this.perfLoading = false;
-      },
-      error: () => { this.perf = { reviews: 0, completed: 0, avgScore: '—', pct: 0 }; this.perfLoading = false; }
-    });
-  }
+        this.perfLoading = false; },
+      error: () => { this.perf = { reviews: 0, completed: 0, avgScore: '—', pct: 0 }; this.perfLoading = false; } }); }
 
-  private loadCompliance() {
-    this.http.get<any>(`${environment.apiUrl}/api/compliance/summary`).subscribe({
-      next: d => {
-        const compliant  = d?.compliantCount  ?? d?.compliant  ?? 0;
+  private loadCompliance() { this.http.get<any>(`${environment.apiUrl}/api/compliance/summary`).subscribe({ next: d => { const compliant  = d?.compliantCount  ?? d?.compliant  ?? 0;
         const violations = d?.violationCount  ?? d?.violations ?? 0;
         const pending    = d?.pendingCount    ?? d?.pending    ?? 0;
         const total = compliant + violations + pending;
         this.comp = { compliant, violations, pending, pct: total > 0 ? Math.round(compliant / total * 100) : 0 };
-        this.compLoading = false;
-      },
-      error: () => { this.comp = { compliant: 0, violations: 0, pending: 0, pct: 0 }; this.compLoading = false; }
-    });
-  }
+        this.compLoading = false; },
+      error: () => { this.comp = { compliant: 0, violations: 0, pending: 0, pct: 0 }; this.compLoading = false; } }); }
 
-  private loadHelpdesk() {
-    this.http.get<any>(`${environment.apiUrl}/api/helpdesk/summary`).subscribe({
-      next: d => {
-        const open       = d?.openCount       ?? d?.open       ?? 0;
+  private loadHelpdesk() { this.http.get<any>(`${environment.apiUrl}/api/helpdesk/summary`).subscribe({ next: d => { const open       = d?.openCount       ?? d?.open       ?? 0;
         const inProgress = d?.inProgressCount ?? d?.inProgress ?? 0;
         const resolved   = d?.resolvedCount   ?? d?.resolved   ?? 0;
         const total = open + inProgress + resolved;
         this.hd = { open, inProgress, resolved, pct: total > 0 ? Math.round(resolved / total * 100) : 0 };
         if (this.topKpis[5]) this.topKpis[5].value = open;
-        this.hdLoading = false;
-      },
-      error: () => { this.hd = { open: 0, inProgress: 0, resolved: 0, pct: 0 }; this.hdLoading = false; }
-    });
-  }
+        this.hdLoading = false; },
+      error: () => { this.hd = { open: 0, inProgress: 0, resolved: 0, pct: 0 }; this.hdLoading = false; } }); }
 
-  private loadAudit() {
-    this.http.get<any>(`${environment.apiUrl}/api/audit/summary`).subscribe({
-      next: d => {
-        this.audit = { today: d?.todayCount ?? d?.today ?? 0, week: d?.weekCount ?? d?.week ?? 0, critical: d?.criticalCount ?? d?.critical ?? 0 };
-        this.auditLoading = false;
-      },
-      error: () => { this.audit = { today: 0, week: 0, critical: 0 }; this.auditLoading = false; }
-    });
-  }
+  private loadAudit() { this.http.get<any>(`${environment.apiUrl}/api/audit/summary`).subscribe({ next: d => { this.audit = { today: d?.todayCount ?? d?.today ?? 0, week: d?.weekCount ?? d?.week ?? 0, critical: d?.criticalCount ?? d?.critical ?? 0 };
+        this.auditLoading = false; },
+      error: () => { this.audit = { today: 0, week: 0, critical: 0 }; this.auditLoading = false; } }); }
 
-  private loadBudget() {
-    this.http.get<any>(`${environment.apiUrl}/api/budget/plans`).subscribe({
-      next: r => {
-        const plans = r?.data ?? r ?? [];
+  private loadBudget() { this.http.get<any>(`${environment.apiUrl}/api/budget/plans`).subscribe({ next: r => { const plans = r?.data ?? r ?? [];
         const active = Array.isArray(plans) ? plans.filter((p: any) => p.status === 'Approved' || p.status === 'Draft').length : 0;
         this.budget = { utilized: 0, plans: active, variance: 0 };
-        this.budgetLoading = false;
-      },
-      error: () => { this.budget = { utilized: 0, plans: 0, variance: 0 }; this.budgetLoading = false; }
-    });
-  }
+        this.budgetLoading = false; },
+      error: () => { this.budget = { utilized: 0, plans: 0, variance: 0 }; this.budgetLoading = false; } }); }
 
-  private loadExits() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees/exits`).subscribe({
-      next: data => {
-        const list      = Array.isArray(data) ? data : (data as any)?.data ?? [];
+  private loadExits() { this.http.get<any[]>(`${environment.apiUrl}/api/employees/exits`).subscribe({ next: data => { const list      = Array.isArray(data) ? data : (data as any)?.data ?? [];
         const active    = list.filter((e: any) => e.status !== 'Completed').length;
         const pending   = list.filter((e: any) => e.status === 'Initiated' || e.status === 'Pending').length;
         const completed = list.filter((e: any) => e.status === 'Completed').length;
         const total = active + completed;
         this.exit = { active, pending, completed, pct: total > 0 ? Math.round(completed / total * 100) : 0 };
-        this.exitLoading = false;
-      },
-      error: () => { this.exit = { active: 0, pending: 0, completed: 0, pct: 0 }; this.exitLoading = false; }
-    });
-  }
+        this.exitLoading = false; },
+      error: () => { this.exit = { active: 0, pending: 0, completed: 0, pct: 0 }; this.exitLoading = false; } }); }
 
-  private loadLms() {
-    this.http.get<any>(`${environment.apiUrl}/api/learning/summary`).subscribe({
-      next: d => {
-        const courses   = d?.courseCount    ?? d?.courses    ?? 0;
+  private loadLms() { this.http.get<any>(`${environment.apiUrl}/api/learning/summary`).subscribe({ next: d => { const courses   = d?.courseCount    ?? d?.courses    ?? 0;
         const completed = d?.completedCount ?? d?.completed  ?? 0;
         const enrolled  = d?.enrolledCount  ?? d?.enrolled   ?? 0;
         this.lms = { courses, completed, enrolled, pct: enrolled > 0 ? Math.round(completed / enrolled * 100) : 0 };
-        this.lmsLoading = false;
-      },
-      error: () => { this.lms = { courses: 0, completed: 0, enrolled: 0, pct: 0 }; this.lmsLoading = false; }
-    });
-  }
+        this.lmsLoading = false; },
+      error: () => { this.lms = { courses: 0, completed: 0, enrolled: 0, pct: 0 }; this.lmsLoading = false; } }); }
 }
+

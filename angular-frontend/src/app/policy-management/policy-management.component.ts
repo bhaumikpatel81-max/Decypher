@@ -1,15 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface Policy {
-  id: number; title: string; category: string; version: string;
+interface Policy { id: number; title: string; category: string; version: string;
   effectiveDate: string; status: string; acknowledged: number; total: number;
 }
 
-@Component({
-  selector: 'app-policy-management',
+@Component({ selector: 'app-policy-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -147,8 +145,7 @@ interface Policy {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class PolicyManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/hr-compliance`;
+export class PolicyManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/hr-compliance`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'library';
   search = '';
@@ -169,13 +166,11 @@ export class PolicyManagementComponent implements OnInit {
   get pendingAck() { return this.policies.reduce((s, p) => s + (p.total - p.acknowledged), 0); }
   get avgAckRate() { const a = this.policies.filter(p => p.total > 0); return a.length ? a.reduce((s, p) => s + (p.acknowledged / p.total) * 100, 0) / a.length : 0; }
 
-  get filteredPolicies() {
-    return this.policies.filter(p =>
+  get filteredPolicies() { return this.policies.filter(p =>
       (!this.search || p.title.toLowerCase().includes(this.search.toLowerCase())) &&
       (!this.filterCat || p.category === this.filterCat) &&
       (!this.filterStatus || p.status === this.filterStatus)
-    );
-  }
+    ); }
 
   ackStatus(empId: string, policyId: number): boolean { return this.ackData[empId]?.[policyId] || false; }
 
@@ -184,54 +179,29 @@ export class PolicyManagementComponent implements OnInit {
 
   ngOnInit() { this.loadPolicies(); this.loadEmployees(); }
 
-  loadPolicies() {
-    this.http.get<any[]>(`${this.api}/policies`).subscribe(data => {
-      this.policies = (data || []).map(p => ({
-        id: p.id, title: p.title, category: p.category || 'HR',
+  loadPolicies() { this.http.get<any[]>(`${this.api}/policies`).subscribe(data => { this.policies = (data || []).map(p => ({ id: p.id, title: p.title, category: p.category || 'HR',
         version: p.version || '1.0', effectiveDate: p.effectiveDate?.slice(0, 10) || '',
-        status: p.status || 'Draft', acknowledged: p.acknowledgedCount || 0, total: p.totalEmployees || 0
-      }));
-    });
-  }
+        status: p.status || 'Draft', acknowledged: p.acknowledgedCount || 0, total: p.totalEmployees || 0 })); }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({
-        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(), dept: e.department || ''
-      }));
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(), dept: e.department || '' })); }); }
 
-  viewPolicy(p: Policy) {
-    this.http.get<any[]>(`${this.api}/policies/${p.id}/acknowledgments`).subscribe(acks => {
-      const map: { [empId: string]: boolean } = {};
+  viewPolicy(p: Policy) { this.http.get<any[]>(`${this.api}/policies/${p.id}/acknowledgments`).subscribe(acks => { const map: { [empId: string]: boolean } = {};
       (acks || []).forEach((a: any) => { map[a.employeeCode || a.employeeId] = true; });
       this.ackData = { ...this.ackData, ...Object.fromEntries(Object.entries(map).map(([k, v]) => [k, { [p.id]: v }])) };
-      this.snack.open(`Viewing: ${p.title} v${p.version}`, '', { duration: 2500 });
-    });
-  }
+      this.snack.open(`Viewing: ${p.title} v${p.version}`, '', { duration: 2500 }); }); }
 
   sendAck(p: Policy) { this.snack.open(`Reminder sent for "${p.title}"`, '', { duration: 2500 }); }
 
-  sendForAck(p: Policy) {
-    this.http.post(`${this.api}/policies/${p.id}/publish`, {}).subscribe({
-      next: () => { p.status = 'Active'; this.snack.open(`"${p.title}" published and sent for acknowledgement`, '', { duration: 3000 }); },
-      error: err => this.snack.open(err?.error?.message || 'Failed to publish', 'Close', { duration: 3000 })
-    });
-  }
+  sendForAck(p: Policy) { this.http.post(`${this.api}/policies/${p.id}/publish`, {}).subscribe({ next: () => { p.status = 'Active'; this.snack.open(`"${p.title}" published and sent for acknowledgement`, '', { duration: 3000 }); },
+      error: err => this.snack.open(err?.error?.message || 'Failed to publish', 'Close', { duration: 3000 }) }); }
 
   uploadPolicy() { this.snack.open('Use the file input to upload a policy document', '', { duration: 2500 }); }
 
-  addPolicy(status: string) {
-    if (!this.form.title || !this.form.category) { this.snack.open('Fill required fields', 'Close', { duration: 3000 }); return; }
+  addPolicy(status: string) { if (!this.form.title || !this.form.category) { this.snack.open('Fill required fields', 'Close', { duration: 3000 }); return; }
     const payload = { title: this.form.title, category: this.form.category, version: this.form.version, effectiveDate: this.form.effectiveDate, status };
-    this.http.post<any>(`${this.api}/policies`, payload).subscribe({
-      next: res => {
-        this.policies = [{ id: res.id, ...this.form, status, acknowledged: 0, total: 0 }, ...this.policies];
+    this.http.post<any>(`${this.api}/policies`, payload).subscribe({ next: res => { this.policies = [{ id: res.id, ...this.form, status, acknowledged: 0, total: 0 }, ...this.policies];
         this.snack.open(`Policy "${this.form.title}" ${status === 'Draft' ? 'saved as draft' : 'published'}`, '', { duration: 3000 });
-        this.form = { title: '', category: '', version: '1.0', effectiveDate: '' };
-      },
-      error: err => this.snack.open(err?.error?.message || 'Failed to save policy', 'Close', { duration: 3000 })
-    });
-  }
+        this.form = { title: '', category: '', version: '1.0', effectiveDate: '' }; },
+      error: err => this.snack.open(err?.error?.message || 'Failed to save policy', 'Close', { duration: 3000 }) }); }
 }
+

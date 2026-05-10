@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-talent-pool',
+@Component({ selector: 'app-talent-pool',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -263,38 +262,27 @@ import { environment } from '../../environments/environment';
     .bar-track { height:10px;background:var(--surface-alt);border-radius:5px;overflow:hidden; }
     .bar-fill  { height:100%;border-radius:5px;transition:width .5s; }
     .num-chip  { padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700; }
-    .dup-badge {
-      display:inline-flex; align-items:center; justify-content:center;
+    .dup-badge { display:inline-flex; align-items:center; justify-content:center;
       min-width:18px; height:18px; border-radius:9px;
       background:#ef4444; color:#fff; font-size:11px; font-weight:700;
-      margin-left:6px; padding:0 5px;
-    }
-    .dup-group-card {
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:12px; padding:16px 20px; margin-bottom:16px;
-    }
+      margin-left:6px; padding:0 5px; }
+    .dup-group-card { background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:16px 20px; margin-bottom:16px; }
     .dup-group-card:hover { border-color:#fbbf24; box-shadow:0 2px 8px rgba(251,191,36,.15); }
-    .dup-group-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:14px; gap:12px;
-    }
+    .dup-group-header { display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:14px; gap:12px; }
     .dup-flag { font-size:13px; font-weight:700; color:#92400e; }
     .dup-candidates { display:flex; flex-direction:column; gap:1px; }
-    .dup-candidate-row {
-      display:flex; align-items:center; gap:12px; padding:10px 12px;
+    .dup-candidate-row { display:flex; align-items:center; gap:12px; padding:10px 12px;
       border-radius:8px; border:1px solid var(--border);
-      background:#fafafa; margin-bottom:6px;
-    }
+      background:#fafafa; margin-bottom:6px; }
     .dup-primary { background:#faf5ff; border-color:#ddd6fe; }
-    .dup-avatar {
-      width:34px; height:34px; border-radius:50%;
+    .dup-avatar { width:34px; height:34px; border-radius:50%;
       display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:14px; flex-shrink:0;
-    }
+      font-weight:700; font-size:14px; flex-shrink:0; }
   `]
 })
-export class TalentPoolComponent implements OnInit {
-  activeTab = 0;
+export class TalentPoolComponent implements OnInit { activeTab = 0;
 
   // Talent Pool tab
   entries: any[] = [];
@@ -312,109 +300,68 @@ export class TalentPoolComponent implements OnInit {
   readonly tpTrendData = [8, 14, 19, 26, 31, 42];
 
   get activeNurtureCount()  { return this.entries.filter(e => e.nurtureStatus === 'Active').length; }
-  get uniqueTagCount() {
-    const tags = new Set<string>();
+  get uniqueTagCount() { const tags = new Set<string>();
     this.entries.forEach(e => (e.tags || []).forEach((t: string) => tags.add(t)));
-    return tags.size;
-  }
-  get nurtureStatusStats(): {label: string, count: number, color: string}[] {
-    const statusMap: Record<string, string> = {
-      Active: '#10b981', Nurturing: '#7c3aed', Cold: '#f59e0b', Unresponsive: '#94a3b8'
-    };
+    return tags.size; }
+  get nurtureStatusStats(): {label: string, count: number, color: string}[] { const statusMap: Record<string, string> = { Active: '#10b981', Nurturing: '#7c3aed', Cold: '#f59e0b', Unresponsive: '#94a3b8' };
     const counts: Record<string, number> = {};
-    this.entries.forEach(e => {
-      const s = e.nurtureStatus || 'Unknown';
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts).map(([label, count]) => ({ label, count, color: statusMap[label] || '#cbd5e1' }));
-  }
-  private statusDash(status: string) {
-    const c = this.entries.filter(e => e.nurtureStatus === status).length;
-    return Math.round((c / (this.entries.length || 1)) * 283);
-  }
+    this.entries.forEach(e => { const s = e.nurtureStatus || 'Unknown';
+      counts[s] = (counts[s] || 0) + 1; });
+    return Object.entries(counts).map(([label, count]) => ({ label, count, color: statusMap[label] || '#cbd5e1' })); }
+  private statusDash(status: string) { const c = this.entries.filter(e => e.nurtureStatus === status).length;
+    return Math.round((c / (this.entries.length || 1)) * 283); }
   get activeDash()    { return this.statusDash('Active'); }
   get nurturingDash() { return this.statusDash('Nurturing'); }
   get coldDash()      { return this.statusDash('Cold'); }
 
-  get topTags(): {tag: string, count: number, pct: number}[] {
-    const counts: Record<string, number> = {};
+  get topTags(): {tag: string, count: number, pct: number}[] { const counts: Record<string, number> = {};
     this.entries.forEach(e => (e.tags || []).forEach((t: string) => { counts[t] = (counts[t] || 0) + 1; }));
     const max = Math.max(...Object.values(counts), 1);
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
-      .map(([tag, count]) => ({ tag, count, pct: Math.round((count / max) * 100) }));
-  }
+      .map(([tag, count]) => ({ tag, count, pct: Math.round((count / max) * 100) })); }
 
-  get tpLinePoints(): string {
-    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get tpAreaPoints(): string {
-    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+  get tpLinePoints(): string { const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get tpAreaPoints(): string { const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get tpDotPoints(): {x: number, y: number}[] {
-    const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return `0,90 ${line} 500,90`; }
+  get tpDotPoints(): {x: number, y: number}[] { const pts = this.tpTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.load();
-    this.loadDuplicates();
-  }
+  ngOnInit() { this.load();
+    this.loadDuplicates(); }
 
-  load() {
-    const params = this.tagFilter ? `?tag=${encodeURIComponent(this.tagFilter)}` : '';
+  load() { const params = this.tagFilter ? `?tag=${encodeURIComponent(this.tagFilter)}` : '';
     this.http.get<any[]>(`${environment.apiUrl}/api/talent-pool${params}`)
-      .subscribe({ next: d => this.entries = d, error: () => {} });
-  }
+      .subscribe({ next: d => this.entries = d, error: () => {} }); }
 
-  createCampaign() {
-    this.savingCampaign = true;
-    const payload = {
-      ...this.campaign,
-      targetTags: this.campaign.tagsText.split(',').map(t => t.trim()).filter(Boolean)
-    };
+  createCampaign() { this.savingCampaign = true;
+    const payload = { ...this.campaign,
+      targetTags: this.campaign.tagsText.split(',').map(t => t.trim()).filter(Boolean) };
     this.http.post<any>(`${environment.apiUrl}/api/talent-pool/campaigns`, payload)
-      .subscribe({
-        next: r => {
-          this.http.post(`${environment.apiUrl}/api/talent-pool/campaigns/${r.id}/send`, {}).subscribe();
+      .subscribe({ next: r => { this.http.post(`${environment.apiUrl}/api/talent-pool/campaigns/${r.id}/send`, {}).subscribe();
           this.savingCampaign = false;
-          this.showCampaign = false;
-        },
-        error: () => { this.savingCampaign = false; }
-      });
-  }
+          this.showCampaign = false; },
+        error: () => { this.savingCampaign = false; } }); }
 
-  loadDuplicates() {
-    this.dupLoading = true;
+  loadDuplicates() { this.dupLoading = true;
     this.http.get<any[]>(`${environment.apiUrl}/api/candidates/duplicates`)
-      .subscribe({
-        next: d => { this.dupGroups = d.map(g => ({ ...g, merging: false, dismissing: false, merged: false, dismissed: false })); this.dupLoading = false; },
-        error: () => { this.dupLoading = false; }
-      });
-  }
+      .subscribe({ next: d => { this.dupGroups = d.map(g => ({ ...g, merging: false, dismissing: false, merged: false, dismissed: false })); this.dupLoading = false; },
+        error: () => { this.dupLoading = false; } }); }
 
-  mergeGroup(group: any) {
-    group.merging = true;
+  mergeGroup(group: any) { group.merging = true;
     const primaryId = group.candidates[0].id;
     const duplicateIds = group.candidates.slice(1).map((c: any) => c.id);
     this.http.post(`${environment.apiUrl}/api/candidates/merge`, { primaryId, duplicateIds })
-      .subscribe({
-        next: () => { group.merging = false; group.merged = true; },
-        error: () => { group.merging = false; }
-      });
-  }
+      .subscribe({ next: () => { group.merging = false; group.merged = true; },
+        error: () => { group.merging = false; } }); }
 
-  dismissGroup(group: any) {
-    group.dismissing = true;
+  dismissGroup(group: any) { group.dismissing = true;
     const candidateIds = group.candidates.map((c: any) => c.id);
     this.http.post(`${environment.apiUrl}/api/candidates/dismiss-duplicate`, { candidateIds })
-      .subscribe({
-        next: () => { group.dismissing = false; group.dismissed = true; },
-        error: () => { group.dismissing = false; }
-      });
-  }
+      .subscribe({ next: () => { group.dismissing = false; group.dismissed = true; },
+        error: () => { group.dismissing = false; } }); }
 }
+

@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface Certification {
-  id: number; employee: string; empId: string; name: string;
+interface Certification { id: number; employee: string; empId: string; name: string;
   issuer: string; obtained: string; expiry: string; certId: string;
   status: string; daysLeft: number;
 }
 
-@Component({
-  selector: 'app-certification-tracker',
+@Component({ selector: 'app-certification-tracker',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -134,8 +132,7 @@ interface Certification {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class CertificationTrackerComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/learning`;
+export class CertificationTrackerComponent implements OnInit { private api = `${environment.apiUrl}/api/learning`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'list';
   search = '';
@@ -151,80 +148,49 @@ export class CertificationTrackerComponent implements OnInit {
   get expiredCerts() { return this.certs.filter(c => c.status === 'Expired').length; }
   get expiringSoon30() { return this.certs.filter(c => c.daysLeft >= 0 && c.daysLeft <= 30).length; }
 
-  get filteredCerts() {
-    return this.certs.filter(c => {
-      const matchSearch = !this.search || c.employee.toLowerCase().includes(this.search.toLowerCase()) || c.name.toLowerCase().includes(this.search.toLowerCase());
+  get filteredCerts() { return this.certs.filter(c => { const matchSearch = !this.search || c.employee.toLowerCase().includes(this.search.toLowerCase()) || c.name.toLowerCase().includes(this.search.toLowerCase());
       const matchExpiry = !this.expiryFilter || (c.daysLeft >= 0 && c.daysLeft <= this.expiryFilter);
       const matchTab = this.tab === 'expiring' ? c.daysLeft >= 0 && c.daysLeft <= 90 : true;
-      return matchSearch && matchExpiry && matchTab;
-    });
-  }
+      return matchSearch && matchExpiry && matchTab; }); }
 
   ngOnInit() { this.loadCerts(); this.loadEmployees(); }
 
-  loadCerts() {
-    this.http.get<any[]>(`${this.api}/certifications`).subscribe(data => {
-      const today = new Date().getTime();
-      this.certs = (data || []).map(c => {
-        const expDate = new Date(c.expiryDate || c.expiry || '').getTime();
+  loadCerts() { this.http.get<any[]>(`${this.api}/certifications`).subscribe(data => { const today = new Date().getTime();
+      this.certs = (data || []).map(c => { const expDate = new Date(c.expiryDate || c.expiry || '').getTime();
         const daysLeft = Math.ceil((expDate - today) / 86400000);
-        return {
-          id: c.id, employee: c.employeeName || '', empId: c.employeeCode || '',
+        return { id: c.id, employee: c.employeeName || '', empId: c.employeeCode || '',
           name: c.certificationName || c.name, issuer: c.issuingOrganization || c.issuer || '',
           obtained: (c.obtainedDate || c.obtained || '')?.slice(0, 10),
           expiry: (c.expiryDate || c.expiry || '')?.slice(0, 10),
           certId: c.certificateId || c.certId || '', daysLeft,
-          status: daysLeft < 0 ? 'Expired' : daysLeft < 30 ? 'Expiring Soon' : 'Active'
-        };
-      });
-    });
-  }
+          status: daysLeft < 0 ? 'Expired' : daysLeft < 30 ? 'Expiring Soon' : 'Active' }; }); }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.empList = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), id: e.employeeCode || e.id }));
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.empList = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), id: e.employeeCode || e.id })); }); }
 
   formError = '';
 
-  addCert() {
-    if (!this.form.employee || !this.form.name) { this.formError = 'Employee and certification name are required.'; return; }
+  addCert() { if (!this.form.employee || !this.form.name) { this.formError = 'Employee and certification name are required.'; return; }
     this.formError = '';
     const emp = this.empList.find(e => e.name === this.form.employee);
     const payload = { employeeName: this.form.employee, employeeCode: emp?.id || '', certificationName: this.form.name, issuingOrganization: this.form.issuer, obtainedDate: this.form.obtained, expiryDate: this.form.expiry, certificateId: this.form.certId };
-    this.http.post<any>(`${this.api}/certifications`, payload).subscribe({
-      next: () => {
-        this.loadCerts();
+    this.http.post<any>(`${this.api}/certifications`, payload).subscribe({ next: () => { this.loadCerts();
         this.snack.open(`Certification added for ${this.form.employee}`, '', { duration: 2000 });
-        this.form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' };
-      },
-      error: err => { this.formError = err?.error?.message || 'Failed to add certification'; }
-    });
-  }
+        this.form = { employee: '', name: '', issuer: '', certId: '', obtained: '', expiry: '' }; },
+      error: err => { this.formError = err?.error?.message || 'Failed to add certification'; } }); }
 
-  viewCert(c: Certification) {
-    this.snack.open(`${c.name} — ${c.issuer} · ID: ${c.certId}`, 'Close', { duration: 4000 });
-  }
+  viewCert(c: Certification) { this.snack.open(`${c.name} — ${c.issuer} · ID: ${c.certId}`, 'Close', { duration: 4000 }); }
 
-  renewCert(c: Certification) {
-    this.http.patch(`${this.api}/certifications/${c.id}/renew`, {}).subscribe({
-      next: () => { this.snack.open(`Renewal initiated for ${c.name}`, '', { duration: 2000 }); this.loadCerts(); },
-      error: () => { this.snack.open(`Renewal request sent for ${c.name}`, '', { duration: 2000 }); }
-    });
-  }
+  renewCert(c: Certification) { this.http.patch(`${this.api}/certifications/${c.id}/renew`, {}).subscribe({ next: () => { this.snack.open(`Renewal initiated for ${c.name}`, '', { duration: 2000 }); this.loadCerts(); },
+      error: () => { this.snack.open(`Renewal request sent for ${c.name}`, '', { duration: 2000 }); } }); }
 
-  onFileUpload(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  onFileUpload(event: Event) { const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     const formData = new FormData();
     formData.append('file', file);
-    this.http.post(`${this.api}/certifications/upload`, formData).subscribe({
-      next: () => { this.snack.open(`${file.name} uploaded successfully`, '', { duration: 2000 }); },
-      error: () => { this.snack.open(`${file.name} selected (upload pending)`, '', { duration: 2000 }); }
-    });
-    (event.target as HTMLInputElement).value = '';
-  }
+    this.http.post(`${this.api}/certifications/upload`, formData).subscribe({ next: () => { this.snack.open(`${file.name} uploaded successfully`, '', { duration: 2000 }); },
+      error: () => { this.snack.open(`${file.name} selected (upload pending)`, '', { duration: 2000 }); } });
+    (event.target as HTMLInputElement).value = ''; }
 
   uploadCert() {}
 }
+

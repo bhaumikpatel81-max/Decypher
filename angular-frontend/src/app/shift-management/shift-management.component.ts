@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface Employee {
-  id: string; name: string; role: string;
+interface Employee { id: string; name: string; role: string;
   shifts: { [day: string]: string };
 }
 
-@Component({
-  selector: 'app-shift-management',
+@Component({ selector: 'app-shift-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -132,8 +130,7 @@ interface Employee {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class ShiftManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/attendance`;
+export class ShiftManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/attendance`;
   constructor(private http: HttpClient) {}
   tab = 'roster';
   assignMsg = '';
@@ -155,52 +152,29 @@ export class ShiftManagementComponent implements OnInit {
 
   ngOnInit() { this.loadAssignments(); }
 
-  loadAssignments() {
-    this.http.get<any[]>(`${this.api}/shifts/assignments`).subscribe(data => {
-      const empMap: { [id: string]: Employee } = {};
-      (data || []).forEach(a => {
-        if (!empMap[a.employeeId]) {
-          empMap[a.employeeId] = { id: a.employeeId, name: a.employeeName || '', role: a.designation || '', shifts: {} };
-        }
+  loadAssignments() { this.http.get<any[]>(`${this.api}/shifts/assignments`).subscribe(data => { const empMap: { [id: string]: Employee } = {};
+      (data || []).forEach(a => { if (!empMap[a.employeeId]) { empMap[a.employeeId] = { id: a.employeeId, name: a.employeeName || '', role: a.designation || '', shifts: {} }; }
         const dayAbbr = new Date(a.date).toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3);
-        empMap[a.employeeId].shifts[dayAbbr] = a.shiftCode || '';
-      });
+        empMap[a.employeeId].shifts[dayAbbr] = a.shiftCode || ''; });
       this.employees = Object.values(empMap);
-      if (!this.employees.length) this.loadEmployeesFallback();
-    });
-  }
+      if (!this.employees.length) this.loadEmployeesFallback(); }); }
 
-  loadEmployeesFallback() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({
-        id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
-        role: e.designation || '', shifts: {}
-      }));
-    });
-  }
+  loadEmployeesFallback() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+        role: e.designation || '', shifts: {} })); }); }
 
-  shiftColor(code: string): string {
-    const map: { [k: string]: string } = { MOR: '#f59e0b', GEN: '#6b4df0', EVE: '#10b981', NGT: '#3b82f6' };
-    return map[code] || '#94a3b8';
-  }
+  shiftColor(code: string): string { const map: { [k: string]: string } = { MOR: '#f59e0b', GEN: '#6b4df0', EVE: '#10b981', NGT: '#3b82f6' };
+    return map[code] || '#94a3b8'; }
 
-  toggleDay(d: string) {
-    const i = this.assignForm.selectedDays.indexOf(d);
+  toggleDay(d: string) { const i = this.assignForm.selectedDays.indexOf(d);
     if (i > -1) this.assignForm.selectedDays.splice(i, 1);
-    else this.assignForm.selectedDays.push(d);
-  }
+    else this.assignForm.selectedDays.push(d); }
 
-  assignShift() {
-    if (!this.assignForm.empId || !this.assignForm.shift || !this.assignForm.selectedDays.length) { this.assignMsg = 'Select employee, shift and days'; return; }
+  assignShift() { if (!this.assignForm.empId || !this.assignForm.shift || !this.assignForm.selectedDays.length) { this.assignMsg = 'Select employee, shift and days'; return; }
     const payload = { employeeId: this.assignForm.empId, shiftCode: this.assignForm.shift, weekStart: this.assignForm.week, days: this.assignForm.selectedDays };
-    this.http.post(`${this.api}/shifts/assign`, payload).subscribe({
-      next: () => {
-        const emp = this.employees.find(e => e.id === this.assignForm.empId);
+    this.http.post(`${this.api}/shifts/assign`, payload).subscribe({ next: () => { const emp = this.employees.find(e => e.id === this.assignForm.empId);
         if (emp) this.assignForm.selectedDays.forEach(d => emp.shifts[d] = this.assignForm.shift);
         this.assignMsg = `Shift ${this.assignForm.shift} assigned for ${this.assignForm.selectedDays.join(', ')}`;
-        setTimeout(() => this.assignMsg = '', 3000);
-      },
-      error: err => { this.assignMsg = err?.error?.message || 'Failed to assign shift'; }
-    });
-  }
+        setTimeout(() => this.assignMsg = '', 3000); },
+      error: err => { this.assignMsg = err?.error?.message || 'Failed to assign shift'; } }); }
 }
+

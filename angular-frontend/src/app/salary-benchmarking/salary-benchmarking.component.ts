@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface BenchmarkRole {
-  role: string; dept: string; yourMedian: number;
+interface BenchmarkRole { role: string; dept: string; yourMedian: number;
   p25: number; p50: number; p75: number; comparaRatio: number; belowMarket: boolean;
 }
 
-@Component({
-  selector: 'app-salary-benchmarking',
+@Component({ selector: 'app-salary-benchmarking',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -145,8 +143,7 @@ interface BenchmarkRole {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class SalaryBenchmarkingComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class SalaryBenchmarkingComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
   tab = 'comparison';
   filterDept = '';
@@ -159,12 +156,10 @@ export class SalaryBenchmarkingComponent implements OnInit {
 
   roles: BenchmarkRole[] = [];
 
-  get filteredRoles() {
-    return this.roles.filter(r =>
+  get filteredRoles() { return this.roles.filter(r =>
       (!this.filterDept || r.dept === this.filterDept) &&
       (!this.search || r.role.toLowerCase().includes(this.search.toLowerCase()))
-    );
-  }
+    ); }
   get avgCompaRatio() { return this.roles.reduce((s, r) => s + r.comparaRatio, 0) / this.roles.length; }
   get belowMarketCount() { return this.roles.filter(r => r.comparaRatio < 0.95).length; }
   get atMarketCount() { return this.roles.filter(r => r.comparaRatio >= 0.95 && r.comparaRatio <= 1.1).length; }
@@ -173,59 +168,40 @@ export class SalaryBenchmarkingComponent implements OnInit {
 
   ngOnInit() { this.loadBenchmarks(); }
 
-  loadBenchmarks() {
-    this.http.get<any[]>(`${this.api}/benchmarks`).subscribe(data => {
-      this.roles = (data || []).map(r => {
-        const yourMedian = r.yourMedianSalary || r.yourMedian || 0;
+  loadBenchmarks() { this.http.get<any[]>(`${this.api}/benchmarks`).subscribe(data => { this.roles = (data || []).map(r => { const yourMedian = r.yourMedianSalary || r.yourMedian || 0;
         const p50 = r.marketP50 || r.p50 || 0;
         const comparaRatio = p50 ? +(yourMedian / p50).toFixed(2) : 1;
-        return {
-          role: r.role || r.jobTitle || '',
+        return { role: r.role || r.jobTitle || '',
           dept: r.department || r.dept || '',
           yourMedian,
           p25: r.marketP25 || r.p25 || 0,
           p50,
           p75: r.marketP75 || r.p75 || 0,
           comparaRatio,
-          belowMarket: comparaRatio < 0.95
-        };
-      });
-    });
-  }
+          belowMarket: comparaRatio < 0.95 }; }); }); }
 
-  importData() {
-    if (!this.importSource) return;
-    this.http.post(`${this.api}/benchmarking/import`, { source: this.importSource }).subscribe({
-      next: () => { this.importMsg = 'Import triggered'; this.importSource = ''; this.loadBenchmarks(); setTimeout(() => this.importMsg = '', 3000); },
-      error: () => {}
-    });
-  }
+  importData() { if (!this.importSource) return;
+    this.http.post(`${this.api}/benchmarking/import`, { source: this.importSource }).subscribe({ next: () => { this.importMsg = 'Import triggered'; this.importSource = ''; this.loadBenchmarks(); setTimeout(() => this.importMsg = '', 3000); },
+      error: () => {} }); }
 
-  onBenchFile(evt: Event) {
-    const file = (evt.target as HTMLInputElement).files?.[0];
+  onBenchFile(evt: Event) { const file = (evt.target as HTMLInputElement).files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
+    reader.onload = (e) => { const text = e.target?.result as string;
       const lines = text.split('\n').filter(l => l.trim());
       const header = lines[0].toLowerCase().split(',');
       const col = (name: string) => header.findIndex(h => h.includes(name));
-      const rows = lines.slice(1).map(l => {
-        const parts = l.split(',');
-        return {
-          role: parts[col('role')]?.trim() || parts[0]?.trim(),
+      const rows = lines.slice(1).map(l => { const parts = l.split(',');
+        return { role: parts[col('role')]?.trim() || parts[0]?.trim(),
           department: parts[col('dept')]?.trim() || parts[col('dep')]?.trim() || '',
           marketP25: +parts[col('p25')]?.trim() || 0,
           marketP50: +parts[col('p50')]?.trim() || 0,
           marketP75: +parts[col('p75')]?.trim() || 0,
-          source: file.name
-        };
-      }).filter(r => r.role && r.marketP50 > 0);
+          source: file.name }; }).filter(r => r.role && r.marketP50 > 0);
       let done = 0;
       rows.forEach(r => this.http.post(`${this.api}/benchmarks`, r).subscribe({ next: () => { if (++done === rows.length) { this.importMsg = `${done} benchmark rows imported`; setTimeout(() => this.importMsg = '', 4000); this.loadBenchmarks(); } } }));
-      if (!rows.length) { this.importMsg = 'No valid rows found in CSV'; setTimeout(() => this.importMsg = '', 3000); }
-    };
+      if (!rows.length) { this.importMsg = 'No valid rows found in CSV'; setTimeout(() => this.importMsg = '', 3000); } };
     reader.readAsText(file);
-    (evt.target as HTMLInputElement).value = '';
-  }
+    (evt.target as HTMLInputElement).value = ''; }
 }
+

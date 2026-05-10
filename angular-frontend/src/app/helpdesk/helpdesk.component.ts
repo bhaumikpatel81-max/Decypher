@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-helpdesk',
+@Component({ selector: 'app-helpdesk',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -227,8 +226,7 @@ import { environment } from '../../environments/environment';
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:13px; }
   `]
 })
-export class HelpdeskComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/helpdesk`;
+export class HelpdeskComponent implements OnInit { private api = `${environment.apiUrl}/api/helpdesk`;
   constructor(private http: HttpClient) {}
 
   tab = 'list';
@@ -246,10 +244,8 @@ export class HelpdeskComponent implements OnInit {
   raiseError = '';
   raiseSuccess = '';
 
-  form: any = {
-    category: 'IT', priority: 'Medium', subCategory: '',
-    title: '', description: '', requesterName: '', requesterEmail: ''
-  };
+  form: any = { category: 'IT', priority: 'Medium', subCategory: '',
+    title: '', description: '', requesterName: '', requesterEmail: '' };
 
   workflowCols = [
     { label: 'Open', status: 'Open', color: '#ef4444', items: [] as any[] },
@@ -260,100 +256,55 @@ export class HelpdeskComponent implements OnInit {
 
   ngOnInit() { this.loadStats(); this.loadTickets(); }
 
-  loadStats() {
-    this.http.get<any>(`${this.api}/stats`).subscribe(data => { this.stats = data || {}; });
-  }
+  loadStats() { this.http.get<any>(`${this.api}/stats`).subscribe(data => { this.stats = data || {}; }); }
 
-  loadTickets() {
-    const params: any = {};
+  loadTickets() { const params: any = {};
     if (this.filterStatus) params.status = this.filterStatus;
     if (this.filterCategory) params.category = this.filterCategory;
     if (this.filterPriority) params.priority = this.filterPriority;
     if (this.searchQuery) params.search = this.searchQuery;
 
-    this.http.get<any>(`${this.api}/tickets`, { params }).subscribe(data => {
-      this.tickets = data || { tickets: [], total: 0 };
+    this.http.get<any>(`${this.api}/tickets`, { params }).subscribe(data => { this.tickets = data || { tickets: [], total: 0 };
       const all = this.tickets.tickets || [];
-      this.workflowCols.forEach(col => {
-        col.items = all.filter((t: any) => t.status === col.status);
-      });
-    });
-  }
+      this.workflowCols.forEach(col => { col.items = all.filter((t: any) => t.status === col.status); }); }); }
 
-  openTicket(ticket: any) {
-    this.selectedTicket = ticket;
+  openTicket(ticket: any) { this.selectedTicket = ticket;
     this.tab = 'raise';
-    this.loadComments(ticket.id);
-  }
+    this.loadComments(ticket.id); }
 
-  loadComments(ticketId: string) {
-    this.http.get<any[]>(`${this.api}/tickets/${ticketId}/comments`).subscribe(data => {
-      this.comments = data || [];
-    });
-  }
+  loadComments(ticketId: string) { this.http.get<any[]>(`${this.api}/tickets/${ticketId}/comments`).subscribe(data => { this.comments = data || []; }); }
 
-  addComment() {
-    if (!this.newComment.trim() || !this.selectedTicket) return;
-    this.http.post<any>(`${this.api}/tickets/${this.selectedTicket.id}/comments`, { content: this.newComment }).subscribe({
-      next: res => {
-        this.comments.push(res);
+  addComment() { if (!this.newComment.trim() || !this.selectedTicket) return;
+    this.http.post<any>(`${this.api}/tickets/${this.selectedTicket.id}/comments`, { content: this.newComment }).subscribe({ next: res => { this.comments.push(res);
         this.newComment = '';
-        this.loadStats();
-      },
-      error: () => {
-        this.comments.push({ authorName: 'You', content: this.newComment, createdAt: new Date().toISOString() });
-        this.newComment = '';
-      }
-    });
-  }
+        this.loadStats(); },
+      error: () => { this.comments.push({ authorName: 'You', content: this.newComment, createdAt: new Date().toISOString() });
+        this.newComment = ''; } }); }
 
-  assignTicket() {
-    if (!this.selectedTicket || !this.assignAction) return;
-    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, {
-      status: 'InProgress', assignedTeam: this.assignAction, assigneeName: this.assignAction, notes: `Assigned to ${this.assignAction}`
-    }).subscribe({
-      next: (res: any) => { this.selectedTicket.status = res.status; this.selectedTicket.assigneeName = res.assigneeName; this.assignAction = ''; this.loadStats(); this.loadTickets(); },
-      error: () => { this.selectedTicket.status = 'InProgress'; this.assignAction = ''; }
-    });
-  }
+  assignTicket() { if (!this.selectedTicket || !this.assignAction) return;
+    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, { status: 'InProgress', assignedTeam: this.assignAction, assigneeName: this.assignAction, notes: `Assigned to ${this.assignAction}` }).subscribe({ next: (res: any) => { this.selectedTicket.status = res.status; this.selectedTicket.assigneeName = res.assigneeName; this.assignAction = ''; this.loadStats(); this.loadTickets(); },
+      error: () => { this.selectedTicket.status = 'InProgress'; this.assignAction = ''; } }); }
 
-  resolveTicket() {
-    if (!this.selectedTicket) return;
-    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, { status: 'Resolved', notes: 'Ticket resolved' }).subscribe({
-      next: (res: any) => { this.selectedTicket.status = 'Resolved'; this.loadStats(); this.loadTickets(); },
-      error: () => { this.selectedTicket.status = 'Resolved'; }
-    });
-  }
+  resolveTicket() { if (!this.selectedTicket) return;
+    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, { status: 'Resolved', notes: 'Ticket resolved' }).subscribe({ next: (res: any) => { this.selectedTicket.status = 'Resolved'; this.loadStats(); this.loadTickets(); },
+      error: () => { this.selectedTicket.status = 'Resolved'; } }); }
 
-  closeTicket() {
-    if (!this.selectedTicket) return;
-    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, { status: 'Closed', notes: 'Ticket closed' }).subscribe({
-      next: () => { this.selectedTicket.status = 'Closed'; this.loadStats(); this.loadTickets(); },
-      error: () => { this.selectedTicket.status = 'Closed'; }
-    });
-  }
+  closeTicket() { if (!this.selectedTicket) return;
+    this.http.patch(`${this.api}/tickets/${this.selectedTicket.id}/status`, { status: 'Closed', notes: 'Ticket closed' }).subscribe({ next: () => { this.selectedTicket.status = 'Closed'; this.loadStats(); this.loadTickets(); },
+      error: () => { this.selectedTicket.status = 'Closed'; } }); }
 
-  submitTicket() {
-    this.raiseError = '';
+  submitTicket() { this.raiseError = '';
     if (!this.form.title || !this.form.requesterName) { this.raiseError = 'Title and requester name are required'; return; }
     this.submitting = true;
-    this.http.post<any>(`${this.api}/tickets`, this.form).subscribe({
-      next: res => {
-        this.raiseSuccess = `Ticket ${res.ticketNumber} created successfully`;
+    this.http.post<any>(`${this.api}/tickets`, this.form).subscribe({ next: res => { this.raiseSuccess = `Ticket ${res.ticketNumber} created successfully`;
         this.form = { category: 'IT', priority: 'Medium', subCategory: '', title: '', description: '', requesterName: '', requesterEmail: '' };
         this.submitting = false;
         this.loadStats(); this.loadTickets();
-        setTimeout(() => { this.raiseSuccess = ''; this.tab = 'list'; }, 2000);
-      },
-      error: () => {
-        this.raiseError = 'Failed to submit ticket. Please try again.';
-        this.submitting = false;
-      }
-    });
-  }
+        setTimeout(() => { this.raiseSuccess = ''; this.tab = 'list'; }, 2000); },
+      error: () => { this.raiseError = 'Failed to submit ticket. Please try again.';
+        this.submitting = false; } }); }
 
-  statusClass(status: string) {
-    const map: any = { Open: 'status-open', InProgress: 'status-inprogress', Pending: 'status-pending', Resolved: 'status-resolved', Closed: 'status-closed' };
-    return map[status] || '';
-  }
+  statusClass(status: string) { const map: any = { Open: 'status-open', InProgress: 'status-inprogress', Pending: 'status-pending', Resolved: 'status-resolved', Closed: 'status-closed' };
+    return map[status] || ''; }
 }
+

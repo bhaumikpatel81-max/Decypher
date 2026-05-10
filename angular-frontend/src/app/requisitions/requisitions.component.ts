@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-requisitions',
+@Component({ selector: 'app-requisitions',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -223,8 +222,7 @@ import { environment } from '../../environments/environment';
     .btn.active { background:var(--brand); color:#fff; }
   `]
 })
-export class RequisitionsComponent implements OnInit {
-  activeTab = 0;
+export class RequisitionsComponent implements OnInit { activeTab = 0;
   requisitions: any[] = [];
   saving = false;
   saveOk = false;
@@ -236,41 +234,29 @@ export class RequisitionsComponent implements OnInit {
   reqMonths: string[] = [];
   reqTrendData: number[] = [0, 0, 0, 0, 0, 0];
 
-  private buildTrend(items: any[], dateField: string) {
-    const now = new Date(), months: string[] = [], counts: number[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  private buildTrend(items: any[], dateField: string) { const now = new Date(), months: string[] = [], counts: number[] = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(d.toLocaleString('default', { month: 'short' }));
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
-    }
-    this.reqMonths = months; this.reqTrendData = counts;
-  }
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length); }
+    this.reqMonths = months; this.reqTrendData = counts; }
   readonly pivotStatuses = ['Pending', 'Approved', 'Filled', 'Rejected'];
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() { this.load(); }
 
-  load() {
-    const q = this.statusFilter ? `?status=${this.statusFilter}` : '';
+  load() { const q = this.statusFilter ? `?status=${this.statusFilter}` : '';
     this.http.get<any[]>(`${environment.apiUrl}/api/requisitions${q}`)
-      .subscribe({ next: d => { this.requisitions = d; this.buildTrend(d, 'createdAt'); }, error: () => {} });
-  }
+      .subscribe({ next: d => { this.requisitions = d; this.buildTrend(d, 'createdAt'); }, error: () => {} }); }
 
-  create() {
-    this.saving = true;
+  create() { this.saving = true;
     this.http.post<any>(`${environment.apiUrl}/api/requisitions`, this.form)
-      .subscribe({
-        next: r => { this.requisitions = [r, ...this.requisitions]; this.saving = false; this.saveOk = true; },
-        error: () => { this.saving = false; }
-      });
-  }
+      .subscribe({ next: r => { this.requisitions = [r, ...this.requisitions]; this.saving = false; this.saveOk = true; },
+        error: () => { this.saving = false; } }); }
 
-  approve(id: string) {
-    this.http.put(`${environment.apiUrl}/api/requisitions/${id}/approve`, {})
-      .subscribe({ next: () => this.load(), error: () => {} });
-  }
+  approve(id: string) { this.http.put(`${environment.apiUrl}/api/requisitions/${id}/approve`, {})
+      .subscribe({ next: () => this.load(), error: () => {} }); }
 
   rejectId = '';
   rejectReason = '';
@@ -278,11 +264,9 @@ export class RequisitionsComponent implements OnInit {
 
   openReject(id: string) { this.rejectId = id; this.rejectReason = ''; this.showRejectDialog = true; }
 
-  confirmReject() {
-    if (!this.rejectReason.trim()) return;
+  confirmReject() { if (!this.rejectReason.trim()) return;
     this.http.put(`${environment.apiUrl}/api/requisitions/${this.rejectId}/reject`, { reason: this.rejectReason })
-      .subscribe({ next: () => { this.showRejectDialog = false; this.load(); }, error: () => { this.showRejectDialog = false; } });
-  }
+      .subscribe({ next: () => { this.showRejectDialog = false; this.load(); }, error: () => { this.showRejectDialog = false; } }); }
 
   get pendingCount()  { return this.requisitions.filter(r => r.status === 'Pending').length; }
   get approvedCount() { return this.requisitions.filter(r => r.status === 'Approved').length; }
@@ -294,43 +278,32 @@ export class RequisitionsComponent implements OnInit {
   get approvedDash() { return this.pctDash(this.approvedCount); }
   get filledDash()   { return this.pctDash(this.filledCount); }
 
-  get deptStats(): {dept: string, count: number, pct: number}[] {
-    const counts: Record<string, number> = {};
+  get deptStats(): {dept: string, count: number, pct: number}[] { const counts: Record<string, number> = {};
     this.requisitions.forEach(r => { counts[r.department] = (counts[r.department] || 0) + 1; });
     const max = Math.max(...Object.values(counts), 1);
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
-      .map(([dept, count]) => ({ dept, count, pct: Math.round((count / max) * 100) }));
-  }
+      .map(([dept, count]) => ({ dept, count, pct: Math.round((count / max) * 100) })); }
 
-  get priorityPivot(): {priority: string, counts: Record<string, number>, total: number}[] {
-    return ['Critical', 'High', 'Medium', 'Low'].map(priority => {
-      const rows = this.requisitions.filter(r => r.priority === priority);
+  get priorityPivot(): {priority: string, counts: Record<string, number>, total: number}[] { return ['Critical', 'High', 'Medium', 'Low'].map(priority => { const rows = this.requisitions.filter(r => r.priority === priority);
       const counts: Record<string, number> = {};
       this.pivotStatuses.forEach(s => { counts[s] = rows.filter(r => r.status === s).length; });
-      return { priority, counts, total: rows.length };
-    }).filter(r => r.total > 0);
-  }
+      return { priority, counts, total: rows.length }; }).filter(r => r.total > 0); }
 
-  get reqLinePoints(): string {
-    const pts = this.reqTrendData;
+  get reqLinePoints(): string { const pts = this.reqTrendData;
     const max = Math.max(...pts, 1);
     const step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get reqAreaPoints(): string {
-    const pts = this.reqTrendData;
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get reqAreaPoints(): string { const pts = this.reqTrendData;
     const max = Math.max(...pts, 1);
     const step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get reqDotPoints(): {x: number, y: number}[] {
-    const pts = this.reqTrendData;
+    return `0,90 ${line} 500,90`; }
+  get reqDotPoints(): {x: number, y: number}[] { const pts = this.reqTrendData;
     const max = Math.max(...pts, 1);
     const step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
 
   priorityColour(p: string) { return p === 'Critical' ? '#fee2e2' : p === 'High' ? '#fef3c7' : '#f1f5f9'; }
   statusTextColour(s: string) { return s === 'Approved' ? '#065f46' : s === 'Rejected' ? '#991b1b' : 'var(--text)'; }
 }
+

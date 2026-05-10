@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-video-interviews',
+@Component({ selector: 'app-video-interviews',
   template: `
     <section class="stack-page">
       <div class="grid grid-cols-2 gap-6">
@@ -188,59 +187,38 @@ import { environment } from '../../environments/environment';
     </section>
   `,
   styles: [`
-    .question-row {
-      display:flex; align-items:center; gap:8px; margin-bottom:8px;
-    }
-    .q-num {
-      font-size:11px; font-weight:700; color:var(--text-3);
-      min-width:24px; text-align:center;
-    }
-    .link-box {
-      margin-top:16px; padding:14px 16px;
-      background:#faf5ff; border:1px solid #ddd6fe; border-radius:8px;
-    }
-    .inv-row {
-      display:flex; align-items:center; gap:12px; padding:10px 8px;
-      border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .1s;
-    }
+    .question-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .q-num { font-size:11px; font-weight:700; color:var(--text-3);
+      min-width:24px; text-align:center; }
+    .link-box { margin-top:16px; padding:14px 16px;
+      background:#faf5ff; border:1px solid #ddd6fe; border-radius:8px; }
+    .inv-row { display:flex; align-items:center; gap:12px; padding:10px 8px;
+      border-radius:8px; cursor:pointer; margin-bottom:4px; transition:background .1s; }
     .inv-row:hover { background:#f8f7ff; }
-    .status-chip {
-      padding:3px 10px; border-radius:16px; font-size:11px; font-weight:700;
-    }
-    .q-response-card {
-      padding:14px; background:var(--surface-alt); border-radius:8px;
-      margin-bottom:12px; border:1px solid var(--border);
-    }
-    .q-label {
-      font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:10px;
-    }
-    .mock-video {
-      background:#1e1b4b; border-radius:8px; padding:24px;
+    .status-chip { padding:3px 10px; border-radius:16px; font-size:11px; font-weight:700; }
+    .q-response-card { padding:14px; background:var(--surface-alt); border-radius:8px;
+      margin-bottom:12px; border:1px solid var(--border); }
+    .q-label { font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:10px; }
+    .mock-video { background:#1e1b4b; border-radius:8px; padding:24px;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      min-height:80px;
-    }
-    .play-btn {
-      width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.2);
+      min-height:80px; }
+    .play-btn { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.2);
       display:flex; align-items:center; justify-content:center;
-      color:#fff; font-size:14px; cursor:pointer;
-    }
+      color:#fff; font-size:14px; cursor:pointer; }
   `]
 })
-export class VideoInterviewsComponent implements OnInit {
-  candidates: any[] = [];
+export class VideoInterviewsComponent implements OnInit { candidates: any[] = [];
   interviews: any[] = [];
   selected: any = null;
   generating = false;
   generatedLink = '';
   copied = false;
 
-  form = {
-    candidateId: '',
+  form = { candidateId: '',
     candidateName: '',
     jobTitle: '',
     deadline: '',
-    questions: [] as string[]
-  };
+    questions: [] as string[] };
 
   readonly questionHints = [
     'Tell me about yourself and your background.',
@@ -252,76 +230,45 @@ export class VideoInterviewsComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/candidates`)
+  ngOnInit() { this.http.get<any[]>(`${environment.apiUrl}/api/candidates`)
       .subscribe({ next: d => this.candidates = d, error: () => {} });
-    this.loadInterviews();
-  }
+    this.loadInterviews(); }
 
-  loadInterviews() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/interviews/video`)
-      .subscribe({ next: d => { this.interviews = d; if (d.length && !this.selected) this.selected = d[0]; }, error: () => {} });
-  }
+  loadInterviews() { this.http.get<any[]>(`${environment.apiUrl}/api/interviews/video`)
+      .subscribe({ next: d => { this.interviews = d; if (d.length && !this.selected) this.selected = d[0]; }, error: () => {} }); }
 
-  onCandidateChange() {
-    const c = this.candidates.find(x => x.id === this.form.candidateId);
-    this.form.candidateName = c ? `${c.firstName} ${c.lastName}`.trim() : '';
-  }
+  onCandidateChange() { const c = this.candidates.find(x => x.id === this.form.candidateId);
+    this.form.candidateName = c ? `${c.firstName} ${c.lastName}`.trim() : ''; }
 
-  addQuestion() {
-    if (this.form.questions.length < 5) this.form.questions.push('');
-  }
+  addQuestion() { if (this.form.questions.length < 5) this.form.questions.push(''); }
 
-  removeQuestion(i: number) {
-    this.form.questions.splice(i, 1);
-  }
+  removeQuestion(i: number) { this.form.questions.splice(i, 1); }
 
-  generateLink() {
-    if (!this.form.candidateId || !this.form.questions.length) return;
+  generateLink() { if (!this.form.candidateId || !this.form.questions.length) return;
     this.generating = true;
-    this.http.post<any>(`${environment.apiUrl}/api/interviews/video-link`, {
-      candidateId: this.form.candidateId,
+    this.http.post<any>(`${environment.apiUrl}/api/interviews/video-link`, { candidateId: this.form.candidateId,
       candidateName: this.form.candidateName,
       jobTitle: this.form.jobTitle,
       deadline: this.form.deadline,
-      questions: this.form.questions.filter(q => q.trim())
-    }).subscribe({
-      next: r => {
-        this.generatedLink = r.link;
+      questions: this.form.questions.filter(q => q.trim()) }).subscribe({ next: r => { this.generatedLink = r.link;
         this.generating = false;
-        this.loadInterviews();
-      },
-      error: () => { this.generating = false; }
-    });
-  }
+        this.loadInterviews(); },
+      error: () => { this.generating = false; } }); }
 
-  copyLink() {
-    navigator.clipboard?.writeText(this.generatedLink).then(() => {
-      this.copied = true;
-      setTimeout(() => this.copied = false, 2000);
-    });
-  }
+  copyLink() { navigator.clipboard?.writeText(this.generatedLink).then(() => { this.copied = true;
+      setTimeout(() => this.copied = false, 2000); }); }
 
-  selectInterview(inv: any) {
-    this.http.get<any>(`${environment.apiUrl}/api/interviews/video-responses/${inv.id}`)
-      .subscribe({ next: d => this.selected = d, error: () => this.selected = inv });
-  }
+  selectInterview(inv: any) { this.http.get<any>(`${environment.apiUrl}/api/interviews/video-responses/${inv.id}`)
+      .subscribe({ next: d => this.selected = d, error: () => this.selected = inv }); }
 
-  getResponse(questionIndex: number): any {
-    return (this.selected?.responses || []).find((r: any) => r.questionIndex === questionIndex);
-  }
+  getResponse(questionIndex: number): any { return (this.selected?.responses || []).find((r: any) => r.questionIndex === questionIndex); }
 
-  responsePct(): number {
-    const total = this.selected?.questions?.length || 0;
+  responsePct(): number { const total = this.selected?.questions?.length || 0;
     const done = this.selected?.responses?.length || 0;
-    return total ? Math.round((done / total) * 100) : 0;
-  }
+    return total ? Math.round((done / total) * 100) : 0; }
 
-  statusBg(s: string): string {
-    return s === 'Completed' ? '#d1fae5' : s === 'Partial' ? '#fef3c7' : s === 'Sent' ? '#dbeafe' : '#f3f4f6';
-  }
+  statusBg(s: string): string { return s === 'Completed' ? '#d1fae5' : s === 'Partial' ? '#fef3c7' : s === 'Sent' ? '#dbeafe' : '#f3f4f6'; }
 
-  statusFg(s: string): string {
-    return s === 'Completed' ? '#065f46' : s === 'Partial' ? '#92400e' : s === 'Sent' ? '#1d4ed8' : '#374151';
-  }
+  statusFg(s: string): string { return s === 'Completed' ? '#065f46' : s === 'Partial' ? '#92400e' : s === 'Sent' ? '#1d4ed8' : '#374151'; }
 }
+

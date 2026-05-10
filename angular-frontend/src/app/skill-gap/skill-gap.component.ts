@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-skill-gap',
+@Component({ selector: 'app-skill-gap',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -133,8 +132,7 @@ import { environment } from '../../environments/environment';
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class SkillGapComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/learning`;
+export class SkillGapComponent implements OnInit { private api = `${environment.apiUrl}/api/learning`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'matrix';
   filterRole = '';
@@ -148,33 +146,23 @@ export class SkillGapComponent implements OnInit {
 
   employees: any[] = [];
 
-  courseMap: { [skill: string]: string } = {
-    Angular: 'Angular Advanced Patterns', 'Node.js': 'Node.js Microservices', AWS: 'AWS Solutions Architect',
+  courseMap: { [skill: string]: string } = { Angular: 'Angular Advanced Patterns', 'Node.js': 'Node.js Microservices', AWS: 'AWS Solutions Architect',
     SQL: 'Advanced SQL for Analytics', Leadership: 'Leadership Essentials', Communication: 'Effective Communication',
-    Agile: 'Agile & Scrum Master', DevOps: 'DevOps Engineering Bootcamp', Python: 'Python for Data Analysis', 'Data Analysis': 'Business Intelligence with Power BI',
-  };
+    Agile: 'Agile & Scrum Master', DevOps: 'DevOps Engineering Bootcamp', Python: 'Python for Data Analysis', 'Data Analysis': 'Business Intelligence with Power BI', };
 
-  getGap(e: any, skill: string): number {
-    const idx = this.skills.indexOf(skill);
+  getGap(e: any, skill: string): number { const idx = this.skills.indexOf(skill);
     const required = this.requiredBySkill[idx] || 0;
-    return (e.skills[skill] || 0) - required;
-  }
+    return (e.skills[skill] || 0) - required; }
 
-  avgGap(e: any): number {
-    const gaps = this.skills.map(s => this.getGap(e, s));
-    return gaps.reduce((a, b) => a + b, 0) / gaps.length;
-  }
+  avgGap(e: any): number { const gaps = this.skills.map(s => this.getGap(e, s));
+    return gaps.reduce((a, b) => a + b, 0) / gaps.length; }
 
-  gapSkills(e: any) {
-    return this.skills.filter(s => this.getGap(e, s) < 0).map(s => ({ skill: s, current: e.skills[s] || 0, required: this.requiredBySkill[this.skills.indexOf(s)] }));
-  }
+  gapSkills(e: any) { return this.skills.filter(s => this.getGap(e, s) < 0).map(s => ({ skill: s, current: e.skills[s] || 0, required: this.requiredBySkill[this.skills.indexOf(s)] })); }
 
-  heatColor(gap: number): string {
-    if (gap <= -2) return '#dc2626';
+  heatColor(gap: number): string { if (gap <= -2) return '#dc2626';
     if (gap === -1) return '#f59e0b';
     if (gap === 0) return '#10b981';
-    return '#6b4df0';
-  }
+    return '#6b4df0'; }
 
   courseFor(skill: string) { return this.courseMap[skill] || 'Related Course'; }
 
@@ -185,35 +173,20 @@ export class SkillGapComponent implements OnInit {
 
   ngOnInit() { this.loadGapAnalysis(); }
 
-  loadGapAnalysis() {
-    this.http.get<any[]>(`${this.api}/skills/gap-analysis`).subscribe({
-     error: () => this.snack.open('Failed to load skill gap data', 'Close', { duration: 3000 }),
-     next: data => {
-      if (!data || !data.length) return;
+  loadGapAnalysis() { this.http.get<any[]>(`${this.api}/skills/gap-analysis`).subscribe({ error: () => this.snack.open('Failed to load skill gap data', 'Close', { duration: 3000 }),
+     next: data => { if (!data || !data.length) return;
       const skillSet = new Set<string>();
       data.forEach(d => skillSet.add(d.skillName));
       this.skills = Array.from(skillSet);
-      this.requiredBySkill = this.skills.map(s => {
-        const entry = data.find(d => d.skillName === s);
-        return entry?.requiredLevel || 3;
-      });
+      this.requiredBySkill = this.skills.map(s => { const entry = data.find(d => d.skillName === s);
+        return entry?.requiredLevel || 3; });
       const empMap: { [name: string]: any } = {};
-      data.forEach(d => {
-        if (!empMap[d.employeeName]) {
-          empMap[d.employeeName] = { name: d.employeeName, role: d.role || '', dept: d.department || '', skills: {} };
-        }
-        empMap[d.employeeName].skills[d.skillName] = d.currentLevel || 0;
-      });
-      this.employees = [...Object.values(empMap)];
-     }
-    });
-  }
+      data.forEach(d => { if (!empMap[d.employeeName]) { empMap[d.employeeName] = { name: d.employeeName, role: d.role || '', dept: d.department || '', skills: {} }; }
+        empMap[d.employeeName].skills[d.skillName] = d.currentLevel || 0; });
+      this.employees = [...Object.values(empMap)]; } }); }
 
-  enrollInCourse(skill: string, emp: string) {
-    const courseName = this.courseFor(skill);
-    this.http.post(`${this.api}/enrollments`, { employeeName: emp, skillName: skill, courseName }).subscribe({
-      next: () => this.snack.open(`Enrolled ${emp} in ${courseName}`, '', { duration: 2000 }),
-      error: err => this.snack.open(err?.status === 409 ? 'Already enrolled' : 'Enrollment failed', 'Close', { duration: 3000 })
-    });
-  }
+  enrollInCourse(skill: string, emp: string) { const courseName = this.courseFor(skill);
+    this.http.post(`${this.api}/enrollments`, { employeeName: emp, skillName: skill, courseName }).subscribe({ next: () => this.snack.open(`Enrolled ${emp} in ${courseName}`, '', { duration: 2000 }),
+      error: err => this.snack.open(err?.status === 409 ? 'Already enrolled' : 'Enrollment failed', 'Close', { duration: 3000 }) }); }
 }
+

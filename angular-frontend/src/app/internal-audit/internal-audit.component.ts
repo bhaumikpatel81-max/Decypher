@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
-interface AuditReport {
-  id: string;
+interface AuditReport { id: string;
   title: string;
   departmentType: string;
   status: string;
@@ -20,8 +19,7 @@ interface AuditReport {
   createdAt: string;
 }
 
-interface AuditObservation {
-  id?: string;
+interface AuditObservation { id?: string;
   observationNumber?: number;
   title: string;
   riskLevel: string;
@@ -42,8 +40,7 @@ interface AuditObservation {
   financialImpact?: number;
 }
 
-interface ReportDetail extends AuditReport {
-  reviewedBy?: string;
+interface ReportDetail extends AuditReport { reviewedBy?: string;
   approvedBy?: string;
   executiveSummary?: string;
   scopeAreas: { id: string; name: string; description?: string; sortOrder: number }[];
@@ -51,8 +48,7 @@ interface ReportDetail extends AuditReport {
   observations: AuditObservation[];
 }
 
-@Component({
-  selector: 'app-internal-audit',
+@Component({ selector: 'app-internal-audit',
   templateUrl: './internal-audit.component.html',
   styles: [`
     .tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:24px; }
@@ -129,8 +125,7 @@ interface ReportDetail extends AuditReport {
     .obs-chip { font-size:11px; font-weight:700; color:#6b4df0; background:rgba(107,77,240,.08); padding:2px 8px; border-radius:20px; white-space:nowrap; }
   `]
 })
-export class InternalAuditComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/internal-audit`;
+export class InternalAuditComponent implements OnInit { private api = `${environment.apiUrl}/api/internal-audit`;
 
   activeTab = 'dashboard';
   loading = false;
@@ -150,19 +145,15 @@ export class InternalAuditComponent implements OnInit {
   riskLevels = ['High','Medium','Low'];
   obsStatuses = ['Open','InProgress','Closed'];
 
-  createForm: any = {
-    title: '', departmentType: 'HR', financialYear: '', auditDate: '',
-    auditedBy: '', reviewedBy: '', approvedBy: '', executiveSummary: ''
-  };
+  createForm: any = { title: '', departmentType: 'HR', financialYear: '', auditDate: '',
+    auditedBy: '', reviewedBy: '', approvedBy: '', executiveSummary: '' };
 
-  obsForm: AuditObservation = {
-    title: '', riskLevel: 'Medium', status: 'Open', processArea: '',
+  obsForm: AuditObservation = { title: '', riskLevel: 'Medium', status: 'Open', processArea: '',
     background: '', detailedObservation: '',
     risks: [], recommendations: [],
     mgmtCause: '', mgmtCorrectiveAction: '', mgmtPreventiveAction: '',
     mgmtTargetDate: '', mgmtResponsiblePerson: '', mgmtResponsibleDesignation: '',
-    isAlreadyImplemented: false, isProcessImprovement: false
-  };
+    isAlreadyImplemented: false, isProcessImprovement: false };
 
   risksInput = '';
   recsInput = '';
@@ -173,110 +164,65 @@ export class InternalAuditComponent implements OnInit {
     private auth: AuthService
   ) {}
 
-  get isSuperAdmin(): boolean {
-    const role = this.auth.getCurrentUser()?.role;
-    return role === 'SuperAdmin' || role === 'TenantAdmin';
-  }
+  get isSuperAdmin(): boolean { const role = this.auth.getCurrentUser()?.role;
+    return role === 'SuperAdmin' || role === 'TenantAdmin'; }
 
-  ngOnInit(): void {
-    this.loadReports();
-  }
+  ngOnInit(): void { this.loadReports(); }
 
-  setTab(tab: string): void {
-    this.activeTab = tab;
-    if (tab === 'reports' && !this.reports.length) this.loadReports();
-  }
+  setTab(tab: string): void { this.activeTab = tab;
+    if (tab === 'reports' && !this.reports.length) this.loadReports(); }
 
-  loadReports(): void {
-    this.loading = true;
+  loadReports(): void { this.loading = true;
     const params: any = {};
     if (this.filterDept) params.departmentType = this.filterDept;
     if (this.filterStatus) params.status = this.filterStatus;
     if (this.filterYear) params.financialYear = this.filterYear;
 
-    this.http.get<AuditReport[]>(`${this.api}/reports`, { params }).subscribe({
-      next: data => { this.reports = [...data]; this.loading = false; },
-      error: () => { this.snack.open('Failed to load audit reports', 'Close', { duration: 3000 }); this.loading = false; }
-    });
-  }
+    this.http.get<AuditReport[]>(`${this.api}/reports`, { params }).subscribe({ next: data => { this.reports = [...data]; this.loading = false; },
+      error: () => { this.snack.open('Failed to load audit reports', 'Close', { duration: 3000 }); this.loading = false; } }); }
 
-  viewReport(report: AuditReport): void {
-    this.loading = true;
-    this.http.get<ReportDetail>(`${this.api}/reports/${report.id}`).subscribe({
-      next: data => {
-        this.selectedReport = data;
+  viewReport(report: AuditReport): void { this.loading = true;
+    this.http.get<ReportDetail>(`${this.api}/reports/${report.id}`).subscribe({ next: data => { this.selectedReport = data;
         this.activeTab = 'detail';
-        this.loading = false;
-      },
-      error: () => { this.snack.open('Failed to load report details', 'Close', { duration: 3000 }); this.loading = false; }
-    });
-  }
+        this.loading = false; },
+      error: () => { this.snack.open('Failed to load report details', 'Close', { duration: 3000 }); this.loading = false; } }); }
 
-  backToList(): void {
-    this.selectedReport = null;
+  backToList(): void { this.selectedReport = null;
     this.activeTab = 'reports';
     this.showObsForm = false;
-    this.editingObsId = null;
-  }
+    this.editingObsId = null; }
 
-  createReport(): void {
-    this.loading = true;
-    this.http.post<{ id: string }>(`${this.api}/reports`, this.createForm).subscribe({
-      next: result => {
-        this.snack.open('Report created successfully', 'Close', { duration: 2500 });
+  createReport(): void { this.loading = true;
+    this.http.post<{ id: string }>(`${this.api}/reports`, this.createForm).subscribe({ next: result => { this.snack.open('Report created successfully', 'Close', { duration: 2500 });
         this.showCreateForm = false;
         this.loading = false;
         this.loadReports();
-        this.activeTab = 'reports';
-      },
-      error: () => { this.snack.open('Failed to create report', 'Close', { duration: 3000 }); this.loading = false; }
-    });
-  }
+        this.activeTab = 'reports'; },
+      error: () => { this.snack.open('Failed to create report', 'Close', { duration: 3000 }); this.loading = false; } }); }
 
-  deleteReport(report: AuditReport): void {
-    this.http.delete(`${this.api}/reports/${report.id}`).subscribe({
-      next: () => {
-        this.reports = this.reports.filter(r => r.id !== report.id);
-        this.snack.open('Report deleted', 'Close', { duration: 2000 });
-      },
-      error: () => this.snack.open('Delete failed', 'Close', { duration: 3000 })
-    });
-  }
+  deleteReport(report: AuditReport): void { this.http.delete(`${this.api}/reports/${report.id}`).subscribe({ next: () => { this.reports = this.reports.filter(r => r.id !== report.id);
+        this.snack.open('Report deleted', 'Close', { duration: 2000 }); },
+      error: () => this.snack.open('Delete failed', 'Close', { duration: 3000 }) }); }
 
-  updateStatus(report: ReportDetail, status: string): void {
-    this.http.put(`${this.api}/reports/${report.id}`, { ...report, status }).subscribe({
-      next: () => {
-        report.status = status;
-        this.snack.open('Status updated', 'Close', { duration: 2000 });
-      },
-      error: () => this.snack.open('Update failed', 'Close', { duration: 3000 })
-    });
-  }
+  updateStatus(report: ReportDetail, status: string): void { this.http.put(`${this.api}/reports/${report.id}`, { ...report, status }).subscribe({ next: () => { report.status = status;
+        this.snack.open('Status updated', 'Close', { duration: 2000 }); },
+      error: () => this.snack.open('Update failed', 'Close', { duration: 3000 }) }); }
 
-  openObsForm(obs?: AuditObservation): void {
-    if (obs) {
-      this.editingObsId = obs.id ?? null;
+  openObsForm(obs?: AuditObservation): void { if (obs) { this.editingObsId = obs.id ?? null;
       this.obsForm = { ...obs };
       this.risksInput = (obs.risks ?? []).join('\n');
-      this.recsInput = (obs.recommendations ?? []).join('\n');
-    } else {
-      this.editingObsId = null;
-      this.obsForm = {
-        title: '', riskLevel: 'Medium', status: 'Open', processArea: '',
+      this.recsInput = (obs.recommendations ?? []).join('\n'); } else { this.editingObsId = null;
+      this.obsForm = { title: '', riskLevel: 'Medium', status: 'Open', processArea: '',
         background: '', detailedObservation: '',
         risks: [], recommendations: [],
         mgmtCause: '', mgmtCorrectiveAction: '', mgmtPreventiveAction: '',
         mgmtTargetDate: '', mgmtResponsiblePerson: '', mgmtResponsibleDesignation: '',
-        isAlreadyImplemented: false, isProcessImprovement: false
-      };
+        isAlreadyImplemented: false, isProcessImprovement: false };
       this.risksInput = '';
-      this.recsInput = '';
-    }
-    this.showObsForm = true;
-  }
+      this.recsInput = ''; }
+    this.showObsForm = true; }
 
-  saveObservation(): void {
-    if (!this.selectedReport) return;
+  saveObservation(): void { if (!this.selectedReport) return;
 
     this.obsForm.risks = this.risksInput.split('\n').map(s => s.trim()).filter(Boolean);
     this.obsForm.recommendations = this.recsInput.split('\n').map(s => s.trim()).filter(Boolean);
@@ -290,44 +236,27 @@ export class InternalAuditComponent implements OnInit {
       : this.http.post<{ id: string; observationNumber: number }>(url, this.obsForm);
 
     this.loading = true;
-    req.subscribe({
-      next: () => {
-        this.showObsForm = false;
+    req.subscribe({ next: () => { this.showObsForm = false;
         this.loading = false;
         this.viewReport(this.selectedReport!);
-        this.snack.open(isEdit ? 'Observation updated' : 'Observation added', 'Close', { duration: 2000 });
-      },
-      error: () => { this.snack.open('Failed to save observation', 'Close', { duration: 3000 }); this.loading = false; }
-    });
-  }
+        this.snack.open(isEdit ? 'Observation updated' : 'Observation added', 'Close', { duration: 2000 }); },
+      error: () => { this.snack.open('Failed to save observation', 'Close', { duration: 3000 }); this.loading = false; } }); }
 
-  deleteObservation(obs: AuditObservation): void {
-    if (!obs.id) return;
-    this.http.delete(`${this.api}/observations/${obs.id}`).subscribe({
-      next: () => {
-        if (this.selectedReport) {
-          this.selectedReport.observations = this.selectedReport.observations.filter(o => o.id !== obs.id);
-          this.recalcLocalCounts();
-        }
-        this.snack.open('Observation deleted', 'Close', { duration: 2000 });
-      },
-      error: () => this.snack.open('Delete failed', 'Close', { duration: 3000 })
-    });
-  }
+  deleteObservation(obs: AuditObservation): void { if (!obs.id) return;
+    this.http.delete(`${this.api}/observations/${obs.id}`).subscribe({ next: () => { if (this.selectedReport) { this.selectedReport.observations = this.selectedReport.observations.filter(o => o.id !== obs.id);
+          this.recalcLocalCounts(); }
+        this.snack.open('Observation deleted', 'Close', { duration: 2000 }); },
+      error: () => this.snack.open('Delete failed', 'Close', { duration: 3000 }) }); }
 
-  exportPdf(): void {
-    if (!this.selectedReport) return;
-    window.open(`${this.api}/reports/${this.selectedReport.id}/export/pdf`, '_blank');
-  }
+  exportPdf(): void { if (!this.selectedReport) return;
+    window.open(`${this.api}/reports/${this.selectedReport.id}/export/pdf`, '_blank'); }
 
-  private recalcLocalCounts(): void {
-    const obs = this.selectedReport!.observations;
+  private recalcLocalCounts(): void { const obs = this.selectedReport!.observations;
     this.selectedReport!.totalObservations = obs.length;
     this.selectedReport!.highRiskCount = obs.filter(o => o.riskLevel === 'High').length;
     this.selectedReport!.mediumRiskCount = obs.filter(o => o.riskLevel === 'Medium').length;
     this.selectedReport!.lowRiskCount = obs.filter(o => o.riskLevel === 'Low').length;
-    this.selectedReport!.closedCount = obs.filter(o => o.status === 'Closed').length;
-  }
+    this.selectedReport!.closedCount = obs.filter(o => o.status === 'Closed').length; }
 
   // ─── Dashboard computed ──────────────────────────────────────────
 
@@ -335,70 +264,47 @@ export class InternalAuditComponent implements OnInit {
   get totalObservations(): number { return this.reports.reduce((s, r) => s + r.totalObservations, 0); }
   get totalHighRisk(): number { return this.reports.reduce((s, r) => s + r.highRiskCount, 0); }
   get totalClosed(): number { return this.reports.reduce((s, r) => s + r.closedCount, 0); }
-  get openRate(): string {
-    const total = this.totalObservations;
+  get openRate(): string { const total = this.totalObservations;
     if (!total) return '0%';
-    return Math.round(((total - this.totalClosed) / total) * 100) + '%';
-  }
+    return Math.round(((total - this.totalClosed) / total) * 100) + '%'; }
 
-  get deptBreakdown(): { dept: string; count: number; pct: number }[] {
-    const map = new Map<string, number>();
+  get deptBreakdown(): { dept: string; count: number; pct: number }[] { const map = new Map<string, number>();
     for (const r of this.reports) map.set(r.departmentType, (map.get(r.departmentType) ?? 0) + 1);
     const max = Math.max(...map.values(), 1);
     return Array.from(map.entries())
       .map(([dept, count]) => ({ dept, count, pct: Math.round((count / max) * 100) }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }
+      .slice(0, 8); }
 
-  get statusBreakdown(): { status: string; count: number; color: string }[] {
-    const map = new Map<string, number>();
+  get statusBreakdown(): { status: string; count: number; color: string }[] { const map = new Map<string, number>();
     for (const r of this.reports) map.set(r.status, (map.get(r.status) ?? 0) + 1);
-    const colors: Record<string, string> = {
-      Draft: '#a5b4fc', InProgress: '#fcd34d', Completed: '#6ee7b7', Approved: '#67e8f9'
-    };
-    return Array.from(map.entries()).map(([status, count]) => ({
-      status, count, color: colors[status] ?? '#cbd5e1'
-    }));
-  }
+    const colors: Record<string, string> = { Draft: '#a5b4fc', InProgress: '#fcd34d', Completed: '#6ee7b7', Approved: '#67e8f9' };
+    return Array.from(map.entries()).map(([status, count]) => ({ status, count, color: colors[status] ?? '#cbd5e1' })); }
 
-  get riskDonutStyle(): string {
-    const h = this.totalHighRisk;
+  get riskDonutStyle(): string { const h = this.totalHighRisk;
     const m = this.reports.reduce((s, r) => s + r.mediumRiskCount, 0);
     const l = this.reports.reduce((s, r) => s + r.lowRiskCount, 0);
     const total = h + m + l || 1;
     const hDeg = (h / total) * 360;
     const mDeg = (m / total) * 360;
     const lDeg = (l / total) * 360;
-    return `conic-gradient(#ef4444 0deg ${hDeg}deg,#f59e0b ${hDeg}deg ${hDeg + mDeg}deg,#10b981 ${hDeg + mDeg}deg ${hDeg + mDeg + lDeg}deg,#e2e8f0 ${hDeg + mDeg + lDeg}deg 360deg)`;
-  }
+    return `conic-gradient(#ef4444 0deg ${hDeg}deg,#f59e0b ${hDeg}deg ${hDeg + mDeg}deg,#10b981 ${hDeg + mDeg}deg ${hDeg + mDeg + lDeg}deg,#e2e8f0 ${hDeg + mDeg + lDeg}deg 360deg)`; }
 
   get totalMediumRisk(): number { return this.reports.reduce((s, r) => s + r.mediumRiskCount, 0); }
   get totalLowRisk(): number { return this.reports.reduce((s, r) => s + r.lowRiskCount, 0); }
   get recentReports(): AuditReport[] { return this.reports.slice(0, 5); }
   get openObservations(): number { return this.totalObservations - this.totalClosed; }
-  get avgObsPerReport(): string {
-    if (!this.totalReports) return '0';
-    return (this.totalObservations / this.totalReports).toFixed(1);
-  }
-  get highRiskPct(): string {
-    if (!this.totalObservations) return '0%';
-    return Math.round((this.totalHighRisk / this.totalObservations) * 100) + '%';
-  }
-  get closureRatePct(): string {
-    if (!this.totalObservations) return '0%';
-    return Math.round((this.totalClosed / this.totalObservations) * 100) + '%';
-  }
+  get avgObsPerReport(): string { if (!this.totalReports) return '0';
+    return (this.totalObservations / this.totalReports).toFixed(1); }
+  get highRiskPct(): string { if (!this.totalObservations) return '0%';
+    return Math.round((this.totalHighRisk / this.totalObservations) * 100) + '%'; }
+  get closureRatePct(): string { if (!this.totalObservations) return '0%';
+    return Math.round((this.totalClosed / this.totalObservations) * 100) + '%'; }
 
-  badgeClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'badge-draft', InProgress: 'badge-inprogress', Completed: 'badge-completed', Approved: 'badge-approved'
-    };
-    return 'badge ' + (map[status] ?? 'badge-draft');
-  }
+  badgeClass(status: string): string { const map: Record<string, string> = { Draft: 'badge-draft', InProgress: 'badge-inprogress', Completed: 'badge-completed', Approved: 'badge-approved' };
+    return 'badge ' + (map[status] ?? 'badge-draft'); }
 
-  riskClass(level: string): string {
-    const map: Record<string, string> = { High: 'risk-high', Medium: 'risk-medium', Low: 'risk-low' };
-    return 'badge ' + (map[level] ?? 'risk-low');
-  }
+  riskClass(level: string): string { const map: Record<string, string> = { High: 'risk-high', Medium: 'risk-medium', Low: 'risk-low' };
+    return 'badge ' + (map[level] ?? 'risk-low'); }
 }
+

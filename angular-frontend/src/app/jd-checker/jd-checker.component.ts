@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { AIService } from '../services/ai.service';
 
-@Component({
-  selector: 'app-jd-checker',
+@Component({ selector: 'app-jd-checker',
   template: `
     <div class="checker-container page-enter">
       <div class="page-header">
@@ -58,33 +57,21 @@ import { AIService } from '../services/ai.service';
     .recommendations { display: flex; flex-direction: column; gap: 12px; }
     .rec-item { display: flex; gap: 8px; }
     .rec-icon { font-size: 18px; }
-  `]
-})
-export class JdCheckerComponent {
-  jobDescription = '';
+  `] })
+export class JdCheckerComponent { jobDescription = '';
   analysis: any = null;
   isLoading = false;
   errorMsg = '';
 
   constructor(private aiService: AIService) {}
 
-  analyzeJd(): void {
-    if (!this.jobDescription) {
-      this.errorMsg = 'Please enter a job description';
-      return;
-    }
+  analyzeJd(): void { if (!this.jobDescription) { this.errorMsg = 'Please enter a job description';
+      return; }
     this.errorMsg = '';
 
     this.isLoading = true;
-    this.aiService.analyzeJobDescription(this.jobDescription).subscribe({
-      next: (response) => {
-        this.analysis = response.data;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Analysis failed', error);
-        this.isLoading = false;
-      }
-    });
-  }
-}
+    this.aiService.analyzeJobDescription(this.jobDescription).subscribe({ next: (response) => { this.analysis = response.data;
+        this.isLoading = false; },
+      error: (error) => { console.error('Analysis failed', error);
+        this.isLoading = false; } }); } }
+

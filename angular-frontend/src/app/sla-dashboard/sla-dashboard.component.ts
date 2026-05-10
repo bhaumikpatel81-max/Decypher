@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface SlaTrack {
-  id: string;
+interface SlaTrack { id: string;
   requirementId: string;
   stage: string;
   stageStartDate: string;
@@ -17,8 +16,7 @@ interface SlaTrack {
   updatedAt: string;
 }
 
-@Component({
-  selector: 'app-sla-dashboard',
+@Component({ selector: 'app-sla-dashboard',
   templateUrl: './sla-dashboard.component.html',
   styles: [`
     .sla-text-muted { color: var(--text-3); }
@@ -30,8 +28,7 @@ interface SlaTrack {
     .sla-progress-col { min-width: 120px; }
   `]
 })
-export class SlaDashboardComponent implements OnInit {
-  tracks: SlaTrack[] = [];
+export class SlaDashboardComponent implements OnInit { tracks: SlaTrack[] = [];
   loading = true;
   error = '';
 
@@ -43,24 +40,15 @@ export class SlaDashboardComponent implements OnInit {
 
   ngOnInit(): void { this.load(); }
 
-  load(): void {
-    this.loading = true;
+  load(): void { this.loading = true;
     this.http.get<SlaTrack[]>(`${environment.apiUrl}/api/aiagents/sla-dashboard`)
-      .subscribe({
-        next:  data => { this.tracks = data; this.loading = false; },
-        error: () => { this.error = 'Failed to load SLA data.'; this.loading = false; }
-      });
-  }
+      .subscribe({ next:  data => { this.tracks = data; this.loading = false; },
+        error: () => { this.error = 'Failed to load SLA data.'; this.loading = false; } }); }
 
-  getSlaClass(status: string): string {
-    return status === 'OnTrack' ? 'on-track' : status === 'Warning' ? 'warning' : 'overdue';
-  }
+  getSlaClass(status: string): string { return status === 'OnTrack' ? 'on-track' : status === 'Warning' ? 'warning' : 'overdue'; }
 
-  getSlaEmoji(status: string): string {
-    return status === 'OnTrack' ? '✅' : status === 'Warning' ? '⚠️' : '🔴';
-  }
+  getSlaEmoji(status: string): string { return status === 'OnTrack' ? '✅' : status === 'Warning' ? '⚠️' : '🔴'; }
 
-  slaProgress(t: SlaTrack): number {
-    return Math.min(Math.round((t.daysInStage / t.targetDays) * 100), 100);
-  }
+  slaProgress(t: SlaTrack): number { return Math.min(Math.round((t.daysInStage / t.targetDays) * 100), 100); }
 }
+

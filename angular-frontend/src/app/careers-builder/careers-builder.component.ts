@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
@@ -100,8 +100,7 @@ import { environment } from '../../environments/environment';
     </div>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.careers-preview{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}.cp-hero{padding:48px 32px;text-align:center;color:#fff}.cp-hero h1{font-size:32px;font-weight:900;margin:0}.cp-hero p{margin:8px 0 0;font-size:16px;opacity:.9}.cp-section{padding:32px;border-bottom:1px solid var(--border)}.cp-section h2{font-size:20px;font-weight:700;margin:0 0 16px}`] })
-export class CareersBuilderComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/branding`;
+export class CareersBuilderComponent implements OnInit { private api = `${environment.apiUrl}/api/branding`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab: 'build'|'preview'|'analytics' = 'build';
   published = false; saving = false; loading = true; newPerk = '';
@@ -114,52 +113,30 @@ export class CareersBuilderComponent implements OnInit {
 
   ngOnInit() { this.loadCareerPage(); this.loadJobs(); }
 
-  loadCareerPage() {
-    this.loading = true;
-    this.http.get<any>(`${this.api}/career-page`).subscribe({
-      next: data => {
-        if (data) {
-          this.page = {
-            company: data.companyName || '',
+  loadCareerPage() { this.loading = true;
+    this.http.get<any>(`${this.api}/career-page`).subscribe({ next: data => { if (data) { this.page = { company: data.companyName || '',
             tagline: data.tagline || '',
             about: data.aboutUs || '',
             brandColor: data.brandColor || '#292966',
             slug: data.slug || '',
             values: Array.isArray(data.values) ? [...data.values] : (data.values ? JSON.parse(data.values) : []),
-            perks: Array.isArray(data.perks) ? [...data.perks] : (data.perks ? data.perks.split(',').map((p: string) => p.trim()) : [])
-          };
+            perks: Array.isArray(data.perks) ? [...data.perks] : (data.perks ? data.perks.split(',').map((p: string) => p.trim()) : []) };
           this.published = data.published || false;
-          this.analytics = [...(data.analytics || [])];
-        }
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.snack.open('Failed to load careers page', 'Close', { duration: 3000 });
-      }
-    });
-  }
+          this.analytics = [...(data.analytics || [])]; }
+        this.loading = false; },
+      error: () => { this.loading = false;
+        this.snack.open('Failed to load careers page', 'Close', { duration: 3000 }); } }); }
 
-  loadJobs() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/jobs`).subscribe({
-      next: data => {
-        this.jobs = (data || []).map(j => ({
-          id: j.id, title: j.title || j.jobTitle, dept: j.department || '',
-          location: j.location || '', type: j.employmentType || 'Full-Time', visible: true
-        }));
-      },
-      error: () => { this.jobs = []; }
-    });
-  }
+  loadJobs() { this.http.get<any[]>(`${environment.apiUrl}/api/jobs`).subscribe({ next: data => { this.jobs = (data || []).map(j => ({ id: j.id, title: j.title || j.jobTitle, dept: j.department || '',
+          location: j.location || '', type: j.employmentType || 'Full-Time', visible: true })); },
+      error: () => { this.jobs = []; } }); }
 
   addPerk() { if (this.newPerk.trim()) { this.page.perks = [...this.page.perks, this.newPerk.trim()]; this.newPerk = ''; } }
 
-  togglePublish() {
-    this.saving = true;
+  togglePublish() { this.saving = true;
     const payload = { companyName: this.page.company, tagline: this.page.tagline, aboutUs: this.page.about, brandColor: this.page.brandColor, slug: this.page.slug, values: this.page.values, perks: this.page.perks, published: !this.published };
-    this.http.post<any>(`${this.api}/career-page`, payload).subscribe({
-      next: () => { this.published = !this.published; this.saving = false; this.snack.open(this.published ? 'Page published' : 'Page unpublished', '', { duration: 2000 }); },
-      error: () => { this.saving = false; this.snack.open('Failed to save careers page', 'Close', { duration: 3000 }); }
-    });
-  }
+    this.http.post<any>(`${this.api}/career-page`, payload).subscribe({ next: () => { this.published = !this.published; this.saving = false; this.snack.open(this.published ? 'Page published' : 'Page unpublished', '', { duration: 2000 }); },
+      error: () => { this.saving = false; this.snack.open('Failed to save careers page', 'Close', { duration: 3000 }); } }); }
 }
+
+

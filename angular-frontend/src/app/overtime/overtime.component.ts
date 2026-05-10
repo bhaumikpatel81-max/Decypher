@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface OTRecord {
-  id: number; employee: string; empId: string; date: string;
+interface OTRecord { id: number; employee: string; empId: string; date: string;
   from: string; to: string; hours: number; reason: string;
   status: string; rate: number; pay: number;
 }
 
-@Component({
-  selector: 'app-overtime',
+@Component({ selector: 'app-overtime',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -148,8 +146,7 @@ interface OTRecord {
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:14px; }
   `]
 })
-export class OvertimeComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/attendance`;
+export class OvertimeComponent implements OnInit { private api = `${environment.apiUrl}/api/attendance`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'request';
   autoCalc = true;
@@ -165,63 +162,38 @@ export class OvertimeComponent implements OnInit {
   get pendingOT() { return this.records.filter(r => r.status === 'Pending'); }
   get totalOTHours() { return this.records.filter(r => r.status === 'Approved').reduce((s, r) => s + r.hours, 0); }
   get totalOTCost() { return this.records.filter(r => r.status === 'Approved').reduce((s, r) => s + r.pay, 0); }
-  get topOTEmployee() {
-    if (!this.records.length) return 'N/A';
+  get topOTEmployee() { if (!this.records.length) return 'N/A';
     const map: { [k: string]: number } = {};
     this.records.filter(r => r.status === 'Approved').forEach(r => { map[r.employee] = (map[r.employee] || 0) + r.hours; });
     const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
-    return top ? top[0].split(' ')[0] : 'N/A';
-  }
-  get filteredRecords() {
-    return this.records.filter(r => {
-      return (!this.search || r.employee.toLowerCase().includes(this.search.toLowerCase())) &&
-        (!this.filterStatus || r.status === this.filterStatus);
-    });
-  }
+    return top ? top[0].split(' ')[0] : 'N/A'; }
+  get filteredRecords() { return this.records.filter(r => { return (!this.search || r.employee.toLowerCase().includes(this.search.toLowerCase())) &&
+        (!this.filterStatus || r.status === this.filterStatus); }); }
 
   ngOnInit() { this.loadOvertimeRecords(); this.loadEmployees(); }
 
-  loadOvertimeRecords() {
-    this.http.get<any[]>(`${this.api}/overtime`).subscribe({
-      next: data => {
-        this.records = [...(data || []).map(r => ({
-          id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+  loadOvertimeRecords() { this.http.get<any[]>(`${this.api}/overtime`).subscribe({ next: data => { this.records = [...(data || []).map(r => ({ id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
           date: r.date?.slice(0, 10) || '', from: r.fromTime || '', to: r.toTime || '',
           hours: r.hours || 0, reason: r.reason || '', status: r.status || 'Pending',
-          rate: r.rate || 0, pay: r.overtimePay || 0
-        }))];
-      },
-      error: () => this.snack.open('Failed to load overtime records', 'Close', { duration: 3000 })
-    });
-  }
+          rate: r.rate || 0, pay: r.overtimePay || 0 }))]; },
+      error: () => this.snack.open('Failed to load overtime records', 'Close', { duration: 3000 }) }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '', hourlyRate: Math.round((e.salary || 0) / 12 / 26 / 8) }));
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '', hourlyRate: Math.round((e.salary || 0) / 12 / 26 / 8) })); }); }
 
-  calcFormHours(): number {
-    if (!this.form.from || !this.form.to) return 0;
+  calcFormHours(): number { if (!this.form.from || !this.form.to) return 0;
     const [fh, fm] = this.form.from.split(':').map(Number);
     const [th, tm] = this.form.to.split(':').map(Number);
     let diff = (th * 60 + tm) - (fh * 60 + fm);
     if (diff < 0) diff += 1440;
-    return Math.round(diff / 60 * 10) / 10;
-  }
+    return Math.round(diff / 60 * 10) / 10; }
 
-  submitOT() {
-    if (!this.form.employee || !this.form.date) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
+  submitOT() { if (!this.form.employee || !this.form.date) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const emp = this.employees.find(e => e.name === this.form.employee);
     const hrs = this.calcFormHours();
     const payload = { employeeName: this.form.employee, employeeCode: emp?.empId || '', date: this.form.date, fromTime: this.form.from, toTime: this.form.to, hours: hrs, reason: this.form.reason };
-    this.http.post<any>(`${this.api}/overtime`, payload).subscribe({
-      next: res => {
-        this.records = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: (emp?.hourlyRate || 0) * 1.5, pay: Math.round(hrs * (emp?.hourlyRate || 0) * 1.5) }, ...this.records];
+    this.http.post<any>(`${this.api}/overtime`, payload).subscribe({ next: res => { this.records = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', date: this.form.date, from: this.form.from, to: this.form.to, hours: hrs, reason: this.form.reason, status: 'Pending', rate: (emp?.hourlyRate || 0) * 1.5, pay: Math.round(hrs * (emp?.hourlyRate || 0) * 1.5) }, ...this.records];
         this.snack.open(`OT request submitted for ${this.form.employee}`, '', { duration: 2000 });
-        this.form = { employee: '', date: '', from: '', to: '', reason: '' };
-      },
-      error: err => this.snack.open(err?.error?.message || 'Failed to submit OT', 'Close', { duration: 3000 })
-    });
-  }
+        this.form = { employee: '', date: '', from: '', to: '', reason: '' }; },
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit OT', 'Close', { duration: 3000 }) }); }
 }
+

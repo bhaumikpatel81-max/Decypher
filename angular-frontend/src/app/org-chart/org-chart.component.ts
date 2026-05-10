@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-org-chart',
+@Component({ selector: 'app-org-chart',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -90,8 +89,7 @@ import { environment } from '../../environments/environment';
     .org-child::before { content:''; position:absolute; top:-12px; left:50%; width:2px; height:12px; background:var(--border); }
   `]
 })
-export class OrgChartComponent implements OnInit {
-  private apiUrl = `${environment.apiUrl}/api/employees`;
+export class OrgChartComponent implements OnInit { private apiUrl = `${environment.apiUrl}/api/employees`;
   search = ''; filterDept = ''; loading = false;
   colors = ['#6b4df0','#2563eb','#10b981','#f59e0b','#db2777','#0891b2','#7c3aed'];
   kpis = [
@@ -108,22 +106,17 @@ export class OrgChartComponent implements OnInit {
 
   ngOnInit() { this.loadOrgChart(); }
 
-  loadOrgChart() {
-    this.loading = true;
-    this.http.get<any[]>(`${this.apiUrl}/org-chart`).subscribe({
-      next: data => {
-        this.loading = false;
+  loadOrgChart() { this.loading = true;
+    this.http.get<any[]>(`${this.apiUrl}/org-chart`).subscribe({ next: data => { this.loading = false;
         const colorList = this.colors;
-        const decorate = (nodes: any[], depth = 0): any[] => (nodes || []).map((n, i) => ({
-          ...n,
+        const decorate = (nodes: any[], depth = 0): any[] => (nodes || []).map((n, i) => ({ ...n,
           name: `${n.firstName || ''} ${n.lastName || ''}`.trim(),
           role: n.designation || n.role || '',
           dept: n.department || '',
           initials: ((n.firstName || '?')[0] + (n.lastName || '?')[0]).toUpperCase(),
           color: colorList[(depth + i) % colorList.length],
           expanded: depth === 0,
-          reports: decorate(n.directReports || [], depth + 1)
-        }));
+          reports: decorate(n.directReports || [], depth + 1) }));
         this.tree = [...decorate(data || [])];
         this.filteredTree = [...this.tree];
         const allEmp: any[] = [];
@@ -135,23 +128,15 @@ export class OrgChartComponent implements OnInit {
           { val: allEmp.length, lbl: 'Total Employees', color: '#2563eb' },
           { val: allEmp.filter(e => (e.reports || []).length > 0).length, lbl: 'Managers', color: '#10b981' },
           { val: [...new Set<string>(allEmp.map(e => e.location).filter(Boolean))].length, lbl: 'Locations', color: '#f59e0b' },
-        ];
-      },
-      error: () => {
-        this.loading = false;
-        this.snack.open('Failed to load org chart', 'Close', { duration: 3000 });
-      }
-    });
-  }
+        ]; },
+      error: () => { this.loading = false;
+        this.snack.open('Failed to load org chart', 'Close', { duration: 3000 }); } }); }
 
-  applyFilter() {
-    if (!this.filterDept) { this.filteredTree = this.tree; return; }
-    this.filteredTree = this.tree.map(n => ({ ...n, reports: (n.reports||[]).filter((r: any) => r.dept === this.filterDept) }));
-  }
+  applyFilter() { if (!this.filterDept) { this.filteredTree = this.tree; return; }
+    this.filteredTree = this.tree.map(n => ({ ...n, reports: (n.reports||[]).filter((r: any) => r.dept === this.filterDept) })); }
 
-  nodeMatches(n: any): boolean {
-    return this.search ? n.name.toLowerCase().includes(this.search.toLowerCase()) : false;
-  }
+  nodeMatches(n: any): boolean { return this.search ? n.name.toLowerCase().includes(this.search.toLowerCase()) : false; }
 
   toggleNode(n: any) { n.expanded = !n.expanded; }
 }
+

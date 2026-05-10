@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-letters-certificates',
+@Component({ selector: 'app-letters-certificates',
   template: `
     <div class="page-container page-enter">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
@@ -120,8 +119,7 @@ import { environment } from '../../environments/environment';
     .textarea { width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;resize:vertical;background:var(--surface);color:var(--text-1); }
   `]
 })
-export class LettersCertificatesComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/employees`;
+export class LettersCertificatesComponent implements OnInit { private api = `${environment.apiUrl}/api/employees`;
   private settingsApi = `${environment.apiUrl}/api/settings`;
 
   saving = false;
@@ -147,81 +145,53 @@ export class LettersCertificatesComponent implements OnInit {
     { id: 'reference',   label: 'Reference Letter' },
   ];
 
-  gen: any = {
-    employeeId: '', employeeName: '', empCode: '',
+  gen: any = { employeeId: '', employeeName: '', empCode: '',
     type: '', designation: '', department: '',
     date: new Date().toISOString().slice(0, 10),
-    extra: '', notes: ''
-  };
+    extra: '', notes: '' };
 
   trackById  = (_: number, item: any) => item.id;
   trackByStr = (_: number, s: string) => s;
 
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
-  ngOnInit() {
-    this.loadCompanyInfo();
+  ngOnInit() { this.loadCompanyInfo();
     this.loadEmployees();
-    this.loadHistory();
-  }
+    this.loadHistory(); }
 
-  loadCompanyInfo() {
-    this.http.get<any>(`${this.settingsApi}/company`).subscribe({
-      next: r => {
-        const d = r?.data || r;
+  loadCompanyInfo() { this.http.get<any>(`${this.settingsApi}/company`).subscribe({ next: r => { const d = r?.data || r;
         this.companyName    = d?.companyName    || d?.name    || 'Your Company';
-        this.companyAddress = d?.address || d?.companyAddress || '';
-      },
-      error: () => {}
-    });
-  }
+        this.companyAddress = d?.address || d?.companyAddress || ''; },
+      error: () => {} }); }
 
-  loadEmployees() {
-    this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: r => { this.employees = [...(r?.data || r || [])]; },
-      error: () => {}
-    });
-  }
+  loadEmployees() { this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({ next: r => { this.employees = [...(r?.data || r || [])]; },
+      error: () => {} }); }
 
-  loadHistory() {
-    this.loadingHistory = true;
-    this.http.get<any>(`${this.api}/letters`).subscribe({
-      next: r => {
-        const data = r?.data || r || [];
-        this.history = [...data.map((h: any) => ({
-          id: h.id,
+  loadHistory() { this.loadingHistory = true;
+    this.http.get<any>(`${this.api}/letters`).subscribe({ next: r => { const data = r?.data || r || [];
+        this.history = [...data.map((h: any) => ({ id: h.id,
           type:        h.letterType || h.type || '',
           employee:    h.employeeName || h.employee || '',
           empCode:     h.employeeCode || h.empCode || '',
           date:        h.generatedDate?.slice(0, 10) || h.date?.slice(0, 10) || '',
-          generatedBy: h.generatedByName || h.generatedBy || ''
-        }))];
-        this.loadingHistory = false;
-      },
-      error: () => { this.loadingHistory = false; }
-    });
-  }
+          generatedBy: h.generatedByName || h.generatedBy || '' }))];
+        this.loadingHistory = false; },
+      error: () => { this.loadingHistory = false; } }); }
 
-  onEmployeeChange() {
-    const emp = this.employees.find(e => e.id === this.gen.employeeId);
-    if (emp) {
-      this.gen.employeeName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+  onEmployeeChange() { const emp = this.employees.find(e => e.id === this.gen.employeeId);
+    if (emp) { this.gen.employeeName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
       this.gen.empCode      = emp.employeeCode || emp.empId || '';
       this.gen.designation  = this.gen.designation || emp.designation || '';
-      this.gen.department   = this.gen.department  || emp.department  || '';
-    }
-  }
+      this.gen.department   = this.gen.department  || emp.department  || ''; } }
 
   updateTemplate() {}
 
-  generate() {
-    if (!this.gen.type || !this.gen.employeeId) return;
+  generate() { if (!this.gen.type || !this.gen.employeeId) return;
     const t = this.letterTypes.find(x => x.id === this.gen.type);
     const body = this.buildBody();
     this.preview = { title: t?.label, date: this.gen.date, body, id: null };
 
-    const payload = {
-      letterType:   t?.label,
+    const payload = { letterType:   t?.label,
       employeeId:   this.gen.employeeId,
       employeeName: this.gen.employeeName,
       employeeCode: this.gen.empCode,
@@ -229,29 +199,19 @@ export class LettersCertificatesComponent implements OnInit {
       department:   this.gen.department,
       generatedDate: this.gen.date,
       additionalInfo: this.gen.extra,
-      notes: this.gen.notes
-    };
+      notes: this.gen.notes };
 
     this.saving = true;
-    this.http.post<any>(`${this.api}/letters`, payload).subscribe({
-      next: res => {
-        this.preview.id = res?.data?.id || res?.id;
+    this.http.post<any>(`${this.api}/letters`, payload).subscribe({ next: res => { this.preview.id = res?.data?.id || res?.id;
         this.saving = false;
         this.snack.open('Letter saved', '', { duration: 2000 });
-        this.loadHistory();
-      },
-      error: () => {
-        this.saving = false;
-        this.snack.open('Letter generated (save failed — download still available)', 'Close', { duration: 4000 });
-      }
-    });
-  }
+        this.loadHistory(); },
+      error: () => { this.saving = false;
+        this.snack.open('Letter generated (save failed — download still available)', 'Close', { duration: 4000 }); } }); }
 
-  buildBody(): string {
-    const { employeeName, empCode, designation, department, date, extra } = this.gen;
+  buildBody(): string { const { employeeName, empCode, designation, department, date, extra } = this.gen;
     const co = this.companyName;
-    const bodies: Record<string, string> = {
-      offer: `Dear <b>${employeeName}</b>,<br><br>We are pleased to extend you an offer of employment as <b>${designation}</b> in the <b>${department}</b> department at <b>${co}</b>, effective from <b>${date}</b>.<br><br>${extra ? `Your offered CTC is <b>${extra}</b>.` : ''}<br><br>Please sign and return the enclosed copy to confirm your acceptance.`,
+    const bodies: Record<string, string> = { offer: `Dear <b>${employeeName}</b>,<br><br>We are pleased to extend you an offer of employment as <b>${designation}</b> in the <b>${department}</b> department at <b>${co}</b>, effective from <b>${date}</b>.<br><br>${extra ? `Your offered CTC is <b>${extra}</b>.` : ''}<br><br>Please sign and return the enclosed copy to confirm your acceptance.`,
       appointment: `Dear <b>${employeeName}</b>,<br><br>We are pleased to appoint you as <b>${designation}</b> in the <b>${department}</b> department at <b>${co}</b>, effective from <b>${date}</b>.<br><br>Your employment is subject to the terms and conditions detailed in your offer letter. We look forward to your valuable contribution.`,
       experience: `To Whom It May Concern,<br><br>This is to certify that <b>${employeeName}</b> (Employee ID: ${empCode}) has worked with <b>${co}</b> as <b>${designation}</b> in the <b>${department}</b> department.<br><br>${extra ? `Period of employment: <b>${extra}</b>.` : ''}<br><br>During the tenure, the employee demonstrated excellent professional skills and conduct. We wish them the very best in their future endeavours.`,
       salary: `To Whom It May Concern,<br><br>This is to certify that <b>${employeeName}</b> (Employee ID: ${empCode}) is working as <b>${designation}</b> at <b>${co}</b>.<br><br>${extra ? `The current CTC of the employee is <b>${extra}</b> per annum.` : ''}<br><br>This certificate is issued at the request of the employee for purposes stated by them.`,
@@ -260,52 +220,35 @@ export class LettersCertificatesComponent implements OnInit {
       noc: `To Whom It May Concern,<br><br>This is to certify that <b>${employeeName}</b> (Employee ID: ${empCode}), <b>${designation}</b> at <b>${co}</b>, has no objection from the company for the purpose as stated by the employee.<br><br>This NOC is valid as of <b>${date}</b>.`,
       bonafide: `To Whom It May Concern,<br><br>This is to certify that <b>${employeeName}</b> (Employee ID: ${empCode}) is a bonafide employee of <b>${co}</b> working as <b>${designation}</b> in the <b>${department}</b> department.<br><br>This certificate is issued as requested for official purposes.`,
       increment: `Dear <b>${employeeName}</b>,<br><br>We are pleased to inform you that based on your performance and contribution, your salary has been revised ${extra ? `to <b>${extra}</b>` : ''} effective from <b>${date}</b>.<br><br>We appreciate your dedication and look forward to your continued contribution.`,
-      reference: `To Whom It May Concern,<br><br>I am writing to provide a reference for <b>${employeeName}</b> who worked as <b>${designation}</b> in the <b>${department}</b> department at <b>${co}</b>.<br><br>${extra}<br><br>I recommend ${employeeName} without reservation and am confident they will be a valuable asset to any organisation.`,
-    };
-    return bodies[this.gen.type] || `This letter pertains to <b>${employeeName}</b> (${empCode}), ${designation}, ${department}. ${extra}`;
-  }
+      reference: `To Whom It May Concern,<br><br>I am writing to provide a reference for <b>${employeeName}</b> who worked as <b>${designation}</b> in the <b>${department}</b> department at <b>${co}</b>.<br><br>${extra}<br><br>I recommend ${employeeName} without reservation and am confident they will be a valuable asset to any organisation.`, };
+    return bodies[this.gen.type] || `This letter pertains to <b>${employeeName}</b> (${empCode}), ${designation}, ${department}. ${extra}`; }
 
-  previewHistory(h: any) {
-    const emp = this.employees.find(e => `${e.firstName} ${e.lastName}`.trim() === h.employee);
-    if (emp) {
-      this.gen.employeeId   = emp.id;
+  previewHistory(h: any) { const emp = this.employees.find(e => `${e.firstName} ${e.lastName}`.trim() === h.employee);
+    if (emp) { this.gen.employeeId   = emp.id;
       this.gen.employeeName = h.employee;
       this.gen.empCode      = h.empCode;
       this.gen.designation  = emp.designation || '';
-      this.gen.department   = emp.department  || '';
-    } else {
-      this.gen.employeeName = h.employee;
-      this.gen.empCode      = h.empCode;
-    }
+      this.gen.department   = emp.department  || ''; } else { this.gen.employeeName = h.employee;
+      this.gen.empCode      = h.empCode; }
     this.gen.type = this.letterTypes.find(t => t.label === h.type)?.id || '';
     this.gen.date = h.date;
-    this.generate();
-  }
+    this.generate(); }
 
   download() { if (this.preview?.id) this.downloadById(this.preview.id); }
 
-  downloadById(id: any) {
-    if (!id) { this.snack.open('No saved letter to download', 'Close', { duration: 3000 }); return; }
-    this.http.get(`${this.api}/letters/${id}/download`, { responseType: 'blob' }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
+  downloadById(id: any) { if (!id) { this.snack.open('No saved letter to download', 'Close', { duration: 3000 }); return; }
+    this.http.get(`${this.api}/letters/${id}/download`, { responseType: 'blob' }).subscribe({ next: blob => { const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `letter-${id}.pdf`;
         a.click();
-        URL.revokeObjectURL(url);
-      },
-      error: () => this.snack.open('Download failed', 'Close', { duration: 3000 })
-    });
-  }
+        URL.revokeObjectURL(url); },
+      error: () => this.snack.open('Download failed', 'Close', { duration: 3000 }) }); }
 
-  reset() {
-    this.gen = {
-      employeeId: '', employeeName: '', empCode: '',
+  reset() { this.gen = { employeeId: '', employeeName: '', empCode: '',
       type: '', designation: '', department: '',
       date: new Date().toISOString().slice(0, 10),
-      extra: '', notes: ''
-    };
-    this.preview = null;
-  }
+      extra: '', notes: '' };
+    this.preview = null; }
 }
+

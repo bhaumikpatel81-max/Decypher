@@ -1,14 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface Course {
-  id: number; title: string; category: string; duration: number;
+interface Course { id: number; title: string; category: string; duration: number;
   type: string; enrolled: number; completions: number; progress?: number;
 }
 
-@Component({
-  selector: 'app-learning-management',
+@Component({ selector: 'app-learning-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -165,8 +163,7 @@ interface Course {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class LearningManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/learning`;
+export class LearningManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/learning`;
   tab = 'catalogue';
   search = '';
   filterCat = '';
@@ -179,41 +176,25 @@ export class LearningManagementComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  get filteredCourses() {
-    return this.courses.filter(c =>
+  get filteredCourses() { return this.courses.filter(c =>
       (!this.search || c.title.toLowerCase().includes(this.search.toLowerCase())) &&
       (!this.filterCat || c.category === this.filterCat) &&
       (!this.filterType || c.type === this.filterType)
-    );
-  }
+    ); }
 
   typeClass(type: string) { return type.toLowerCase(); }
   typeIcon(type: string) { const m: { [k: string]: string } = { Video: '🎥', Quiz: '📝', Reading: '📖', Workshop: '🏫' }; return m[type] || '📚'; }
 
   ngOnInit() { this.loadCourses(); this.loadStats(); this.loadMyEnrollments(); }
 
-  loadCourses() {
-    this.http.get<any[]>(`${this.api}/courses`).subscribe(data => {
-      this.courses = (data || []).map(c => ({
-        id: c.id, title: c.title, category: c.category, duration: c.durationHours || 0,
-        type: c.mode || 'Video', enrolled: c.enrolledCount || 0, completions: c.completedCount || 0
-      }));
-    });
-  }
+  loadCourses() { this.http.get<any[]>(`${this.api}/courses`).subscribe(data => { this.courses = (data || []).map(c => ({ id: c.id, title: c.title, category: c.category, duration: c.durationHours || 0,
+        type: c.mode || 'Video', enrolled: c.enrolledCount || 0, completions: c.completedCount || 0 })); }); }
 
-  loadStats() {
-    this.http.get<any>(`${this.api}/courses/stats`).subscribe(s => { this.stats = s || {}; });
-  }
+  loadStats() { this.http.get<any>(`${this.api}/courses/stats`).subscribe(s => { this.stats = s || {}; }); }
 
-  loadMyEnrollments() {
-    this.http.get<any[]>(`${this.api}/enrollments`).subscribe(data => {
-      this.myCourses = (data || []).map(e => ({
-        id: e.id, courseId: e.courseId, title: e.course?.title || '', category: e.course?.category || '',
+  loadMyEnrollments() { this.http.get<any[]>(`${this.api}/enrollments`).subscribe(data => { this.myCourses = (data || []).map(e => ({ id: e.id, courseId: e.courseId, title: e.course?.title || '', category: e.course?.category || '',
         duration: e.course?.durationHours || 0, type: e.course?.mode || 'Video',
-        progress: e.progressPercent || 0, status: e.status
-      }));
-    });
-  }
+        progress: e.progressPercent || 0, status: e.status })); }); }
 
   get totalHours(): number { return this.stats?.totalHours ?? 0; }
   get completedCourses(): number { return this.stats?.completedCourses ?? 0; }
@@ -221,21 +202,12 @@ export class LearningManagementComponent implements OnInit {
 
   enrollMsg = '';
 
-  enrollCourse(c: Course) {
-    this.http.post<any>(`${this.api}/courses/${c.id}/enroll`, { employeeId: null }).subscribe({
-      next: () => { this.enrollMsg = `Enrolled in ${c.title}`; setTimeout(() => this.enrollMsg = '', 3000); this.loadMyEnrollments(); this.loadCourses(); },
-      error: err => { this.enrollMsg = err?.error?.message || 'Enrollment failed'; setTimeout(() => this.enrollMsg = '', 3000); }
-    });
-  }
+  enrollCourse(c: Course) { this.http.post<any>(`${this.api}/courses/${c.id}/enroll`, { employeeId: null }).subscribe({ next: () => { this.enrollMsg = `Enrolled in ${c.title}`; setTimeout(() => this.enrollMsg = '', 3000); this.loadMyEnrollments(); this.loadCourses(); },
+      error: err => { this.enrollMsg = err?.error?.message || 'Enrollment failed'; setTimeout(() => this.enrollMsg = '', 3000); } }); }
 
-  continueCourse(c: any) {
-    const newProgress = Math.min((c.progress || 0) + 20, 100);
-    this.http.patch<any>(`${this.api}/enrollments/${c.id}/progress`, { progressPercent: newProgress }).subscribe({
-      next: () => { c.progress = newProgress; if (newProgress >= 100) this.completeCourse(c); }
-    });
-  }
+  continueCourse(c: any) { const newProgress = Math.min((c.progress || 0) + 20, 100);
+    this.http.patch<any>(`${this.api}/enrollments/${c.id}/progress`, { progressPercent: newProgress }).subscribe({ next: () => { c.progress = newProgress; if (newProgress >= 100) this.completeCourse(c); } }); }
 
-  completeCourse(c: any) {
-    this.http.post(`${this.api}/enrollments/${c.id}/complete`, {}).subscribe(() => { this.loadStats(); });
-  }
+  completeCourse(c: any) { this.http.post(`${this.api}/enrollments/${c.id}/complete`, {}).subscribe(() => { this.loadStats(); }); }
 }
+

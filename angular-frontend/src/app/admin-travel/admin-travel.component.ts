@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-admin-travel',
+@Component({ selector: 'app-admin-travel',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -258,8 +257,7 @@ import { environment } from '../../environments/environment';
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:13px; }
   `]
 })
-export class AdminTravelComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/travel`;
+export class AdminTravelComponent implements OnInit { private api = `${environment.apiUrl}/api/travel`;
   constructor(private http: HttpClient) {}
 
   tab = 'requests';
@@ -282,82 +280,51 @@ export class AdminTravelComponent implements OnInit {
 
   loadStats() { this.http.get<any>(`${this.api}/stats`).subscribe(d => { this.stats = d || {}; }); }
 
-  loadRequests() {
-    const params: any = {};
+  loadRequests() { const params: any = {};
     if (this.reqFilter) params.status = this.reqFilter;
-    this.http.get<any[]>(`${this.api}/requests`, { params }).subscribe(d => { this.requests = d || []; });
-  }
+    this.http.get<any[]>(`${this.api}/requests`, { params }).subscribe(d => { this.requests = d || []; }); }
 
-  loadAdvances() {
-    const params: any = {};
+  loadAdvances() { const params: any = {};
     if (this.advFilter) params.status = this.advFilter;
-    this.http.get<any[]>(`${this.api}/advances`, { params }).subscribe(d => { this.advances = d || []; });
-  }
+    this.http.get<any[]>(`${this.api}/advances`, { params }).subscribe(d => { this.advances = d || []; }); }
 
-  loadClaims() {
-    const params: any = {};
+  loadClaims() { const params: any = {};
     if (this.claimFilter) params.status = this.claimFilter;
-    this.http.get<any[]>(`${this.api}/claims`, { params }).subscribe(d => { this.claims = d || []; });
-  }
+    this.http.get<any[]>(`${this.api}/claims`, { params }).subscribe(d => { this.claims = d || []; }); }
 
   approveRequest(r: any) { this.patchRequest(r.id, 'Approved'); }
   rejectRequest(r: any) { this.patchRequest(r.id, 'Rejected'); }
-  patchRequest(id: string, status: string) {
-    this.http.patch(`${this.api}/requests/${id}/status`, { status }).subscribe({
-      next: () => { this.loadRequests(); this.loadStats(); },
-      error: () => { const r = this.requests.find(x => x.id === id); if (r) r.status = status; }
-    });
-  }
+  patchRequest(id: string, status: string) { this.http.patch(`${this.api}/requests/${id}/status`, { status }).subscribe({ next: () => { this.loadRequests(); this.loadStats(); },
+      error: () => { const r = this.requests.find(x => x.id === id); if (r) r.status = status; } }); }
 
   approveAdvance(a: any) { this.patchAdvance(a.id, 'Approved'); }
   disburseAdvance(a: any) { this.patchAdvance(a.id, 'Disbursed'); }
   settleAdvance(a: any) { this.patchAdvance(a.id, 'Settled'); }
-  patchAdvance(id: string, status: string) {
-    this.http.patch(`${this.api}/advances/${id}/status`, { status }).subscribe({
-      next: () => { this.loadAdvances(); this.loadStats(); },
-      error: () => { const a = this.advances.find(x => x.id === id); if (a) a.status = status; }
-    });
-  }
+  patchAdvance(id: string, status: string) { this.http.patch(`${this.api}/advances/${id}/status`, { status }).subscribe({ next: () => { this.loadAdvances(); this.loadStats(); },
+      error: () => { const a = this.advances.find(x => x.id === id); if (a) a.status = status; } }); }
 
   approveClaim(c: any) { this.patchClaim(c.id, 'Approved'); }
   rejectClaim(c: any) { this.patchClaim(c.id, 'Rejected'); }
   payClaim(c: any) { this.patchClaim(c.id, 'Paid'); }
-  patchClaim(id: string, status: string) {
-    this.http.patch(`${this.api}/claims/${id}/status`, { status }).subscribe({
-      next: () => { this.loadClaims(); this.loadStats(); },
-      error: () => { const c = this.claims.find(x => x.id === id); if (c) c.status = status; }
-    });
-  }
+  patchClaim(id: string, status: string) { this.http.patch(`${this.api}/claims/${id}/status`, { status }).subscribe({ next: () => { this.loadClaims(); this.loadStats(); },
+      error: () => { const c = this.claims.find(x => x.id === id); if (c) c.status = status; } }); }
 
-  submitRequest() {
-    if (!this.reqForm.employeeName || !this.reqForm.destination) { this.formMsg = 'Employee name and destination are required'; return; }
-    this.http.post<any>(`${this.api}/requests`, this.reqForm).subscribe({
-      next: () => { this.formMsg = 'Travel request submitted successfully'; this.loadRequests(); this.loadStats(); setTimeout(() => { this.formMsg = ''; this.tab = 'requests'; }, 2000); },
-      error: () => { this.formMsg = 'Failed to submit request'; }
-    });
-  }
+  submitRequest() { if (!this.reqForm.employeeName || !this.reqForm.destination) { this.formMsg = 'Employee name and destination are required'; return; }
+    this.http.post<any>(`${this.api}/requests`, this.reqForm).subscribe({ next: () => { this.formMsg = 'Travel request submitted successfully'; this.loadRequests(); this.loadStats(); setTimeout(() => { this.formMsg = ''; this.tab = 'requests'; }, 2000); },
+      error: () => { this.formMsg = 'Failed to submit request'; } }); }
 
-  submitAdvance() {
-    if (!this.advForm.employeeName || !this.advForm.amount) return;
-    this.http.post<any>(`${this.api}/advances`, this.advForm).subscribe({
-      next: () => { this.loadAdvances(); this.loadStats(); this.tab = 'advances'; },
-      error: () => { this.tab = 'advances'; }
-    });
-  }
+  submitAdvance() { if (!this.advForm.employeeName || !this.advForm.amount) return;
+    this.http.post<any>(`${this.api}/advances`, this.advForm).subscribe({ next: () => { this.loadAdvances(); this.loadStats(); this.tab = 'advances'; },
+      error: () => { this.tab = 'advances'; } }); }
 
-  submitClaim() {
-    if (!this.claimForm.employeeName) return;
+  submitClaim() { if (!this.claimForm.employeeName) return;
     const payload = { ...this.claimForm, totalAmount: this.totalClaimAmount, status: 'Submitted' };
-    this.http.post<any>(`${this.api}/claims`, payload).subscribe({
-      next: () => { this.loadClaims(); this.loadStats(); this.tab = 'claims'; },
-      error: () => { this.tab = 'claims'; }
-    });
-  }
+    this.http.post<any>(`${this.api}/claims`, payload).subscribe({ next: () => { this.loadClaims(); this.loadStats(); this.tab = 'claims'; },
+      error: () => { this.tab = 'claims'; } }); }
 
   addLineItem() { this.claimForm.lineItems.push({ category: 'Misc', description: '', amount: 0 }); }
   removeLineItem(i: number) { this.claimForm.lineItems.splice(i, 1); }
 
-  travelStatusClass(status: string) {
-    return 'status-' + (status || '').toLowerCase().replace(' ', '');
-  }
+  travelStatusClass(status: string) { return 'status-' + (status || '').toLowerCase().replace(' ', ''); }
 }
+

@@ -1,15 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface LeaveRequest {
-  id: number; employee: string; empId: string; type: string;
+interface LeaveRequest { id: number; employee: string; empId: string; type: string;
   from: string; to: string; days: number; reason: string;
   status: string; appliedOn: string;
 }
 
-@Component({
-  selector: 'app-leave-management',
+@Component({ selector: 'app-leave-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -183,8 +181,7 @@ interface LeaveRequest {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class LeaveManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/attendance`;
+export class LeaveManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/attendance`;
   tab = 'apply';
   search = '';
   filterStatus = '';
@@ -201,96 +198,55 @@ export class LeaveManagementComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   get pendingLeaves() { return this.leaveRequests.filter(l => l.status === 'Pending'); }
-  get filteredHistory() {
-    return this.leaveRequests.filter(l => {
-      const matchSearch = !this.search || l.employee.toLowerCase().includes(this.search.toLowerCase());
+  get filteredHistory() { return this.leaveRequests.filter(l => { const matchSearch = !this.search || l.employee.toLowerCase().includes(this.search.toLowerCase());
       const matchStatus = !this.filterStatus || l.status === this.filterStatus;
-      return matchSearch && matchStatus;
-    });
-  }
+      return matchSearch && matchStatus; }); }
 
-  ngOnInit() {
-    this.buildCalendar();
+  ngOnInit() { this.buildCalendar();
     this.loadLeaveTypes();
     this.loadRequests();
     this.loadBalances();
-    this.loadEmployees();
-  }
+    this.loadEmployees(); }
 
-  loadLeaveTypes() {
-    this.http.get<any[]>(`${this.api}/leave/types`).subscribe(data => { this.leaveTypes = data || []; });
-  }
+  loadLeaveTypes() { this.http.get<any[]>(`${this.api}/leave/types`).subscribe(data => { this.leaveTypes = data || []; }); }
 
-  loadBalances() {
-    this.http.get<any[]>(`${this.api}/leave/balances`).subscribe(data => {
-      const colors = ['#6b4df0', '#10b981', '#f59e0b', '#ec4899', '#3bbdea', '#ef4444'];
-      this.balances = (data || []).map((b: any, i: number) => ({
-        type: b.leaveTypeName || b.type, used: b.usedDays || 0, total: b.totalDays || 0, color: colors[i % colors.length]
-      }));
-    });
-  }
+  loadBalances() { this.http.get<any[]>(`${this.api}/leave/balances`).subscribe(data => { const colors = ['#6b4df0', '#10b981', '#f59e0b', '#ec4899', '#3bbdea', '#ef4444'];
+      this.balances = (data || []).map((b: any, i: number) => ({ type: b.leaveTypeName || b.type, used: b.usedDays || 0, total: b.totalDays || 0, color: colors[i % colors.length] })); }); }
 
-  loadRequests() {
-    this.http.get<any[]>(`${this.api}/leave/requests`).subscribe(data => {
-      this.leaveRequests = (data || []).map((r: any) => ({
-        id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
+  loadRequests() { this.http.get<any[]>(`${this.api}/leave/requests`).subscribe(data => { this.leaveRequests = (data || []).map((r: any) => ({ id: r.id, employee: r.employeeName || '', empId: r.employeeCode || '',
         type: r.leaveTypeName || r.type, from: r.startDate?.slice(0, 10) || '',
         to: r.endDate?.slice(0, 10) || '', days: r.numberOfDays || 0,
         reason: r.reason || '', status: r.status || 'Pending',
-        appliedOn: r.createdAt?.slice(0, 10) || ''
-      }));
-    });
-  }
+        appliedOn: r.createdAt?.slice(0, 10) || '' })); }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = data || []; });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = data || []; }); }
 
-  buildCalendar() {
-    const now = new Date();
+  buildCalendar() { const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     this.calCells = [];
     for (let i = 0; i < firstDay; i++) this.calCells.push({ day: '', isWeekend: false, hasLeave: false });
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dow = (firstDay + d - 1) % 7;
-      this.calCells.push({ day: d, isWeekend: dow === 0 || dow === 6, hasLeave: false, isToday: d === now.getDate() });
-    }
-  }
+    for (let d = 1; d <= daysInMonth; d++) { const dow = (firstDay + d - 1) % 7;
+      this.calCells.push({ day: d, isWeekend: dow === 0 || dow === 6, hasLeave: false, isToday: d === now.getDate() }); } }
 
-  submitLeave() {
-    if (!this.form.employeeId || !this.form.type || !this.form.from || !this.form.to) { this.errorMsg = 'Please fill all required fields'; return; }
+  submitLeave() { if (!this.form.employeeId || !this.form.type || !this.form.from || !this.form.to) { this.errorMsg = 'Please fill all required fields'; return; }
     const leaveType = this.leaveTypes.find(t => t.name === this.form.type);
-    const payload = {
-      employeeId: this.form.employeeId,
+    const payload = { employeeId: this.form.employeeId,
       leaveTypeId: leaveType?.id,
       startDate: this.form.from,
       endDate: this.form.to,
-      reason: this.form.reason
-    };
-    this.http.post<any>(`${this.api}/leave/requests`, payload).subscribe({
-      next: req => {
-        this.successMsg = `Leave request submitted (${req.numberOfDays || '?'} days)`;
+      reason: this.form.reason };
+    this.http.post<any>(`${this.api}/leave/requests`, payload).subscribe({ next: req => { this.successMsg = `Leave request submitted (${req.numberOfDays || '?'} days)`;
         this.loadRequests();
         this.loadBalances();
         this.resetForm();
-        setTimeout(() => this.successMsg = '', 3000);
-      },
-      error: err => { this.errorMsg = err?.error?.message || 'Failed to submit leave request'; }
-    });
-  }
+        setTimeout(() => this.successMsg = '', 3000); },
+      error: err => { this.errorMsg = err?.error?.message || 'Failed to submit leave request'; } }); }
 
   resetForm() { this.form = { employeeId: '', type: '', from: '', to: '', reason: '' }; }
 
-  approveLeave(l: LeaveRequest) {
-    this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Approved' }).subscribe({
-      next: () => { l.status = 'Approved'; this.loadBalances(); }
-    });
-  }
+  approveLeave(l: LeaveRequest) { this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Approved' }).subscribe({ next: () => { l.status = 'Approved'; this.loadBalances(); } }); }
 
-  rejectLeave(l: LeaveRequest) {
-    this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Rejected' }).subscribe({
-      next: () => { l.status = 'Rejected'; }
-    });
-  }
+  rejectLeave(l: LeaveRequest) { this.http.patch(`${this.api}/leave/requests/${l.id}/status`, { status: 'Rejected' }).subscribe({ next: () => { l.status = 'Rejected'; } }); }
 }
+

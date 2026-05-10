@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-interface BroadcastChannel {
-  id: string;
+interface BroadcastChannel { id: string;
   name: string;
   logo: string;
   color: string;
@@ -12,8 +11,7 @@ interface BroadcastChannel {
   status: string;
 }
 
-@Component({
-  selector: 'app-job-broadcasting',
+@Component({ selector: 'app-job-broadcasting',
   template: `
     <section class="stack-page">
 
@@ -142,31 +140,21 @@ interface BroadcastChannel {
     </section>
   `,
   styles: [`
-    .channel-row {
-      display: flex; align-items: center; gap: 14px;
+    .channel-row { display: flex; align-items: center; gap: 14px;
       padding: 14px 16px; border-radius: 8px; margin-bottom: 10px;
-      border: 1.5px solid var(--border); transition: border-color .15s, background .15s;
-    }
+      border: 1.5px solid var(--border); transition: border-color .15s, background .15s; }
     .channel-row.channel-active { border-color: var(--brand); background: #f8f7ff; }
-    .channel-logo {
-      width: 42px; height: 42px; border-radius: 8px; flex-shrink: 0;
+    .channel-logo { width: 42px; height: 42px; border-radius: 8px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 13px;
-    }
+      font-weight: 700; font-size: 13px; }
     .channel-info { flex: 1; min-width: 0; }
-    .status-badge {
-      padding: 3px 10px; border-radius: 20px; font-size: 11px;
-      font-weight: 700; white-space: nowrap;
-    }
-    .history-entry {
-      padding: 12px 0; border-bottom: 1px solid var(--border);
-    }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px;
+      font-weight: 700; white-space: nowrap; }
+    .history-entry { padding: 12px 0; border-bottom: 1px solid var(--border); }
     .history-entry:last-child { border-bottom: none; }
   `]
 })
-export class JobBroadcastingComponent implements OnInit {
-
-  requisitions: any[] = [];
+export class JobBroadcastingComponent implements OnInit { requisitions: any[] = [];
   selectedReqId = '';
   broadcasting = false;
   broadcastOk = false;
@@ -180,69 +168,43 @@ export class JobBroadcastingComponent implements OnInit {
     { id: 'referral',  name: 'Employee Referral',     logo: '👥', color: '#10b981', active: false, lastPosted: null, status: 'Draft' },
   ];
 
-  private readonly meta: Record<string, { name: string; color: string }> = {
-    linkedin: { name: 'LinkedIn',             color: '#0077b5' },
+  private readonly meta: Record<string, { name: string; color: string }> = { linkedin: { name: 'LinkedIn',             color: '#0077b5' },
     naukri:   { name: 'Naukri',               color: '#ff7555' },
     indeed:   { name: 'Indeed',               color: '#2164f3' },
     internal: { name: 'Internal Career Page', color: '#292966' },
-    referral: { name: 'Employee Referral',    color: '#10b981' },
-  };
+    referral: { name: 'Employee Referral',    color: '#10b981' }, };
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() { this.loadRequisitions(); }
 
-  loadRequisitions() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/requisitions`)
-      .subscribe({
-        next: items => {
-          this.requisitions = items;
-          if (items.length) { this.selectedReqId = items[0].id; this.loadStatus(); }
-        },
-        error: () => {}
-      });
-  }
+  loadRequisitions() { this.http.get<any[]>(`${environment.apiUrl}/api/requisitions`)
+      .subscribe({ next: items => { this.requisitions = items;
+          if (items.length) { this.selectedReqId = items[0].id; this.loadStatus(); } },
+        error: () => {} }); }
 
   onReqChange() { this.broadcastHistory = []; this.resetChannels(); this.loadStatus(); }
 
-  loadStatus() {
-    if (!this.selectedReqId) return;
+  loadStatus() { if (!this.selectedReqId) return;
     this.http.get<any>(`${environment.apiUrl}/api/requisitions/${this.selectedReqId}/broadcast-status`)
-      .subscribe({
-        next: d => {
-          this.broadcastHistory = d.history || [];
-          this.channels.forEach(ch => {
-            const entry = (d.channels || []).find((c: any) => c.channelId === ch.id);
-            if (entry) {
-              ch.active    = true;
+      .subscribe({ next: d => { this.broadcastHistory = d.history || [];
+          this.channels.forEach(ch => { const entry = (d.channels || []).find((c: any) => c.channelId === ch.id);
+            if (entry) { ch.active    = true;
               ch.lastPosted = entry.lastPosted;
-              ch.status    = entry.status || 'Posted';
-            } else {
-              ch.active = false; ch.lastPosted = null; ch.status = 'Draft';
-            }
-          });
-        },
-        error: () => this.resetChannels()
-      });
-  }
+              ch.status    = entry.status || 'Posted'; } else { ch.active = false; ch.lastPosted = null; ch.status = 'Draft'; } }); },
+        error: () => this.resetChannels() }); }
 
-  broadcast() {
-    const selected = this.channels.filter(c => c.active).map(c => c.id);
+  broadcast() { const selected = this.channels.filter(c => c.active).map(c => c.id);
     if (!selected.length) return;
     this.broadcasting = true;
     this.http.post(
       `${environment.apiUrl}/api/requisitions/${this.selectedReqId}/broadcast`,
       { channels: selected }
-    ).subscribe({
-      next: () => {
-        this.broadcasting = false;
+    ).subscribe({ next: () => { this.broadcasting = false;
         this.broadcastOk = true;
         this.loadStatus();
-        setTimeout(() => this.broadcastOk = false, 3000);
-      },
-      error: () => { this.broadcasting = false; }
-    });
-  }
+        setTimeout(() => this.broadcastOk = false, 3000); },
+      error: () => { this.broadcasting = false; } }); }
 
   get selectedReq()      { return this.requisitions.find(r => r.id === this.selectedReqId); }
   get activeChannelCount() { return this.channels.filter(c => c.active).length; }
@@ -257,7 +219,6 @@ export class JobBroadcastingComponent implements OnInit {
   priorityFg(p: string) { return p === 'Critical' ? '#991b1b' : p === 'High' ? '#92400e' : '#1e3a5f'; }
   priorityBg(p: string) { return p === 'Critical' ? '#fee2e2' : p === 'High' ? '#fef3c7' : '#eff6ff'; }
 
-  private resetChannels() {
-    this.channels.forEach(c => { c.active = false; c.lastPosted = null; c.status = 'Draft'; });
-  }
+  private resetChannels() { this.channels.forEach(c => { c.active = false; c.lastPosted = null; c.status = 'Draft'; }); }
 }
+

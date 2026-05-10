@@ -109,6 +109,7 @@ import { EmployeePortalComponent } from './employee-portal/employee-portal.compo
 import { WorkflowBuilderComponent } from './workflow-builder/workflow-builder.component';
 // RBAC
 import { PermissionsMatrixComponent } from './permissions-matrix/permissions-matrix.component';
+import { RecruitmentDashboardComponent } from './recruitment-dashboard/recruitment-dashboard.component';
 import { PermissionGuard } from './guards/permission.guard';
 
 @NgModule({
@@ -142,6 +143,7 @@ import { PermissionGuard } from './guards/permission.guard';
     EmployeePortalComponent,
     WorkflowBuilderComponent,
     PermissionsMatrixComponent,
+    RecruitmentDashboardComponent,
   ],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, SharedModule,
@@ -216,8 +218,9 @@ import { PermissionGuard } from './guards/permission.guard';
       { path: 'helpdesk',              component: HelpdeskComponent },
       { path: 'admin-travel',          component: AdminTravelComponent },
       { path: 'portal',                component: EmployeePortalComponent },
-      { path: 'workflow-builder',      component: WorkflowBuilderComponent,     canActivate: [PermissionGuard], data: { permission: 'settings' } },
-      { path: 'permissions',           component: PermissionsMatrixComponent,   canActivate: [PermissionGuard], data: { permission: 'settings' } },
+      { path: 'workflow-builder',          component: WorkflowBuilderComponent,       canActivate: [PermissionGuard], data: { permission: 'settings' } },
+      { path: 'permissions',               component: PermissionsMatrixComponent,     canActivate: [PermissionGuard], data: { permission: 'settings' } },
+      { path: 'recruitment-dashboard',     component: RecruitmentDashboardComponent },
     ])
   ]
 })

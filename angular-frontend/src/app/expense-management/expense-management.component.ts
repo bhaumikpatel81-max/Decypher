@@ -1,15 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface Expense {
-  id: number; employee: string; empId: string; category: string;
+interface Expense { id: number; employee: string; empId: string; category: string;
   amount: number; date: string; description: string; status: string;
 }
 
-@Component({
-  selector: 'app-expense-management',
+@Component({ selector: 'app-expense-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -162,8 +160,7 @@ interface Expense {
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:14px; }
   `]
 })
-export class ExpenseManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class ExpenseManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'claim';
   search = '';
@@ -186,77 +183,44 @@ export class ExpenseManagementComponent implements OnInit {
   get totalClaims() { return this.expenses.reduce((s, e) => s + e.amount, 0); }
   get approvedAmount() { return this.expenses.filter(e => e.status === 'Approved').reduce((s, e) => s + e.amount, 0); }
   get pendingExpenses() { return this.expenses.filter(e => e.status === 'Pending'); }
-  get filteredExpenses() {
-    return this.expenses.filter(e =>
+  get filteredExpenses() { return this.expenses.filter(e =>
       (!this.search || e.employee.toLowerCase().includes(this.search.toLowerCase())) &&
       (!this.filterCat || e.category === this.filterCat) &&
       (!this.filterStatus || e.status === this.filterStatus)
-    );
-  }
+    ); }
 
-  catIcon(cat: string): string {
-    const m: { [k: string]: string } = { Travel: '✈️', Meal: '🍽️', Accommodation: '🏨', Equipment: '💻', Other: '📦' };
-    return m[cat] || '📦';
-  }
+  catIcon(cat: string): string { const m: { [k: string]: string } = { Travel: '✈️', Meal: '🍽️', Accommodation: '🏨', Equipment: '💻', Other: '📦' };
+    return m[cat] || '📦'; }
 
   ngOnInit() { this.loadExpenses(); this.loadEmployees(); }
 
-  loadExpenses() {
-    this.http.get<any[]>(`${this.api}/expenses`).subscribe({
-      next: data => {
-        this.expenses = [...(data || []).map(e => ({
-          id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
+  loadExpenses() { this.http.get<any[]>(`${this.api}/expenses`).subscribe({ next: data => { this.expenses = [...(data || []).map(e => ({ id: e.id, employee: e.employeeName || '', empId: e.employeeCode || '',
           category: e.category, amount: e.amount, date: e.expenseDate?.slice(0, 10) || '',
-          description: e.description, status: e.status
-        }))];
-        this.recomputeCategoryStats();
-      },
-      error: () => this.snack.open('Failed to load expenses', 'Close', { duration: 3000 })
-    });
-  }
+          description: e.description, status: e.status }))];
+        this.recomputeCategoryStats(); },
+      error: () => this.snack.open('Failed to load expenses', 'Close', { duration: 3000 }) }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '' }));
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ name: `${e.firstName} ${e.lastName}`.trim(), empId: e.employeeCode || '' })); }); }
 
-  recomputeCategoryStats() {
-    const totals: { [k: string]: number } = {};
+  recomputeCategoryStats() { const totals: { [k: string]: number } = {};
     this.expenses.forEach(e => { totals[e.category] = (totals[e.category] || 0) + e.amount; });
-    this.categoryStats = Object.entries(totals).map(([name, total]) => ({ name, total, color: this.catColors[name] || '#94a3b8' }));
-  }
+    this.categoryStats = Object.entries(totals).map(([name, total]) => ({ name, total, color: this.catColors[name] || '#94a3b8' })); }
 
-  submitClaim() {
-    if (!this.form.employee || !this.form.category || !this.form.amount) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
+  submitClaim() { if (!this.form.employee || !this.form.category || !this.form.amount) { this.snack.open('Fill all required fields', 'Close', { duration: 3000 }); return; }
     const emp = this.employees.find(e => e.name === this.form.employee);
-    const payload = {
-      employeeName: this.form.employee, employeeCode: emp?.empId || '',
+    const payload = { employeeName: this.form.employee, employeeCode: emp?.empId || '',
       category: this.form.category, amount: this.form.amount,
-      expenseDate: this.form.date, description: this.form.description
-    };
-    this.http.post<any>(`${this.api}/expenses`, payload).subscribe({
-      next: res => {
-        this.expenses = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' }, ...this.expenses];
+      expenseDate: this.form.date, description: this.form.description };
+    this.http.post<any>(`${this.api}/expenses`, payload).subscribe({ next: res => { this.expenses = [{ id: res.id, employee: this.form.employee, empId: emp?.empId || '', category: this.form.category, amount: this.form.amount, date: this.form.date, description: this.form.description, status: 'Pending' }, ...this.expenses];
         this.recomputeCategoryStats();
         this.snack.open(`Expense claim of ₹${this.form.amount} submitted`, '', { duration: 2000 });
-        this.form = { employee: '', category: '', amount: 0, date: '', description: '' };
-      },
-      error: err => this.snack.open(err?.error?.message || 'Failed to submit claim', 'Close', { duration: 3000 })
-    });
-  }
+        this.form = { employee: '', category: '', amount: 0, date: '', description: '' }; },
+      error: err => this.snack.open(err?.error?.message || 'Failed to submit claim', 'Close', { duration: 3000 }) }); }
 
-  approve(e: Expense) {
-    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Approved' }).subscribe({
-      next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Approved' } : x); this.snack.open('Approved', '', { duration: 1500 }); },
-      error: () => this.snack.open('Failed to approve', 'Close', { duration: 3000 })
-    });
-  }
-  reject(e: Expense) {
-    this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Rejected' }).subscribe({
-      next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Rejected' } : x); this.snack.open('Rejected', '', { duration: 1500 }); },
-      error: () => this.snack.open('Failed to reject', 'Close', { duration: 3000 })
-    });
-  }
+  approve(e: Expense) { this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Approved' }).subscribe({ next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Approved' } : x); this.snack.open('Approved', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to approve', 'Close', { duration: 3000 }) }); }
+  reject(e: Expense) { this.http.patch(`${this.api}/expenses/${e.id}/status`, { status: 'Rejected' }).subscribe({ next: () => { this.expenses = this.expenses.map(x => x.id === e.id ? { ...x, status: 'Rejected' } : x); this.snack.open('Rejected', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to reject', 'Close', { duration: 3000 }) }); }
   uploadReceipt() { this.snack.open('Use the file input to upload a receipt', '', { duration: 2500 }); }
 }
+

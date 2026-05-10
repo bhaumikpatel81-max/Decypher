@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-employee-portal',
+@Component({ selector: 'app-employee-portal',
   template: `
     <div class="portal-layout">
       <!-- Sidebar -->
@@ -266,8 +265,7 @@ import { environment } from '../../environments/environment';
     .textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;font-size:13px; }
   `]
 })
-export class EmployeePortalComponent implements OnInit {
-  private apiUrl = environment.apiUrl;
+export class EmployeePortalComponent implements OnInit { private apiUrl = environment.apiUrl;
   constructor(private http: HttpClient) {}
 
   activeSection = 'home';
@@ -300,113 +298,60 @@ export class EmployeePortalComponent implements OnInit {
   leaveForm: any = { type: '', from: '', to: '', reason: '' };
   ticketForm: any = { category: 'IT', priority: 'Medium', title: '', description: '' };
 
-  ngOnInit() {
-    this.loadProfile();
+  ngOnInit() { this.loadProfile();
     this.loadAnnouncements();
     this.loadPayslips();
     this.loadLeaveBalances();
     this.loadLeaveRequests();
-    this.loadPolicies();
-  }
+    this.loadPolicies(); }
 
-  loadProfile() {
-    this.http.get<any>(`${this.apiUrl}/api/employees/me`).subscribe({
-      next: data => {
-        this.profile = data;
-        this.homeKpis[0].val = (data?.leaveBalance || '—');
-      },
-      error: () => {}
-    });
-  }
+  loadProfile() { this.http.get<any>(`${this.apiUrl}/api/employees/me`).subscribe({ next: data => { this.profile = data;
+        this.homeKpis[0].val = (data?.leaveBalance || '—'); },
+      error: () => {} }); }
 
-  loadAnnouncements() {
-    this.http.get<any[]>(`${this.apiUrl}/api/portal/announcements`).subscribe({
-      next: data => { this.announcements = data || []; },
-      error: () => {}
-    });
-  }
+  loadAnnouncements() { this.http.get<any[]>(`${this.apiUrl}/api/portal/announcements`).subscribe({ next: data => { this.announcements = data || []; },
+      error: () => {} }); }
 
-  loadPayslips() {
-    this.http.get<any[]>(`${this.apiUrl}/api/payroll/payslips`).subscribe({
-      next: data => {
-        this.payslips = data || [];
-        this.homeKpis[1].val = this.payslips.length;
-      },
-      error: () => {}
-    });
-  }
+  loadPayslips() { this.http.get<any[]>(`${this.apiUrl}/api/payroll/payslips`).subscribe({ next: data => { this.payslips = data || [];
+        this.homeKpis[1].val = this.payslips.length; },
+      error: () => {} }); }
 
-  loadLeaveBalances() {
-    this.http.get<any[]>(`${this.apiUrl}/api/attendance/leave/balances`).subscribe({
-      next: data => {
-        this.leaveBalances = data || [];
+  loadLeaveBalances() { this.http.get<any[]>(`${this.apiUrl}/api/attendance/leave/balances`).subscribe({ next: data => { this.leaveBalances = data || [];
         const total = this.leaveBalances.reduce((s, b) => s + (b.remaining || 0), 0);
-        this.homeKpis[0].val = `${total}d`;
-      },
-      error: () => {}
-    });
-  }
+        this.homeKpis[0].val = `${total}d`; },
+      error: () => {} }); }
 
-  loadLeaveRequests() {
-    this.http.get<any[]>(`${this.apiUrl}/api/attendance/leave/requests`).subscribe({
-      next: data => { this.leaveRequests = data || []; },
-      error: () => {}
-    });
-  }
+  loadLeaveRequests() { this.http.get<any[]>(`${this.apiUrl}/api/attendance/leave/requests`).subscribe({ next: data => { this.leaveRequests = data || []; },
+      error: () => {} }); }
 
-  loadPolicies() {
-    this.http.get<any[]>(`${this.apiUrl}/api/policies`).subscribe({
-      next: data => {
-        this.policies = (data || []).map(p => ({ ...p, acknowledged: false }));
+  loadPolicies() { this.http.get<any[]>(`${this.apiUrl}/api/policies`).subscribe({ next: data => { this.policies = (data || []).map(p => ({ ...p, acknowledged: false }));
         const due = this.policies.filter(p => !p.acknowledged).length;
-        this.homeKpis[3].val = due;
-      },
-      error: () => {}
-    });
-  }
+        this.homeKpis[3].val = due; },
+      error: () => {} }); }
 
-  applyLeave() {
-    if (!this.leaveForm.type || !this.leaveForm.from || !this.leaveForm.to) { this.leaveMsg = 'Please fill all required fields'; return; }
+  applyLeave() { if (!this.leaveForm.type || !this.leaveForm.from || !this.leaveForm.to) { this.leaveMsg = 'Please fill all required fields'; return; }
     const payload = { leaveTypeName: this.leaveForm.type, startDate: this.leaveForm.from, endDate: this.leaveForm.to, reason: this.leaveForm.reason };
-    this.http.post(`${this.apiUrl}/api/attendance/leave/requests`, payload).subscribe({
-      next: () => {
-        this.leaveMsg = 'Leave request submitted successfully';
+    this.http.post(`${this.apiUrl}/api/attendance/leave/requests`, payload).subscribe({ next: () => { this.leaveMsg = 'Leave request submitted successfully';
         this.leaveForm = { type: '', from: '', to: '', reason: '' };
         this.loadLeaveRequests();
-        setTimeout(() => this.leaveMsg = '', 3000);
-      },
-      error: () => { this.leaveMsg = 'Failed to submit leave request'; setTimeout(() => this.leaveMsg = '', 3000); }
-    });
-  }
+        setTimeout(() => this.leaveMsg = '', 3000); },
+      error: () => { this.leaveMsg = 'Failed to submit leave request'; setTimeout(() => this.leaveMsg = '', 3000); } }); }
 
-  downloadPayslip(id: string) {
-    this.http.get(`${this.apiUrl}/api/payroll/payslips/${id}/download`, { responseType: 'blob' }).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
+  downloadPayslip(id: string) { this.http.get(`${this.apiUrl}/api/payroll/payslips/${id}/download`, { responseType: 'blob' }).subscribe(blob => { const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `payslip-${id}.pdf`;
-      a.click(); URL.revokeObjectURL(url);
-    });
-  }
+      a.click(); URL.revokeObjectURL(url); }); }
 
-  viewPolicy(p: any) {
-    if (!p.acknowledged && p.id) {
-      this.http.post(`${this.apiUrl}/api/policies/${p.id}/acknowledge`, {}).subscribe();
-      p.acknowledged = true;
-    }
-    if (p.documentUrl) window.open(p.documentUrl, '_blank');
-  }
+  viewPolicy(p: any) { if (!p.acknowledged && p.id) { this.http.post(`${this.apiUrl}/api/policies/${p.id}/acknowledge`, {}).subscribe();
+      p.acknowledged = true; }
+    if (p.documentUrl) window.open(p.documentUrl, '_blank'); }
 
-  submitTicket() {
-    if (!this.ticketForm.title) { this.ticketMsg = 'Title is required'; return; }
+  submitTicket() { if (!this.ticketForm.title) { this.ticketMsg = 'Title is required'; return; }
     const payload = { ...this.ticketForm, requesterName: `${this.profile?.firstName||''} ${this.profile?.lastName||''}`.trim(), requesterEmail: this.profile?.email };
-    this.http.post(`${this.apiUrl}/api/helpdesk/tickets`, payload).subscribe({
-      next: (res: any) => {
-        this.ticketMsg = `Ticket ${res.ticketNumber} created successfully`;
+    this.http.post(`${this.apiUrl}/api/helpdesk/tickets`, payload).subscribe({ next: (res: any) => { this.ticketMsg = `Ticket ${res.ticketNumber} created successfully`;
         this.ticketForm = { category: 'IT', priority: 'Medium', title: '', description: '' };
         this.homeKpis[2].val = (Number(this.homeKpis[2].val) || 0) + 1;
-        setTimeout(() => this.ticketMsg = '', 3000);
-      },
-      error: () => { this.ticketMsg = 'Failed to submit ticket'; setTimeout(() => this.ticketMsg = '', 3000); }
-    });
-  }
+        setTimeout(() => this.ticketMsg = '', 3000); },
+      error: () => { this.ticketMsg = 'Failed to submit ticket'; setTimeout(() => this.ticketMsg = '', 3000); } }); }
 }
+

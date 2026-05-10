@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { AIService } from '../services/ai.service';
 
-@Component({
-  selector: 'app-competency-ranker',
+@Component({ selector: 'app-competency-ranker',
   template: `
     <div class="ranker-container page-enter">
       <div class="page-header">
@@ -49,32 +48,18 @@ import { AIService } from '../services/ai.service';
     .textarea { width: 100%; padding: 12px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: monospace; margin-bottom: 12px; }
     .results-card { margin-top: 24px; }
     .score-badge { padding: 4px 12px; background: var(--violet-100); color: var(--violet-700); border-radius: 4px; font-weight: 600; }
-  `]
-})
-export class CompetencyRankerComponent {
-  candidateData = '';
+  `] })
+export class CompetencyRankerComponent { candidateData = '';
   rankedCandidates: any[] = [];
   isLoading = false;
   parseError = '';
 
   constructor(private aiService: AIService) {}
 
-  rankCompetencies(): void {
-    try {
-      const candidates = JSON.parse(this.candidateData);
+  rankCompetencies(): void { try { const candidates = JSON.parse(this.candidateData);
       this.isLoading = true;
-      this.aiService.rankCompetencies(candidates).subscribe({
-        next: (response) => {
-          this.rankedCandidates = response.data;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Ranking failed', error);
-          this.isLoading = false;
-        }
-      });
-    } catch (e) {
-      this.parseError = 'Invalid JSON format — paste a valid JSON array';
-    }
-  }
-}
+      this.aiService.rankCompetencies(candidates).subscribe({ next: (response) => { this.rankedCandidates = response.data;
+          this.isLoading = false; },
+        error: (error) => { console.error('Ranking failed', error);
+          this.isLoading = false; } }); } catch (e) { this.parseError = 'Invalid JSON format — paste a valid JSON array'; } } }
+

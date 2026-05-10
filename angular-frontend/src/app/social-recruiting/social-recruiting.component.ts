@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
@@ -57,8 +57,7 @@ import { environment } from '../../environments/environment';
     </div>
   </div>
 </div>`, styles:[`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.channel-list{display:flex;flex-direction:column;gap:8px}.channel-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:10px}.channel-row.connected{border-color:rgba(16,185,129,.4)}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}`] })
-export class SocialRecruitingComponent implements OnInit {
-  private api = `${environment.apiUrl}/api`;
+export class SocialRecruitingComponent implements OnInit { private api = `${environment.apiUrl}/api`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   post:any={job:''};
   jobs:string[]=[];
@@ -67,11 +66,8 @@ export class SocialRecruitingComponent implements OnInit {
 
   ngOnInit(){ this.loadChannels(); this.loadJobs(); }
 
-  loadChannels() {
-    this.http.get<any[]>(`${this.api}/branding/social-channels`).subscribe({
-     error: () => this.snack.open('Failed to load channel data', 'Close', { duration: 3000 }),
-     next: data => {
-      this.channels = (data || []).map(c => ({ ...c, name: c.name, icon: c.icon, color: c.color, connected: c.connected, selected: c.connected, applications: c.applications, hires: c.hires, spend: c.spend, cph: c.cph }));
+  loadChannels() { this.http.get<any[]>(`${this.api}/branding/social-channels`).subscribe({ error: () => this.snack.open('Failed to load channel data', 'Close', { duration: 3000 }),
+     next: data => { this.channels = (data || []).map(c => ({ ...c, name: c.name, icon: c.icon, color: c.color, connected: c.connected, selected: c.connected, applications: c.applications, hires: c.hires, spend: c.spend, cph: c.cph }));
       const totalApps = this.channels.reduce((s, c) => s + c.applications, 0);
       const totalHires = this.channels.reduce((s, c) => s + c.hires, 0);
       const totalSpend = this.channels.reduce((s, c) => s + c.spend, 0);
@@ -80,26 +76,17 @@ export class SocialRecruitingComponent implements OnInit {
         { val: totalHires, lbl: 'Total Hires', color: '#10b981' },
         { val: `₹${totalHires ? Math.round(totalSpend / totalHires).toLocaleString() : 0}`, lbl: 'Avg Cost Per Hire', color: '#f59e0b' },
         { val: this.channels.filter(c => c.connected).length, lbl: 'Active Channels', color: '#2563eb' },
-      ];
-     }
-    });
-  }
+      ]; } }); }
 
-  loadJobs() {
-    this.http.get<any[]>(`${this.api}/jobs`).subscribe({
-      next: data => { this.jobs = [...(data || []).map(j => j.title)]; },
-      error: () => {}
-    });
-  }
+  loadJobs() { this.http.get<any[]>(`${this.api}/jobs`).subscribe({ next: data => { this.jobs = [...(data || []).map(j => j.title)]; },
+      error: () => {} }); }
 
   get maxApps(){ return this.channels.length ? Math.max(...this.channels.map(c=>c.applications)) : 1; }
 
-  postJob() {
-    const sel = this.channels.filter(c => c.selected && c.connected);
+  postJob() { const sel = this.channels.filter(c => c.selected && c.connected);
     if (!sel.length || !this.post.job) return;
-    this.http.post(`${this.api}/branding/social-channels/post`, { job: this.post.job, channels: sel.map(c => c.name) }).subscribe({
-      next: () => { this.snack.open(`"${this.post.job}" posted to ${sel.length} channel(s)`, '', { duration: 2000 }); this.post = { job: '' }; },
-      error: () => this.snack.open('Failed to post job', 'Close', { duration: 3000 })
-    });
-  }
+    this.http.post(`${this.api}/branding/social-channels/post`, { job: this.post.job, channels: sel.map(c => c.name) }).subscribe({ next: () => { this.snack.open(`"${this.post.job}" posted to ${sel.length} channel(s)`, '', { duration: 2000 }); this.post = { job: '' }; },
+      error: () => this.snack.open('Failed to post job', 'Close', { duration: 3000 }) }); }
 }
+
+

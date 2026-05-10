@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-offer-management',
+@Component({ selector: 'app-offer-management',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -180,8 +179,7 @@ import { environment } from '../../environments/environment';
     .offer-info { flex:1; display:flex; flex-direction:column; gap:2px; }
   `]
 })
-export class OfferManagementComponent implements OnInit {
-  activeTab = 0;
+export class OfferManagementComponent implements OnInit { activeTab = 0;
   pending: any[] = [];
   saving = false;
   saveOk = false;
@@ -190,68 +188,44 @@ export class OfferManagementComponent implements OnInit {
   offerMonths: string[] = [];
   offerTrend: number[] = [0, 0, 0, 0, 0, 0];
 
-  private buildTrend(items: any[], dateField: string) {
-    const now = new Date(), months: string[] = [], counts: number[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  private buildTrend(items: any[], dateField: string) { const now = new Date(), months: string[] = [], counts: number[] = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(d.toLocaleString('default', { month: 'short' }));
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
-    }
-    this.offerMonths = months; this.offerTrend = counts;
-  }
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length); }
+    this.offerMonths = months; this.offerTrend = counts; }
 
   constructor(private http: HttpClient, private router: Router, private snack: MatSnackBar) {}
 
   ngOnInit() { this.loadPending(); }
 
-  loadPending() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/offers/pending`)
-      .subscribe({
-        next: d => { this.pending = [...d]; this.buildTrend(d, 'createdAt'); },
-        error: () => this.snack.open('Failed to load offers', 'Close', { duration: 3000 })
-      });
-  }
+  loadPending() { this.http.get<any[]>(`${environment.apiUrl}/api/offers/pending`)
+      .subscribe({ next: d => { this.pending = [...d]; this.buildTrend(d, 'createdAt'); },
+        error: () => this.snack.open('Failed to load offers', 'Close', { duration: 3000 }) }); }
 
-  createOffer() {
-    this.saving = true;
+  createOffer() { this.saving = true;
     this.http.post<any>(`${environment.apiUrl}/api/offers`, this.form)
-      .subscribe({
-        next: r => { this.pending = [...this.pending, r]; this.saving = false; this.saveOk = true; this.snack.open('Offer created', '', { duration: 2000 }); },
-        error: (err: any) => { this.saving = false; this.snack.open(err?.error?.message || 'Failed to create offer', 'Close', { duration: 3000 }); }
-      });
-  }
+      .subscribe({ next: r => { this.pending = [...this.pending, r]; this.saving = false; this.saveOk = true; this.snack.open('Offer created', '', { duration: 2000 }); },
+        error: (err: any) => { this.saving = false; this.snack.open(err?.error?.message || 'Failed to create offer', 'Close', { duration: 3000 }); } }); }
 
-  sendOffer(id: string) {
-    this.http.put(`${environment.apiUrl}/api/offers/${id}/send`, {})
-      .subscribe({
-        next: () => { this.snack.open('Offer sent', '', { duration: 2000 }); this.loadPending(); },
-        error: () => this.snack.open('Failed to send offer', 'Close', { duration: 3000 })
-      });
-  }
+  sendOffer(id: string) { this.http.put(`${environment.apiUrl}/api/offers/${id}/send`, {})
+      .subscribe({ next: () => { this.snack.open('Offer sent', '', { duration: 2000 }); this.loadPending(); },
+        error: () => this.snack.open('Failed to send offer', 'Close', { duration: 3000 }) }); }
 
-  initiateOnboarding(offer: any) {
-    this.http.post(`${environment.apiUrl}/api/onboarding`, {
-      candidateId: offer.candidateId,
+  initiateOnboarding(offer: any) { this.http.post(`${environment.apiUrl}/api/onboarding`, { candidateId: offer.candidateId,
       candidateName: offer.candidateName || offer.candidateId,
       jobTitle: offer.jobTitle || '',
       offerId: offer.id,
-      expectedStartDate: offer.startDate
-    }).subscribe({
-      next: () => this.router.navigate(['/onboarding']),
-      error: () => this.router.navigate(['/onboarding'])
-    });
-  }
+      expectedStartDate: offer.startDate }).subscribe({ next: () => this.router.navigate(['/onboarding']),
+      error: () => this.router.navigate(['/onboarding']) }); }
 
   get draftCount()    { return this.pending.filter(o => o.status === 'Draft').length; }
   get sentCount()     { return this.pending.filter(o => o.status === 'Sent').length; }
   get acceptedCount() { return this.pending.filter(o => o.status === 'Accepted').length; }
   get declinedCount() { return this.pending.filter(o => o.status === 'Declined').length; }
   get totalOfferValue() { return this.pending.reduce((s, o) => s + (o.salary || 0), 0); }
-  get acceptanceRate() {
-    const d = this.acceptedCount + this.declinedCount;
-    return d ? Math.round(this.acceptedCount / d * 100) : 0;
-  }
+  get acceptanceRate() { const d = this.acceptedCount + this.declinedCount;
+    return d ? Math.round(this.acceptedCount / d * 100) : 0; }
 
   private dash(n: number) { return Math.round((n / (this.pending.length || 1)) * 283); }
   get draftDash()    { return this.dash(this.draftCount); }
@@ -259,8 +233,7 @@ export class OfferManagementComponent implements OnInit {
   get acceptedDash() { return this.dash(this.acceptedCount); }
   get declinedDash() { return this.dash(this.declinedCount); }
 
-  get salaryBuckets(): {label: string, count: number, pct: number}[] {
-    const ranges = [
+  get salaryBuckets(): {label: string, count: number, pct: number}[] { const ranges = [
       { label: '< 5 LPA',    min: 0,       max: 500000 },
       { label: '5–10 LPA',   min: 500000,  max: 1000000 },
       { label: '10–20 LPA',  min: 1000000, max: 2000000 },
@@ -269,24 +242,16 @@ export class OfferManagementComponent implements OnInit {
     ];
     const counts = ranges.map(r => this.pending.filter(o => (o.salary||0) >= r.min && (o.salary||0) < r.max).length);
     const max = Math.max(...counts, 1);
-    return ranges.map((r, i) => ({ label: r.label, count: counts[i], pct: Math.round(counts[i] / max * 100) }));
-  }
+    return ranges.map((r, i) => ({ label: r.label, count: counts[i], pct: Math.round(counts[i] / max * 100) })); }
 
-  get offerLinePoints(): string {
-    const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get offerAreaPoints(): string {
-    const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+  get offerLinePoints(): string { const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get offerAreaPoints(): string { const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get offerDotPoints(): {x: number, y: number}[] {
-    const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return `0,90 ${line} 500,90`; }
+  get offerDotPoints(): {x: number, y: number}[] { const pts = this.offerTrend, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
 
-  statusColour(s: string) {
-    return s === 'Accepted' ? '#d1fae5' : s === 'Declined' ? '#fee2e2' : '#fef3c7';
-  }
+  statusColour(s: string) { return s === 'Accepted' ? '#d1fae5' : s === 'Declined' ? '#fee2e2' : '#fef3c7'; }
 }
+

@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-candidate-portal',
+@Component({ selector: 'app-candidate-portal',
   template: `
     <section class="stack-page">
       <!-- Tabs -->
@@ -67,8 +66,7 @@ import { environment } from '../../environments/environment';
     .tab-btn.active { background:var(--brand); color:#fff; }
   `]
 })
-export class CandidatePortalComponent implements OnInit {
-  tab = 'jobs';
+export class CandidatePortalComponent implements OnInit { tab = 'jobs';
   jobs: any[] = [];
   incoming: any[] = [];
   submitting = false;
@@ -79,28 +77,19 @@ export class CandidatePortalComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/candidate-portal/jobs`)
-      .subscribe({ next: d => this.jobs = d, error: () => {} });
-  }
+  ngOnInit() { this.http.get<any[]>(`${environment.apiUrl}/api/candidate-portal/jobs`)
+      .subscribe({ next: d => this.jobs = d, error: () => {} }); }
 
-  applyTo(job: any) {
-    this.form.jobId = job.id;
-    this.tab = 'apply';
-  }
+  applyTo(job: any) { this.form.jobId = job.id;
+    this.tab = 'apply'; }
 
-  submit() {
-    this.submitting = true;
+  submit() { this.submitting = true;
     this.submitError = '';
     this.http.post<any>(`${environment.apiUrl}/api/candidate-portal/apply`, this.form)
-      .subscribe({
-        next: r => { this.submitted = true; this.submittedRef = r.id; this.submitting = false; },
-        error: err => { this.submitError = err?.error?.error ?? 'Submission failed'; this.submitting = false; }
-      });
-  }
+      .subscribe({ next: r => { this.submitted = true; this.submittedRef = r.id; this.submitting = false; },
+        error: err => { this.submitError = err?.error?.error ?? 'Submission failed'; this.submitting = false; } }); }
 
-  loadIncoming() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/candidate-portal/incoming`)
-      .subscribe({ next: d => this.incoming = d, error: () => {} });
-  }
+  loadIncoming() { this.http.get<any[]>(`${environment.apiUrl}/api/candidate-portal/incoming`)
+      .subscribe({ next: d => this.incoming = d, error: () => {} }); }
 }
+

@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-interface TrainingSession {
-  id: number; name: string; type: string; trainer: string;
+interface TrainingSession { id: number; name: string; type: string; trainer: string;
   date: string; venue: string; capacity: number; enrolled: number;
   status: 'Upcoming' | 'Completed' | 'In Progress'; attended?: boolean;
 }
 
-@Component({
-  selector: 'app-training-calendar',
+@Component({ selector: 'app-training-calendar',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -144,8 +142,7 @@ interface TrainingSession {
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class TrainingCalendarComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/learning`;
+export class TrainingCalendarComponent implements OnInit { private api = `${environment.apiUrl}/api/learning`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'list';
   search = '';
@@ -161,75 +158,46 @@ export class TrainingCalendarComponent implements OnInit {
   get completed() { return this.sessions.filter(s => s.status === 'Completed').length; }
   get totalEnrolled() { return this.sessions.reduce((s, t) => s + t.enrolled, 0); }
 
-  get filteredSessions() {
-    return this.sessions.filter(s =>
+  get filteredSessions() { return this.sessions.filter(s =>
       (!this.search || s.name.toLowerCase().includes(this.search.toLowerCase())) &&
       (!this.filterStatus || s.status === this.filterStatus)
-    );
-  }
+    ); }
 
   ngOnInit() { this.loadSessions(); }
 
-  loadSessions() {
-    this.http.get<any[]>(`${this.api}/training`).subscribe({
-      next: data => {
-        this.sessions = [...(data || []).map(s => ({
-          id: s.id, name: s.title || s.name, type: s.trainingType || 'Technical Workshop',
+  loadSessions() { this.http.get<any[]>(`${this.api}/training`).subscribe({ next: data => { this.sessions = [...(data || []).map(s => ({ id: s.id, name: s.title || s.name, type: s.trainingType || 'Technical Workshop',
           trainer: s.trainerName || '', date: s.scheduledDate?.slice(0, 10) || '',
           venue: s.venue || '', capacity: s.maxCapacity || 20, enrolled: s.registeredCount || 0,
-          status: s.status as 'Upcoming' | 'Completed' | 'In Progress', attended: false
-        }))];
-        this.buildCalendar();
-      },
-      error: () => this.snack.open('Failed to load training sessions', 'Close', { duration: 3000 })
-    });
-  }
+          status: s.status as 'Upcoming' | 'Completed' | 'In Progress', attended: false }))];
+        this.buildCalendar(); },
+      error: () => this.snack.open('Failed to load training sessions', 'Close', { duration: 3000 }) }); }
 
-  buildCalendar() {
-    this.calCells = [];
+  buildCalendar() { this.calCells = [];
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const trainingDays: { [day: number]: string[] } = {};
-    this.sessions.forEach(s => {
-      const d = new Date(s.date);
-      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
-        const day = d.getDate();
+    this.sessions.forEach(s => { const d = new Date(s.date);
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) { const day = d.getDate();
         if (!trainingDays[day]) trainingDays[day] = [];
-        trainingDays[day].push(s.name.slice(0, 12));
-      }
-    });
+        trainingDays[day].push(s.name.slice(0, 12)); } });
     for (let i = 0; i < firstDay; i++) this.calCells.push({ day: '', sessions: [] });
-    for (let d = 1; d <= daysInMonth; d++) this.calCells.push({ day: d, sessions: trainingDays[d] || [] });
-  }
+    for (let d = 1; d <= daysInMonth; d++) this.calCells.push({ day: d, sessions: trainingDays[d] || [] }); }
 
-  register(s: TrainingSession) {
-    this.http.post(`${this.api}/training/${s.id}/register`, {}).subscribe({
-      next: () => {
-        this.sessions = this.sessions.map(x => x.id === s.id ? { ...x, enrolled: Math.min(x.enrolled + 1, x.capacity) } : x);
-        this.snack.open(`Registered for ${s.name}`, '', { duration: 2000 });
-      },
-      error: err => this.snack.open(err?.error?.message || 'Registration failed', 'Close', { duration: 3000 })
-    });
-  }
+  register(s: TrainingSession) { this.http.post(`${this.api}/training/${s.id}/register`, {}).subscribe({ next: () => { this.sessions = this.sessions.map(x => x.id === s.id ? { ...x, enrolled: Math.min(x.enrolled + 1, x.capacity) } : x);
+        this.snack.open(`Registered for ${s.name}`, '', { duration: 2000 }); },
+      error: err => this.snack.open(err?.error?.message || 'Registration failed', 'Close', { duration: 3000 }) }); }
 
-  markAttendance(s: TrainingSession) {
-    this.sessions = this.sessions.map(x => x.id === s.id ? { ...x, attended: true } : x);
-    this.snack.open(`Attendance marked for ${s.name}`, '', { duration: 2000 });
-  }
+  markAttendance(s: TrainingSession) { this.sessions = this.sessions.map(x => x.id === s.id ? { ...x, attended: true } : x);
+    this.snack.open(`Attendance marked for ${s.name}`, '', { duration: 2000 }); }
 
-  createSession() {
-    if (!this.newSession.name || !this.newSession.date) { this.snack.open('Fill required fields', 'Close', { duration: 3000 }); return; }
+  createSession() { if (!this.newSession.name || !this.newSession.date) { this.snack.open('Fill required fields', 'Close', { duration: 3000 }); return; }
     const payload = { title: this.newSession.name, trainingType: this.newSession.type, trainerName: this.newSession.trainer, scheduledDate: this.newSession.date, maxCapacity: this.newSession.capacity, venue: this.newSession.venue };
-    this.http.post<any>(`${this.api}/training`, payload).subscribe({
-      next: res => {
-        const newSess: TrainingSession = { id: res.id, name: this.newSession.name, type: this.newSession.type as any, trainer: this.newSession.trainer, date: this.newSession.date, venue: this.newSession.venue, capacity: this.newSession.capacity, enrolled: 0, status: 'Upcoming' };
+    this.http.post<any>(`${this.api}/training`, payload).subscribe({ next: res => { const newSess: TrainingSession = { id: res.id, name: this.newSession.name, type: this.newSession.type as any, trainer: this.newSession.trainer, date: this.newSession.date, venue: this.newSession.venue, capacity: this.newSession.capacity, enrolled: 0, status: 'Upcoming' };
         this.sessions = [newSess, ...this.sessions];
         this.buildCalendar();
         this.snack.open(`Session "${this.newSession.name}" created`, '', { duration: 2000 });
-        this.newSession = { name: '', type: 'Technical Workshop', trainer: '', date: '', capacity: 20, venue: '' };
-      },
-      error: err => this.snack.open(err?.error?.message || 'Failed to create session', 'Close', { duration: 3000 })
-    });
-  }
+        this.newSession = { name: '', type: 'Technical Workshop', trainer: '', date: '', capacity: 20, venue: '' }; },
+      error: err => this.snack.open(err?.error?.message || 'Failed to create session', 'Close', { duration: 3000 }) }); }
 }
+

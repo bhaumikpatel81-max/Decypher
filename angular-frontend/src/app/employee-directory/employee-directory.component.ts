@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-employee-directory',
+@Component({ selector: 'app-employee-directory',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -165,8 +164,7 @@ import { environment } from '../../environments/environment';
     .detail-label { font-size:11px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
   `]
 })
-export class EmployeeDirectoryComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/employees`;
+export class EmployeeDirectoryComponent implements OnInit { private api = `${environment.apiUrl}/api/employees`;
   view: 'grid' | 'list' = 'grid';
   showForm = false;
   saveError = '';
@@ -186,41 +184,31 @@ export class EmployeeDirectoryComponent implements OnInit {
 
   ngOnInit() { this.loadEmployees(); }
 
-  loadEmployees() {
-    this.loading = true;
+  loadEmployees() { this.loading = true;
     const params: any = {};
     if (this.filterDept) params['department'] = this.filterDept;
     if (this.filterStatus) params['status'] = this.filterStatus;
     if (this.search) params['search'] = this.search;
-    this.http.get<any[]>(this.api, { params }).subscribe({
-      next: data => {
-        this.employees = (data || []).map(e => this.decorate(e));
+    this.http.get<any[]>(this.api, { params }).subscribe({ next: data => { this.employees = (data || []).map(e => this.decorate(e));
         this.filtered = this.employees;
         this.loading = false;
         // Derive dropdown options from loaded data
         this.departments = [...new Set(this.employees.map(e => e.department).filter(Boolean))].sort();
-        this.locations   = [...new Set(this.employees.map(e => e.location).filter(Boolean))].sort();
-      },
-      error: () => { this.loading = false; }
-    });
-  }
+        this.locations   = [...new Set(this.employees.map(e => e.location).filter(Boolean))].sort(); },
+      error: () => { this.loading = false; } }); }
 
-  decorate(e: any) {
-    const first = e.firstName || e.fullName?.split(' ')[0] || '?';
+  decorate(e: any) { const first = e.firstName || e.fullName?.split(' ')[0] || '?';
     const last = e.lastName || e.fullName?.split(' ')[1] || '';
     e.initials = (first[0] + (last[0] || '')).toUpperCase();
     e.empId = e.employeeCode || e.id;
     e.avatarColor = this.colors[(e.employeeCode || '').charCodeAt((e.employeeCode || 'A').length - 1) % this.colors.length];
     e.doj = e.dateOfJoining ? new Date(e.dateOfJoining).toISOString().slice(0, 10) : '';
-    return e;
-  }
+    return e; }
 
   applyFilter() { this.loadEmployees(); }
 
-  addEmployee() {
-    if (!this.draft.firstName) return;
-    const payload = {
-      firstName: this.draft.firstName,
+  addEmployee() { if (!this.draft.firstName) return;
+    const payload = { firstName: this.draft.firstName,
       lastName: this.draft.lastName,
       email: this.draft.email,
       phone: this.draft.phone,
@@ -229,29 +217,18 @@ export class EmployeeDirectoryComponent implements OnInit {
       location: this.draft.location,
       dateOfJoining: this.draft.doj || new Date().toISOString(),
       employmentType: this.draft.employmentType,
-      status: this.draft.status
-    };
-    this.http.post<any>(this.api, payload).subscribe({
-      next: emp => {
-        this.employees.unshift(this.decorate(emp));
+      status: this.draft.status };
+    this.http.post<any>(this.api, payload).subscribe({ next: emp => { this.employees.unshift(this.decorate(emp));
         this.filtered = this.employees;
         this.draft = { firstName:'', lastName:'', email:'', phone:'', employeeCode:'', designation:'', department:'', location:'', doj:'', employmentType:'Full-Time', status:'Active' };
-        this.showForm = false;
-      },
-      error: err => { this.saveError = err?.error?.message || 'Failed to save employee'; setTimeout(() => this.saveError = '', 4000); }
-    });
-  }
+        this.showForm = false; },
+      error: err => { this.saveError = err?.error?.message || 'Failed to save employee'; setTimeout(() => this.saveError = '', 4000); } }); }
 
   select(e: any) { this.selected = this.selected?.id === e.id ? null : e; }
 
-  remove(e: any) {
-    if (!confirm(`Remove ${e.firstName} ${e.lastName}?`)) return;
-    this.http.delete(`${this.api}/${e.id}`).subscribe({
-      next: () => {
-        this.employees = this.employees.filter(x => x.id !== e.id);
+  remove(e: any) { if (!confirm(`Remove ${e.firstName} ${e.lastName}?`)) return;
+    this.http.delete(`${this.api}/${e.id}`).subscribe({ next: () => { this.employees = this.employees.filter(x => x.id !== e.id);
         this.filtered = this.employees;
-        if (this.selected?.id === e.id) this.selected = null;
-      }
-    });
-  }
+        if (this.selected?.id === e.id) this.selected = null; } }); }
 }
+

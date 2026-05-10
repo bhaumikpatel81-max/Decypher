@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 @Component({ selector: 'app-audit-trail', template: `
@@ -46,39 +46,32 @@ import { environment } from '../../environments/environment';
     <div *ngIf="!filtered.length" style="text-align:center;padding:32px;color:var(--text-3);">No logs match filter.</div>
   </div>
 </div>`, styles: [`.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}.kpi-val{font-size:28px;font-weight:800}.kpi-lbl{font-size:12px;color:var(--text-3);margin-top:4px}.th{padding:10px;text-align:left;font-size:12px;color:var(--text-3);font-weight:600}.td{padding:10px;border-bottom:1px solid var(--border);font-size:13px}.tr-row:hover{background:var(--surface-alt)}.critical-row{background:rgba(239,68,68,.03)}.mod-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(107,77,240,.1);color:#6b4df0}.sev-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}.sev-info{background:#e0e7ff;color:#3730a3}.sev-warn{background:#fef3c7;color:#92400e}.sev-crit{background:#fee2e2;color:#991b1b}`] })
-export class AuditTrailComponent implements OnInit {
-  private api = `${environment.apiUrl}/api`;
+export class AuditTrailComponent implements OnInit { private api = `${environment.apiUrl}/api`;
   constructor(private http: HttpClient) {}
   search='';filterModule='';filterSeverity='';fromDate='';toDate='';exportMsg='';
   modules=['Employee Directory','Payroll','Attendance','Compliance','User Management','Leave','Performance','Recruitment'];
   kpis=[{val:0,lbl:'Actions Today',color:'#6b4df0'},{val:0,lbl:'Critical Events',color:'#ef4444'},{val:0,lbl:'Unique Users',color:'#10b981'},{val:0,lbl:'Failed Logins',color:'#f59e0b'}];
   logs:any[]=[];
   ngOnInit(){ this.loadLogs(); }
-  loadLogs() {
-    this.http.get<any[]>(`${this.api}/audit-logs`).subscribe(data => {
-      if (!data || !data.length) return;
-      this.logs = data.map(l => ({
-        ts: l.timestamp?.replace('T',' ')?.slice(0,19) || l.ts || '',
+  loadLogs() { this.http.get<any[]>(`${this.api}/audit-logs`).subscribe(data => { if (!data || !data.length) return;
+      this.logs = data.map(l => ({ ts: l.timestamp?.replace('T',' ')?.slice(0,19) || l.ts || '',
         user: l.userName || l.user || 'System',
         role: l.userRole || l.role || '—',
         module: l.module || l.moduleName || '',
         action: l.action || l.actionType || '',
         details: l.details || l.description || '',
         ip: l.ipAddress || l.ip || '—',
-        severity: l.severity || 'Info'
-      }));
+        severity: l.severity || 'Info' }));
       const today = new Date().toISOString().slice(0, 10);
       const todayLogs = this.logs.filter(l => l.ts.startsWith(today));
       this.kpis[0].val = todayLogs.length;
       this.kpis[1].val = this.logs.filter(l => l.severity === 'Critical').length;
       const users = new Set(this.logs.map(l => l.user));
       this.kpis[2].val = users.size;
-      this.kpis[3].val = this.logs.filter(l => l.action?.toLowerCase().includes('failed login')).length;
-    });
-  }
-  get filtered(){return this.logs.filter(l=>{
-    const qs=this.search.toLowerCase();
-    return(!qs||l.user.toLowerCase().includes(qs)||l.action.toLowerCase().includes(qs)||l.details.toLowerCase().includes(qs))&&(!this.filterModule||l.module===this.filterModule)&&(!this.filterSeverity||l.severity===this.filterSeverity);
-  });}
+      this.kpis[3].val = this.logs.filter(l => l.action?.toLowerCase().includes('failed login')).length; }); }
+  get filtered(){return this.logs.filter(l=>{ const qs=this.search.toLowerCase();
+    return(!qs||l.user.toLowerCase().includes(qs)||l.action.toLowerCase().includes(qs)||l.details.toLowerCase().includes(qs))&&(!this.filterModule||l.module===this.filterModule)&&(!this.filterSeverity||l.severity===this.filterSeverity); });}
   export(){ this.exportMsg='Audit log exported as audit_trail_'+new Date().toISOString().slice(0,10)+'.csv'; setTimeout(()=>this.exportMsg='',3000); }
 }
+
+

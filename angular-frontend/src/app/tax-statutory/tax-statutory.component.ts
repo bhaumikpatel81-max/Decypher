@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-tax-statutory',
+@Component({ selector: 'app-tax-statutory',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -245,8 +244,7 @@ import { environment } from '../../environments/environment';
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class TaxStatutoryComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class TaxStatutoryComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
   tab = 'overview';
   challanMsg = '';
@@ -312,40 +310,23 @@ export class TaxStatutoryComponent implements OnInit {
 
   ngOnInit() { this.loadFilings(); }
 
-  loadFilings() {
-    this.http.get<any[]>(`${this.api}/statutory-filings`).subscribe(data => {
-      if (!data || !data.length) return;
-      this.filingHistory = data.map(f => ({
-        month: f.period || '', pf: f.pfAmount || 0, esi: f.esiAmount || 0,
-        pt: f.ptAmount || 0, tds: f.tdsAmount || 0, status: f.status || 'Pending'
-      }));
-    });
-  }
+  loadFilings() { this.http.get<any[]>(`${this.api}/statutory-filings`).subscribe(data => { if (!data || !data.length) return;
+      this.filingHistory = data.map(f => ({ month: f.period || '', pf: f.pfAmount || 0, esi: f.esiAmount || 0,
+        pt: f.ptAmount || 0, tds: f.tdsAmount || 0, status: f.status || 'Pending' })); }); }
 
   downloadChallan(type: string) { this.challanMsg = `${type} challan PDF downloading...`; setTimeout(() => this.challanMsg = '', 3000); }
   generateChallan(type: string) { this.challanMsg = `${type} challan generated`; setTimeout(() => this.challanMsg = '', 3000); }
   generateForm16() { this.challanMsg = 'Form 16 generation triggered for all employees'; setTimeout(() => this.challanMsg = '', 3000); }
 
-  loadDeclarations() {
-    this.http.get<any[]>(`${this.api}/tax/declarations`).subscribe(data => { this.declarations = data || []; });
-    if (!this.declEmployees.length) {
-      this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-        this.declEmployees = (data || []).map(e => ({ empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim() }));
-      });
-    }
-  }
+  loadDeclarations() { this.http.get<any[]>(`${this.api}/tax/declarations`).subscribe(data => { this.declarations = data || []; });
+    if (!this.declEmployees.length) { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.declEmployees = (data || []).map(e => ({ empId: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim() })); }); } }
 
-  saveDeclaration() {
-    if (!this.declForm.empId || !this.declForm.section || !this.declForm.amount) { this.declMsg = 'Fill all required fields'; return; }
+  saveDeclaration() { if (!this.declForm.empId || !this.declForm.section || !this.declForm.amount) { this.declMsg = 'Fill all required fields'; return; }
     const emp = this.declEmployees.find(e => e.empId === this.declForm.empId);
     const payload = { employeeId: this.declForm.empId, employeeName: emp?.name, section: this.declForm.section, fiscalYear: this.declForm.fiscalYear, amount: this.declForm.amount, description: this.declForm.description };
-    this.http.post<any>(`${this.api}/tax/declarations`, payload).subscribe({
-      next: res => {
-        this.declarations.unshift({ ...payload, id: res.id });
+    this.http.post<any>(`${this.api}/tax/declarations`, payload).subscribe({ next: res => { this.declarations.unshift({ ...payload, id: res.id });
         this.declMsg = `Declaration submitted for ${emp?.name}`; setTimeout(() => this.declMsg = '', 3000);
-        this.declForm = { empId: '', section: '', fiscalYear: '2025-26', amount: 0, description: '' };
-      },
-      error: err => { this.declMsg = err?.error?.message || 'Failed to save declaration'; setTimeout(() => this.declMsg = '', 3000); }
-    });
-  }
+        this.declForm = { empId: '', section: '', fiscalYear: '2025-26', amount: 0, description: '' }; },
+      error: err => { this.declMsg = err?.error?.message || 'Failed to save declaration'; setTimeout(() => this.declMsg = '', 3000); } }); }
 }
+

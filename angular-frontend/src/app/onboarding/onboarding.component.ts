@@ -1,25 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  ITSetup:         'IT Setup',
+const CATEGORY_LABELS: Record<string, string> = { ITSetup:         'IT Setup',
   Documents:       'Documents',
   Orientation:     'Orientation',
   BackgroundCheck: 'Background Check',
   ESignature:      'E-Signature',
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  ITSetup:         '💻',
+const CATEGORY_ICONS: Record<string, string> = { ITSetup:         '💻',
   Documents:       '📄',
   Orientation:     '🎯',
   BackgroundCheck: '🔍',
   ESignature:      '✍️',
 };
 
-@Component({
-  selector: 'app-onboarding',
+@Component({ selector: 'app-onboarding',
   template: `
     <section class="stack-page">
       <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="150ms">
@@ -276,35 +273,24 @@ const CATEGORY_ICONS: Record<string, string> = {
     </section>
   `,
   styles: [`
-    .onboard-row {
-      display:flex; align-items:center; gap:12px; padding:12px 8px;
-      border-radius:8px; cursor:pointer; transition:background .1s; margin-bottom:4px;
-    }
+    .onboard-row { display:flex; align-items:center; gap:12px; padding:12px 8px;
+      border-radius:8px; cursor:pointer; transition:background .1s; margin-bottom:4px; }
     .onboard-row:hover { background:#f8f7ff; }
     .onboard-row.selected { background:#f0efff; border-left:3px solid var(--brand); padding-left:6px; }
-    .avatar-circle {
-      width:38px; height:38px; border-radius:50%; display:flex; align-items:center;
-      justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;
-    }
+    .avatar-circle { width:38px; height:38px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; }
     .status-badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-    .cat-header {
-      font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase;
+    .cat-header { font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase;
       letter-spacing:.06em; margin:16px 0 8px; padding-bottom:6px;
-      border-bottom:1px solid var(--border);
-    }
-    .checklist-row {
-      display:flex; align-items:center; gap:10px; padding:8px 0;
-      border-bottom:1px solid var(--border);
-    }
+      border-bottom:1px solid var(--border); }
+    .checklist-row { display:flex; align-items:center; gap:10px; padding:8px 0;
+      border-bottom:1px solid var(--border); }
     .checklist-row:last-child { border-bottom:none; }
-    .check-icon {
-      width:24px; height:24px; border-radius:50%; display:flex; align-items:center;
-      justify-content:center; cursor:pointer; flex-shrink:0; transition:background .15s;
-    }
+    .check-icon { width:24px; height:24px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; cursor:pointer; flex-shrink:0; transition:background .15s; }
   `]
 })
-export class OnboardingComponent implements OnInit {
-  activeTab = 0;
+export class OnboardingComponent implements OnInit { activeTab = 0;
 
   records: any[] = [];
   selectedRecord: any = null;
@@ -318,109 +304,75 @@ export class OnboardingComponent implements OnInit {
   obMonths: string[] = [];
   obTrendData: number[] = [0, 0, 0, 0, 0, 0];
 
-  private buildTrend(items: any[], dateField: string) {
-    const now = new Date();
+  private buildTrend(items: any[], dateField: string) { const now = new Date();
     const months: string[] = [], counts: number[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(d.toLocaleString('default', { month: 'short' }));
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length);
-    }
+      counts.push(items.filter(x => (x[dateField] || '').slice(0, 7) === ym).length); }
     this.obMonths = months;
-    this.obTrendData = counts;
-  }
+    this.obTrendData = counts; }
 
   get completedOnboarding()  { return this.records.filter(r => r.overallStatus === 'Completed').length; }
   get inProgressOnboarding() { return this.records.filter(r => r.overallStatus === 'InProgress').length; }
   get notStartedOnboarding() { return this.records.filter(r => r.overallStatus === 'NotStarted' || !r.overallStatus).length; }
-  get completionRate() {
-    return this.records.length ? Math.round(this.completedOnboarding / this.records.length * 100) : 0;
-  }
+  get completionRate() { return this.records.length ? Math.round(this.completedOnboarding / this.records.length * 100) : 0; }
   private obDash(n: number) { return Math.round((n / (this.records.length || 1)) * 283); }
   get completedDash()  { return this.obDash(this.completedOnboarding); }
   get inProgressDash() { return this.obDash(this.inProgressOnboarding); }
   get notStartedDash() { return this.obDash(this.notStartedOnboarding); }
 
-  get categoryCompletion(): {cat: string, label: string, pct: number}[] {
-    return this.categories.map(cat => {
-      const items: any[] = [];
+  get categoryCompletion(): {cat: string, label: string, pct: number}[] { return this.categories.map(cat => { const items: any[] = [];
       this.records.forEach(r => (r.items || []).filter((i: any) => i.category === cat).forEach((i: any) => items.push(i)));
       const done = items.filter(i => i.status === 'Complete').length;
-      return { cat, label: CATEGORY_LABELS[cat] || cat, pct: items.length ? Math.round(done / items.length * 100) : 0 };
-    });
-  }
+      return { cat, label: CATEGORY_LABELS[cat] || cat, pct: items.length ? Math.round(done / items.length * 100) : 0 }; }); }
 
-  get obLinePts(): string {
-    const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-  }
-  get obAreaPts(): string {
-    const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+  get obLinePts(): string { const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' '); }
+  get obAreaPts(): string { const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
     const line = pts.map((v, i) => `${i * step},${90 - (v / max) * 80}`).join(' ');
-    return `0,90 ${line} 500,90`;
-  }
-  get obDotPts(): {x: number, y: number}[] {
-    const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
-    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 }));
-  }
+    return `0,90 ${line} 500,90`; }
+  get obDotPts(): {x: number, y: number}[] { const pts = this.obTrendData, max = Math.max(...pts, 1), step = 500 / (pts.length - 1);
+    return pts.map((v, i) => ({ x: i * step, y: 90 - (v / max) * 80 })); }
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() { this.load(); }
 
-  load() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/onboarding`)
-      .subscribe({ next: d => { this.records = d; if (d.length && !this.selectedRecord) this.selectedRecord = d[0]; this.buildTrend(d, 'createdAt'); }, error: () => {} });
-  }
+  load() { this.http.get<any[]>(`${environment.apiUrl}/api/onboarding`)
+      .subscribe({ next: d => { this.records = d; if (d.length && !this.selectedRecord) this.selectedRecord = d[0]; this.buildTrend(d, 'createdAt'); }, error: () => {} }); }
 
   select(r: any) { this.selectedRecord = r; }
 
-  initiate() {
-    if (!this.initForm.candidateId || !this.initForm.candidateName) return;
+  initiate() { if (!this.initForm.candidateId || !this.initForm.candidateName) return;
     this.initiating = true;
     this.http.post<any>(`${environment.apiUrl}/api/onboarding`, this.initForm)
-      .subscribe({
-        next: r => {
-          this.records = [r, ...this.records.filter(x => x.id !== r.id)];
+      .subscribe({ next: r => { this.records = [r, ...this.records.filter(x => x.id !== r.id)];
           this.selectedRecord = r;
           this.showInitiate = false;
           this.initiating = false;
-          this.initForm = { candidateId: '', candidateName: '', jobTitle: '', offerId: '', expectedStartDate: '' };
-        },
-        error: () => { this.initiating = false; }
-      });
-  }
+          this.initForm = { candidateId: '', candidateName: '', jobTitle: '', offerId: '', expectedStartDate: '' }; },
+        error: () => { this.initiating = false; } }); }
 
-  updateItem(item: any) {
-    this.http.patch(`${environment.apiUrl}/api/onboarding/${item.id}/item`,
+  updateItem(item: any) { this.http.patch(`${environment.apiUrl}/api/onboarding/${item.id}/item`,
       { status: item.status, notes: item.notes, signed: item.signed })
-      .subscribe({ next: () => this.refreshRecord(), error: () => {} });
-  }
+      .subscribe({ next: () => this.refreshRecord(), error: () => {} }); }
 
-  cycleStatus(item: any) {
-    item.status = item.status === 'Pending' ? 'InProgress' : item.status === 'InProgress' ? 'Complete' : 'Pending';
-    this.updateItem(item);
-  }
+  cycleStatus(item: any) { item.status = item.status === 'Pending' ? 'InProgress' : item.status === 'InProgress' ? 'Complete' : 'Pending';
+    this.updateItem(item); }
 
-  mockSign(item: any) {
-    item.signed = true;
+  mockSign(item: any) { item.signed = true;
     item.status = 'Complete';
-    this.updateItem(item);
-  }
+    this.updateItem(item); }
 
-  refreshRecord() {
-    if (!this.selectedRecord) return;
+  refreshRecord() { if (!this.selectedRecord) return;
     this.http.get<any>(`${environment.apiUrl}/api/onboarding/${this.selectedRecord.candidateId}`)
-      .subscribe({ next: r => { this.selectedRecord = r; const i = this.records.findIndex(x => x.id === r.id); if (i >= 0) this.records[i] = r; }, error: () => {} });
-  }
+      .subscribe({ next: r => { this.selectedRecord = r; const i = this.records.findIndex(x => x.id === r.id); if (i >= 0) this.records[i] = r; }, error: () => {} }); }
 
   itemsForCat(r: any, cat: string): any[] { return (r.items || []).filter((i: any) => i.category === cat); }
   completedCount(r: any): number { return (r.items || []).filter((i: any) => i.status === 'Complete').length; }
-  progressPct(r: any): number {
-    const total = (r.items || []).length;
-    return total ? Math.round(this.completedCount(r) / total * 100) : 0;
-  }
+  progressPct(r: any): number { const total = (r.items || []).length;
+    return total ? Math.round(this.completedCount(r) / total * 100) : 0; }
 
   catLabel(cat: string): string { return CATEGORY_LABELS[cat] || cat; }
   catIcon(cat: string): string  { return CATEGORY_ICONS[cat] || '📌'; }
@@ -428,3 +380,4 @@ export class OnboardingComponent implements OnInit {
   statusFg(s: string): string { return s === 'Complete' ? '#065f46' : s === 'InProgress' ? '#92400e' : '#374151'; }
   statusBg(s: string): string { return s === 'Complete' ? '#d1fae5' : s === 'InProgress' ? '#fef3c7' : '#f3f4f6'; }
 }
+

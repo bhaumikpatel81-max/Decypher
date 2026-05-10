@@ -1,10 +1,9 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-platform-login',
+@Component({ selector: 'app-platform-login',
   template: `
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg,#0f0f14);">
       <div style="width:380px;background:var(--surface,#1a1a24);border:1px solid var(--border,#2a2a3a);border-radius:16px;padding:40px;">
@@ -33,28 +32,20 @@ import { environment } from '../../environments/environment';
     </div>
   `
 })
-export class PlatformLoginComponent {
-  email = '';
+export class PlatformLoginComponent { email = '';
   password = '';
   loading = false;
   error = '';
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  login() {
-    if (!this.email || !this.password) { this.error = 'Email and password required.'; return; }
+  login() { if (!this.email || !this.password) { this.error = 'Email and password required.'; return; }
     this.loading = true; this.error = '';
     this.http.post<any>(`${environment.apiUrl}/api/platform/auth/login`, { email: this.email, password: this.password })
-      .subscribe({
-        next: res => {
-          localStorage.setItem('platform_token', res.token);
+      .subscribe({ next: res => { localStorage.setItem('platform_token', res.token);
           localStorage.setItem('platform_user', JSON.stringify(res.user));
-          this.router.navigate(['/platform']);
-        },
-        error: err => {
-          this.error = err.error?.error ?? 'Login failed.';
-          this.loading = false;
-        }
-      });
-  }
+          this.router.navigate(['/platform']); },
+        error: err => { this.error = err.error?.error ?? 'Login failed.';
+          this.loading = false; } }); }
 }
+

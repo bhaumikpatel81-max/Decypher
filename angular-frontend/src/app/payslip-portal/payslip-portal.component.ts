@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-payslip-portal',
+@Component({ selector: 'app-payslip-portal',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -135,8 +134,7 @@ import { environment } from '../../environments/environment';
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:0; }
   `]
 })
-export class PayslipPortalComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class PayslipPortalComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient) {}
 
   selectedEmp = '';
@@ -153,59 +151,31 @@ export class PayslipPortalComponent implements OnInit {
 
   get currentEmp() { return this.employees.find(e => e.id === this.selectedEmp); }
 
-  ngOnInit() {
-    this.loadCompanyInfo();
-    this.loadEmployees();
-  }
+  ngOnInit() { this.loadCompanyInfo();
+    this.loadEmployees(); }
 
-  loadCompanyInfo() {
-    this.http.get<any>(`${environment.apiUrl}/api/settings/company`).subscribe({
-      next: r => {
-        const d = r?.data || r;
+  loadCompanyInfo() { this.http.get<any>(`${environment.apiUrl}/api/settings/company`).subscribe({ next: r => { const d = r?.data || r;
         this.companyName      = d?.companyName    || d?.name    || 'Your Company';
         this.companyShortName = d?.shortName       || d?.abbreviation || this.companyName.split(' ')[0].toUpperCase();
-        this.companyAddress   = d?.address || d?.companyAddress || '';
-      },
-      error: () => {}
-    });
-  }
+        this.companyAddress   = d?.address || d?.companyAddress || ''; },
+      error: () => {} }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => {
-      this.employees = (data || []).map(e => ({
-        id: e.id || e.employeeCode, name: `${e.firstName} ${e.lastName}`.trim(),
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe(data => { this.employees = (data || []).map(e => ({ id: e.id || e.employeeCode, name: `${e.firstName} ${e.lastName}`.trim(),
         role: e.designation || '', dept: e.department || '',
-        ctc: e.salary || 0, pan: e.pan || 'N/A', bank: e.bankAccount || 'N/A'
-      }));
-      if (this.employees.length) { this.selectedEmp = this.employees[0].id; this.loadPayslips(); }
-    });
-  }
+        ctc: e.salary || 0, pan: e.pan || 'N/A', bank: e.bankAccount || 'N/A' }));
+      if (this.employees.length) { this.selectedEmp = this.employees[0].id; this.loadPayslips(); } }); }
 
-  loadPayslips() {
-    this.http.get<any[]>(`${this.api}/payslips`).subscribe(data => {
-      this.allPayslips = data || [];
-      this.buildMonthList();
-    });
-  }
+  loadPayslips() { this.http.get<any[]>(`${this.api}/payslips`).subscribe(data => { this.allPayslips = data || [];
+      this.buildMonthList(); }); }
 
-  buildMonthList() {
-    const empSlips = this.allPayslips.filter(s => s.employeeId === this.selectedEmp);
-    if (empSlips.length) {
-      this.months = empSlips.map((s, i) => ({
-        idx: i, label: s.periodLabel || s.period || '', net: s.netPay || 0, data: s
-      }));
+  buildMonthList() { const empSlips = this.allPayslips.filter(s => s.employeeId === this.selectedEmp);
+    if (empSlips.length) { this.months = empSlips.map((s, i) => ({ idx: i, label: s.periodLabel || s.period || '', net: s.netPay || 0, data: s }));
       this.selectedMonthIdx = 0;
-      this.buildSlipFromData(this.months[0].data);
-    } else {
-      this.months = [];
-      this.slip = null;
-    }
-  }
+      this.buildSlipFromData(this.months[0].data); } else { this.months = [];
+      this.slip = null; } }
 
-  buildSlipFromData(s: any) {
-    const parts = (s.periodLabel || '').split(' ');
-    this.slip = {
-      id: s.id,
+  buildSlipFromData(s: any) { const parts = (s.periodLabel || '').split(' ');
+    this.slip = { id: s.id,
       monthLabel: parts[0] || '', year: parts[1] || '',
       daysWorked: s.daysWorked || 26,
       earnings: s.earnings || [
@@ -220,34 +190,23 @@ export class PayslipPortalComponent implements OnInit {
         { label: 'Tax Deducted at Source', amount: s.tds || 0 },
       ],
       gross: s.grossPay || 0, totalDeductions: s.totalDeductions || 0,
-      netPay: s.netPay || 0, netInWords: s.netInWords || ''
-    };
-  }
+      netPay: s.netPay || 0, netInWords: s.netInWords || '' }; }
 
-  loadPayslip() {
-    if (!this.selectedEmp) return;
-    this.buildMonthList();
-  }
+  loadPayslip() { if (!this.selectedEmp) return;
+    this.buildMonthList(); }
 
-  selectMonth(idx: number) {
-    this.selectedMonthIdx = idx;
-    if (this.months[idx]?.data) this.buildSlipFromData(this.months[idx].data);
-  }
+  selectMonth(idx: number) { this.selectedMonthIdx = idx;
+    if (this.months[idx]?.data) this.buildSlipFromData(this.months[idx].data); }
 
-  downloadPayslip() {
-    const id = this.slip?.id;
+  downloadPayslip() { const id = this.slip?.id;
     if (!id) return;
-    this.http.get(`${this.api}/payslips/${id}/download`, { responseType: 'blob' }).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
+    this.http.get(`${this.api}/payslips/${id}/download`, { responseType: 'blob' }).subscribe(blob => { const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `payslip-${id}.pdf`;
-      a.click(); URL.revokeObjectURL(url);
-    });
-  }
+      a.click(); URL.revokeObjectURL(url); }); }
 
-  emailPayslip() {
-    const id = this.slip?.id;
+  emailPayslip() { const id = this.slip?.id;
     if (!id) return;
-    this.http.post(`${this.api}/payslips/${id}/email`, {}).subscribe();
-  }
+    this.http.post(`${this.api}/payslips/${id}/email`, {}).subscribe(); }
 }
+

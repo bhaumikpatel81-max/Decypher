@@ -1,17 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { SettingsService } from '../services/settings.service';
 
-interface SettingsTab {
-  id: string;
+interface SettingsTab { id: string;
   label: string;
   icon: string;
   requiredRoles: string[];
 }
 
-@Component({
-  selector: 'app-settings',
+@Component({ selector: 'app-settings',
   template: `
     <div class="settings-container">
       <!-- Settings Navigation -->
@@ -540,35 +538,26 @@ interface SettingsTab {
     </div>
   `,
   styles: [`
-    .settings-container {
-      display: flex;
+    .settings-container { display: flex;
       gap: 32px;
       max-width: 1200px;
-      margin: 0 auto;
-    }
+      margin: 0 auto; }
 
-    .settings-nav {
-      flex: 0 0 220px;
+    .settings-nav { flex: 0 0 220px;
       position: sticky;
       top: 88px;
-      align-self: flex-start;
-    }
+      align-self: flex-start; }
 
-    .settings-nav-section {
-      margin-bottom: 32px;
-    }
+    .settings-nav-section { margin-bottom: 32px; }
 
-    .settings-nav-label {
-      font-size: 11px;
+    .settings-nav-label { font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--text-3);
-      margin-bottom: 8px;
-    }
+      margin-bottom: 8px; }
 
-    .settings-nav-item {
-      display: flex;
+    .settings-nav-item { display: flex;
       align-items: center;
       gap: 10px;
       padding: 8px 12px;
@@ -578,81 +567,55 @@ interface SettingsTab {
       cursor: pointer;
       transition: all var(--transition-fast);
       text-decoration: none;
-      margin-bottom: 2px;
-    }
+      margin-bottom: 2px; }
 
-    .settings-nav-item:hover {
-      background: var(--surface-alt);
-      color: var(--text);
-    }
+    .settings-nav-item:hover { background: var(--surface-alt);
+      color: var(--text); }
 
-    .settings-nav-item.active {
-      background: var(--brand-violet-50);
-      color: var(--brand-violet-700);
-    }
+    .settings-nav-item.active { background: var(--brand-violet-50);
+      color: var(--brand-violet-700); }
 
-    .settings-nav-icon {
-      width: 18px;
+    .settings-nav-icon { width: 18px;
       height: 18px;
-      flex-shrink: 0;
-    }
+      flex-shrink: 0; }
 
-    .settings-content {
-      flex: 1;
-    }
+    .settings-content { flex: 1; }
 
-    .settings-header {
-      margin-bottom: 24px;
+    .settings-header { margin-bottom: 24px;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-    }
+      align-items: flex-start; }
 
-    .settings-title {
-      font-family: 'Space Grotesk', sans-serif;
+    .settings-title { font-family: 'Space Grotesk', sans-serif;
       font-size: 24px;
       font-weight: 600;
       color: var(--text);
-      margin-bottom: 4px;
-    }
+      margin-bottom: 4px; }
 
-    .settings-description {
-      font-size: 14px;
-      color: var(--text-2);
-    }
+    .settings-description { font-size: 14px;
+      color: var(--text-2); }
 
-    .form-grid {
-      display: grid;
+    .form-grid { display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
-      margin-bottom: 24px;
-    }
+      margin-bottom: 24px; }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
+    .form-group { display: flex;
+      flex-direction: column; }
 
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
+    .form-group.full-width { grid-column: 1 / -1; }
 
-    .form-label {
-      font-size: 13px;
+    .form-label { font-size: 13px;
       font-weight: 500;
       color: var(--text);
-      margin-bottom: 6px;
-    }
+      margin-bottom: 6px; }
 
-    .form-actions {
-      display: flex;
+    .form-actions { display: flex;
       gap: 12px;
       padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
+      border-top: 1px solid var(--border); }
 
-    .avatar-sm {
-      width: 32px;
+    .avatar-sm { width: 32px;
       height: 32px;
       border-radius: 50%;
       background: var(--brand-gradient);
@@ -661,68 +624,48 @@ interface SettingsTab {
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 12px;
-    }
+      font-size: 12px; }
 
-    .permissions-matrix {
-      overflow-x: auto;
-    }
+    .permissions-matrix { overflow-x: auto; }
 
-    .permission-cell {
-      text-align: center;
-    }
+    .permission-cell { text-align: center; }
 
-    .checkbox-label {
-      display: flex;
+    .checkbox-label { display: flex;
       align-items: center;
       gap: 6px;
-      cursor: pointer;
-    }
+      cursor: pointer; }
 
-    .permission-type {
-      font-size: 11px;
-      color: var(--text-3);
-    }
+    .permission-type { font-size: 11px;
+      color: var(--text-3); }
 
-    .permission-legend {
-      display: flex;
+    .permission-legend { display: flex;
       gap: 16px;
       padding: 16px;
       background: var(--surface-alt);
       border-radius: var(--radius-md);
-      margin-top: 16px;
-    }
+      margin-top: 16px; }
 
-    .legend-item {
-      display: flex;
+    .legend-item { display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
-    }
+      font-size: 13px; }
 
-    .integration-list {
-      display: flex;
+    .integration-list { display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
+      gap: 16px; }
 
-    .integration-item {
-      display: flex;
+    .integration-item { display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px;
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-    }
+      border-radius: var(--radius-md); }
 
-    .integration-info {
-      display: flex;
+    .integration-info { display: flex;
       gap: 12px;
-      align-items: center;
-    }
+      align-items: center; }
 
-    .integration-logo {
-      width: 48px;
+    .integration-logo { width: 48px;
       height: 48px;
       border-radius: var(--radius-md);
       background: var(--brand-violet-50);
@@ -731,232 +674,160 @@ interface SettingsTab {
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 18px;
-    }
+      font-size: 18px; }
 
-    .integration-name {
-      font-weight: 600;
+    .integration-name { font-weight: 600;
       font-size: 15px;
-      color: var(--text);
-    }
+      color: var(--text); }
 
-    .integration-description {
-      font-size: 13px;
+    .integration-description { font-size: 13px;
       color: var(--text-2);
-      margin-top: 2px;
-    }
+      margin-top: 2px; }
 
-    .integration-status {
-      display: flex;
+    .integration-status { display: flex;
       gap: 12px;
-      align-items: center;
-    }
+      align-items: center; }
 
-    .api-key-list {
-      display: flex;
+    .api-key-list { display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
+      gap: 12px; }
 
-    .api-key-item {
-      display: flex;
+    .api-key-item { display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 12px;
       background: var(--surface-alt);
-      border-radius: var(--radius-md);
-    }
+      border-radius: var(--radius-md); }
 
-    .api-key-name {
-      font-weight: 500;
+    .api-key-name { font-weight: 500;
       font-size: 14px;
-      color: var(--text);
-    }
+      color: var(--text); }
 
-    .api-key-value {
-      font-family: 'JetBrains Mono', monospace;
+    .api-key-value { font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--text-2);
-      margin-top: 4px;
-    }
+      margin-top: 4px; }
 
-    .api-key-meta {
-      font-size: 12px;
+    .api-key-meta { font-size: 12px;
       color: var(--text-3);
-      margin-top: 4px;
-    }
+      margin-top: 4px; }
 
-    .notification-category {
-      margin-bottom: 32px;
-    }
+    .notification-category { margin-bottom: 32px; }
 
-    .notification-category-title {
-      font-size: 15px;
+    .notification-category-title { font-size: 15px;
       font-weight: 600;
       color: var(--text);
-      margin-bottom: 16px;
-    }
+      margin-bottom: 16px; }
 
-    .notification-option {
-      display: flex;
+    .notification-option { display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
+      border-bottom: 1px solid var(--border); }
 
-    .notification-option:last-child {
-      border-bottom: none;
-    }
+    .notification-option:last-child { border-bottom: none; }
 
-    .notification-option-label {
-      font-size: 14px;
+    .notification-option-label { font-size: 14px;
       font-weight: 500;
-      color: var(--text);
-    }
+      color: var(--text); }
 
-    .notification-option-description {
-      font-size: 13px;
+    .notification-option-description { font-size: 13px;
       color: var(--text-2);
-      margin-top: 2px;
-    }
+      margin-top: 2px; }
 
-    .notification-toggles {
-      display: flex;
-      gap: 24px;
-    }
+    .notification-toggles { display: flex;
+      gap: 24px; }
 
-    .toggle-label {
-      display: flex;
+    .toggle-label { display: flex;
       align-items: center;
       gap: 8px;
       font-size: 13px;
       color: var(--text-2);
-      cursor: pointer;
-    }
+      cursor: pointer; }
 
-    .billing-current-plan {
-      display: flex;
+    .billing-current-plan { display: flex;
       justify-content: space-between;
       align-items: flex-start;
       padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
+      margin-bottom: 20px; }
 
-    .billing-plan-name {
-      font-size: 20px;
+    .billing-plan-name { font-size: 20px;
       font-weight: 600;
-      color: var(--text);
-    }
+      color: var(--text); }
 
-    .billing-plan-price {
-      font-family: 'Space Grotesk', sans-serif;
+    .billing-plan-price { font-family: 'Space Grotesk', sans-serif;
       font-size: 32px;
       font-weight: 700;
       color: var(--brand-violet-500);
-      margin-top: 8px;
-    }
+      margin-top: 8px; }
 
-    .billing-plan-period {
-      font-size: 14px;
-      color: var(--text-2);
-    }
+    .billing-plan-period { font-size: 14px;
+      color: var(--text-2); }
 
-    .billing-features {
-      display: grid;
+    .billing-features { display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+      gap: 12px; }
 
-    .billing-feature {
-      display: flex;
+    .billing-feature { display: flex;
       gap: 8px;
       align-items: center;
       font-size: 14px;
-      color: var(--text-2);
-    }
+      color: var(--text-2); }
 
-    .usage-stats {
-      display: flex;
+    .usage-stats { display: flex;
       flex-direction: column;
-      gap: 20px;
-    }
+      gap: 20px; }
 
-    .usage-stat-label {
-      font-size: 14px;
+    .usage-stat-label { font-size: 14px;
       font-weight: 500;
       color: var(--text);
-      margin-bottom: 8px;
-    }
+      margin-bottom: 8px; }
 
-    .usage-stat-progress {
-      display: flex;
+    .usage-stat-progress { display: flex;
       align-items: center;
-      gap: 12px;
-    }
+      gap: 12px; }
 
-    .usage-stat-values {
-      font-size: 13px;
+    .usage-stat-values { font-size: 13px;
       color: var(--text-2);
       min-width: 120px;
-      text-align: right;
-    }
+      text-align: right; }
 
-    .danger-zone {
-      margin-top: 48px;
-    }
+    .danger-zone { margin-top: 48px; }
 
-    .card-danger {
-      border-color: var(--danger-500);
-    }
+    .card-danger { border-color: var(--danger-500); }
 
-    .danger-action {
-      display: flex;
+    .danger-action { display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 20px 0;
-      border-bottom: 1px solid var(--border);
-    }
+      border-bottom: 1px solid var(--border); }
 
-    .danger-action:last-child {
-      border-bottom: none;
-    }
+    .danger-action:last-child { border-bottom: none; }
 
-    .danger-action-title {
-      font-size: 15px;
+    .danger-action-title { font-size: 15px;
       font-weight: 600;
       color: var(--danger-500);
-      margin-bottom: 4px;
-    }
+      margin-bottom: 4px; }
 
-    .danger-action-description {
-      font-size: 13px;
-      color: var(--text-2);
-    }
+    .danger-action-description { font-size: 13px;
+      color: var(--text-2); }
 
-    .btn-danger {
-      background: var(--danger-500);
+    .btn-danger { background: var(--danger-500);
       color: white;
-      border: none;
-    }
+      border: none; }
 
-    .btn-danger:hover {
-      background: var(--danger-600);
-    }
+    .btn-danger:hover { background: var(--danger-600); }
 
-    .btn-icon {
-      width: 32px;
+    .btn-icon { width: 32px;
       height: 32px;
       padding: 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-    }
+      justify-content: center; }
   `]
 })
-export class SettingsComponent implements OnInit {
-  activeTab = 'profile';
+export class SettingsComponent implements OnInit { activeTab = 'profile';
   currentUser: any;
   saving = false;
   
@@ -972,11 +843,9 @@ export class SettingsComponent implements OnInit {
   currentPlan: any = {};
   usageStats: any[] = [];
 
-  availableTabs: { personal: any[]; organization: any[]; platform: any[] } = {
-    personal: [],
+  availableTabs: { personal: any[]; organization: any[]; platform: any[] } = { personal: [],
     organization: [],
-    platform: []
-  };
+    platform: [] };
 
   canAccessDangerZone = false;
 
@@ -986,35 +855,26 @@ export class SettingsComponent implements OnInit {
     private settingsService: SettingsService
   ) {}
 
-  ngOnInit() {
-    this.currentUser = this.authService.getCurrentUser();
+  ngOnInit() { this.currentUser = this.authService.getCurrentUser();
     this.initializeForms();
     this.loadAvailableTabs();
-    this.loadData();
-  }
+    this.loadData(); }
 
-  initializeForms() {
-    this.profileForm = this.fb.group({
-      firstName: [this.currentUser.firstName, Validators.required],
+  initializeForms() { this.profileForm = this.fb.group({ firstName: [this.currentUser.firstName, Validators.required],
       lastName: [this.currentUser.lastName, Validators.required],
       email: [{ value: this.currentUser.email, disabled: true }],
       phone: [this.currentUser.phone],
       department: [this.currentUser.department],
-      designation: [this.currentUser.designation]
-    });
+      designation: [this.currentUser.designation] });
 
-    this.companyForm = this.fb.group({
-      companyName: ['', Validators.required],
+    this.companyForm = this.fb.group({ companyName: ['', Validators.required],
       address: [''],
       industry: [''],
       employeeCount: [0],
       phone: [''],
-      website: ['']
-    });
-  }
+      website: [''] }); }
 
-  loadAvailableTabs() {
-    const allTabs: SettingsTab[] = [
+  loadAvailableTabs() { const allTabs: SettingsTab[] = [
       { id: 'profile', label: 'Profile', icon: '<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>', requiredRoles: [] },
       { id: 'notifications', label: 'Notifications', icon: '<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>', requiredRoles: [] },
       { id: 'team', label: 'Team', icon: '<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>', requiredRoles: ['SuperAdmin', 'TenantAdmin'] },
@@ -1037,18 +897,14 @@ export class SettingsComponent implements OnInit {
       tab.id === 'platform' && tab.requiredRoles.includes(this.currentUser.role)
     );
 
-    this.canAccessDangerZone = ['SuperAdmin', 'TenantAdmin'].includes(this.currentUser.role);
-  }
+    this.canAccessDangerZone = ['SuperAdmin', 'TenantAdmin'].includes(this.currentUser.role); }
 
-  loadData() {
-    // Load data based on active tab
+  loadData() { // Load data based on active tab
     // This will call the backend APIs
   }
 
-  setActiveTab(tabId: string) {
-    this.activeTab = tabId;
-    this.loadData();
-  }
+  setActiveTab(tabId: string) { this.activeTab = tabId;
+    this.loadData(); }
 
   // Form submission methods
   saveProfile() {
@@ -1071,12 +927,8 @@ export class SettingsComponent implements OnInit {
     if (this.companyForm.valid) {
       this.saving = true;
       this.settingsService.updateCompany(this.companyForm.value).subscribe({
-        next: () => {
-          this.saving = false;
-        },
-        error: () => {
-          this.saving = false;
-        }
+        next: () => { this.saving = false; },
+        error: () => { this.saving = false; }
       });
     }
   }
@@ -1093,9 +945,7 @@ export class SettingsComponent implements OnInit {
     return classes[role] || 'chip-neutral';
   }
 
-  hasPermission(permission: any, role: string): boolean {
-    return permission.roles[role] !== 'none';
-  }
+  hasPermission(permission: any, role: string): boolean { return permission.roles[role] !== 'none'; }
 
   canEditRole(role: string): boolean {
     if (this.currentUser.role === 'SuperAdmin') return true;
@@ -1103,9 +953,7 @@ export class SettingsComponent implements OnInit {
     return false;
   }
 
-  getPermissionLevel(permission: any, role: string): string {
-    return permission.roles[role] || 'none';
-  }
+  getPermissionLevel(permission: any, role: string): string { return permission.roles[role] || 'none'; }
 
   togglePermission(permission: any, role: string, event: any) {
     // Implement permission toggle logic
@@ -1119,59 +967,19 @@ export class SettingsComponent implements OnInit {
   }
 
   // Action methods
-  openAddUserModal() {
-    // Open add user modal
-  }
-
-  viewUserDetails(user: any) {
-    // View user details
-  }
-
-  editUser(user: any) {
-    // Edit user
-  }
-
-  resetPassword(user: any) {
-    // Reset password
-  }
-
-  toggleUserStatus(user: any) {
-    // Toggle user active/inactive
-  }
-
-  deleteUser(user: any) {
-    // Delete user
-  }
-
-  toggleIntegration(integration: any) {
-    // Toggle integration
-  }
-
-  generateApiKey() {
-    // Generate new API key
-  }
-
-  deleteApiKey(key: any) {
-    // Delete API key
-  }
-
-  saveNotificationSettings() {
-    // Save notification settings
-  }
-
-  upgradePlan() {
-    // Open upgrade modal
-  }
-
-  savePlatformSettings() {
-    // Save platform settings
-  }
-
-  deleteOrganization() {
-    // Delete organization with confirmation
-  }
-
-  resetPlatform() {
-    // Reset platform with confirmation
-  }
+  openAddUserModal() {}
+  viewUserDetails(user: any) {}
+  editUser(user: any) {}
+  resetPassword(user: any) {}
+  toggleUserStatus(user: any) {}
+  deleteUser(user: any) {}
+  toggleIntegration(integration: any) {}
+  generateApiKey() {}
+  deleteApiKey(key: any) {}
+  saveNotificationSettings() {}
+  upgradePlan() {}
+  savePlatformSettings() {}
+  deleteOrganization() {}
+  resetPlatform() {}
 }
+

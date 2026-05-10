@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-exit-management',
+@Component({ selector: 'app-exit-management',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -119,8 +118,7 @@ import { environment } from '../../environments/environment';
     .clearance-check.done { background:#10b981; color:#fff; border-color:#10b981; }
   `]
 })
-export class ExitManagementComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/employees`;
+export class ExitManagementComponent implements OnInit { private api = `${environment.apiUrl}/api/employees`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
   showForm = false;
@@ -145,33 +143,19 @@ export class ExitManagementComponent implements OnInit {
   get activeExits() { return this.exits.filter(e => e.stage !== 'Completed'); }
   get completedExits() { return this.exits.filter(e => e.stage === 'Completed'); }
 
-  ngOnInit() {
-    this.loadEmployees();
-    this.loadExits();
-  }
+  ngOnInit() { this.loadEmployees();
+    this.loadExits(); }
 
-  loadEmployees() {
-    this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: r => { this.employees = [...(r?.data || r || [])]; },
-      error: () => {}
-    });
-  }
+  loadEmployees() { this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({ next: r => { this.employees = [...(r?.data || r || [])]; },
+      error: () => {} }); }
 
-  onEmployeeChange() {
-    const emp = this.employees.find(e => e.id === this.draft.employeeId);
-    if (emp) {
-      this.draft.employeeName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+  onEmployeeChange() { const emp = this.employees.find(e => e.id === this.draft.employeeId);
+    if (emp) { this.draft.employeeName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
       this.draft.designation  = this.draft.designation  || emp.designation || '';
-      this.draft.department   = this.draft.department   || emp.department  || '';
-    }
-  }
+      this.draft.department   = this.draft.department   || emp.department  || ''; } }
 
-  loadExits() {
-    this.loading = true;
-    this.http.get<any[]>(`${this.api}/exits`).subscribe({
-      next: data => {
-        this.exits = [...(data || []).map((e: any) => ({
-          id: e.id,
+  loadExits() { this.loading = true;
+    this.http.get<any[]>(`${this.api}/exits`).subscribe({ next: data => { this.exits = [...(data || []).map((e: any) => ({ id: e.id,
           employee:    e.employeeName  || '',
           empId:       e.employeeCode  || '',
           designation: e.designation   || '',
@@ -180,71 +164,42 @@ export class ExitManagementComponent implements OnInit {
           exitType:    e.exitType      || 'Resignation',
           stage:       e.status        || 'Initiated',
           initiatedDate: e.initiatedDate || e.createdAt || '',
-          clearances:  (e.checklistItems || []).map((item: any) => ({
-            id:   item.id,
+          clearances:  (e.checklistItems || []).map((item: any) => ({ id:   item.id,
             dept: item.itemName,
-            done: item.isCompleted
-          }))
-        }))];
+            done: item.isCompleted })) }))];
         this.loading = false;
         const active = this.exits.filter(e => e.stage !== 'Completed').length;
         this.kpis[0].val = active;
         this.kpis[1].val = this.exits.filter(e => e.stage === 'Initiated' || e.stage === 'Pending').length;
         this.kpis[2].val = this.exits.filter(e => e.stage === 'Completed').length;
         const completed = this.exits.filter(e => e.stage === 'Completed' && e.initiatedDate && e.lastDay);
-        if (completed.length) {
-          const totalDays = completed.reduce((sum: number, e: any) => {
-            const days = Math.abs((new Date(e.lastDay).getTime() - new Date(e.initiatedDate).getTime()) / 86400000);
-            return sum + (isNaN(days) ? 0 : days);
-          }, 0);
-          this.kpis[3].val = Math.round(totalDays / completed.length) || 0;
-        }
-      },
-      error: err => {
-        this.loading = false;
-        this.snack.open(err.status === 403 ? 'Access denied' : 'Failed to load exits', 'Close', { duration: 4000 });
-      }
-    });
-  }
+        if (completed.length) { const totalDays = completed.reduce((sum: number, e: any) => { const days = Math.abs((new Date(e.lastDay).getTime() - new Date(e.initiatedDate).getTime()) / 86400000);
+            return sum + (isNaN(days) ? 0 : days); }, 0);
+          this.kpis[3].val = Math.round(totalDays / completed.length) || 0; } },
+      error: err => { this.loading = false;
+        this.snack.open(err.status === 403 ? 'Access denied' : 'Failed to load exits', 'Close', { duration: 4000 }); } }); }
 
-  initiateExit() {
-    if (!this.draft.employeeId) { this.initiateError = 'Please select an employee'; return; }
-    const payload = {
-      employeeId:      this.draft.employeeId,
+  initiateExit() { if (!this.draft.employeeId) { this.initiateError = 'Please select an employee'; return; }
+    const payload = { employeeId:      this.draft.employeeId,
       employeeName:    this.draft.employeeName,
       designation:     this.draft.designation,
       department:      this.draft.department,
       lastWorkingDate: this.draft.lastDay,
       exitType:        this.draft.exitType,
-      reason:          this.draft.reason
-    };
-    this.http.post<any>(`${this.api}/exits`, payload).subscribe({
-      next: () => {
-        this.loadExits();
+      reason:          this.draft.reason };
+    this.http.post<any>(`${this.api}/exits`, payload).subscribe({ next: () => { this.loadExits();
         this.draft = { employeeId: '', employeeName: '', designation: '', department: '', lastDay: '', exitType: 'Resignation', reason: '' };
         this.showForm = false;
         this.initiateError = '';
-        this.snack.open('Exit initiated', '', { duration: 2000 });
-      },
-      error: err => { this.initiateError = err?.error?.message || 'Failed to initiate exit'; }
-    });
-  }
+        this.snack.open('Exit initiated', '', { duration: 2000 }); },
+      error: err => { this.initiateError = err?.error?.message || 'Failed to initiate exit'; } }); }
 
   completedClearances(ex: any): number { return (ex.clearances || []).filter((c: any) => c.done).length; }
 
-  toggleClearance(ex: any, c: any) {
-    this.http.patch(`${this.api}/exits/checklist/${c.id}`, { isCompleted: !c.done }).subscribe({
-      next: () => { c.done = !c.done; if (this.completedClearances(ex) >= ex.clearances.length) ex.stage = 'Clearance'; }
-    });
-  }
+  toggleClearance(ex: any, c: any) { this.http.patch(`${this.api}/exits/checklist/${c.id}`, { isCompleted: !c.done }).subscribe({ next: () => { c.done = !c.done; if (this.completedClearances(ex) >= ex.clearances.length) ex.stage = 'Clearance'; } }); }
 
-  completeExit(ex: any) {
-    this.http.patch(`${this.api}/exits/${ex.id}/status`, { status: 'Completed' }).subscribe({
-      next: () => { ex.stage = 'Completed'; this.loadExits(); }
-    });
-  }
+  completeExit(ex: any) { this.http.patch(`${this.api}/exits/${ex.id}/status`, { status: 'Completed' }).subscribe({ next: () => { ex.stage = 'Completed'; this.loadExits(); } }); }
 
-  sendReminder(ex: any) {
-    this.snack.open(`Reminder sent to pending departments for ${ex.employee}`, '', { duration: 3000 });
-  }
+  sendReminder(ex: any) { this.snack.open(`Reminder sent to pending departments for ${ex.employee}`, '', { duration: 3000 }); }
 }
+

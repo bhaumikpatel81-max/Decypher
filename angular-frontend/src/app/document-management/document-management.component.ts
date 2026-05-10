@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-document-management',
+@Component({ selector: 'app-document-management',
   template: `
     <div class="page-container page-enter">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
@@ -121,8 +120,7 @@ import { environment } from '../../environments/environment';
                   border:2px dashed var(--border);border-radius:8px;height:72px;color:var(--text-3);gap:2px; }
   `]
 })
-export class DocumentManagementComponent implements OnInit {
-  private empApi = `${environment.apiUrl}/api/employees`;
+export class DocumentManagementComponent implements OnInit { private empApi = `${environment.apiUrl}/api/employees`;
 
   showUpload = false;
   loading = false;
@@ -142,25 +140,15 @@ export class DocumentManagementComponent implements OnInit {
 
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
 
-  ngOnInit() {
-    this.loadEmployees();
-    this.loadDocs();
-  }
+  ngOnInit() { this.loadEmployees();
+    this.loadDocs(); }
 
-  loadEmployees() {
-    this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: r => { this.employees = [...(r?.data || r || [])]; },
-      error: () => {}
-    });
-  }
+  loadEmployees() { this.http.get<any>(`${environment.apiUrl}/api/employees`).subscribe({ next: r => { this.employees = [...(r?.data || r || [])]; },
+      error: () => {} }); }
 
-  loadDocs() {
-    this.loading = true;
-    this.http.get<any>(`${this.empApi}/documents`).subscribe({
-      next: r => {
-        const data = r?.data || r || [];
-        this.docs = [...data.map((d: any) => ({
-          id: d.id,
+  loadDocs() { this.loading = true;
+    this.http.get<any>(`${this.empApi}/documents`).subscribe({ next: r => { const data = r?.data || r || [];
+        this.docs = [...data.map((d: any) => ({ id: d.id,
           title: d.title || d.fileName || '',
           category: d.category || d.documentType || 'Other',
           employeeId: d.employeeId || '',
@@ -170,33 +158,20 @@ export class DocumentManagementComponent implements OnInit {
           size: d.fileSize || d.size || '—',
           type: (d.fileName || d.title || '').split('.').pop()?.toLowerCase() || 'pdf',
           access: d.accessLevel || d.access || 'HR Only',
-          expiryDate: d.expiryDate?.slice(0, 10) || ''
-        }))];
-        this.loading = false;
-      },
-      error: err => {
-        this.snack.open(err.status === 403 ? 'Access denied' : 'Failed to load documents', 'Close', { duration: 4000 });
-        this.loading = false;
-      }
-    });
-  }
+          expiryDate: d.expiryDate?.slice(0, 10) || '' }))];
+        this.loading = false; },
+      error: err => { this.snack.open(err.status === 403 ? 'Access denied' : 'Failed to load documents', 'Close', { duration: 4000 });
+        this.loading = false; } }); }
 
-  get filteredDocs() {
-    return this.docs.filter(d => {
-      const matchCat = this.activeCategory === 'All' || d.category === this.activeCategory;
+  get filteredDocs() { return this.docs.filter(d => { const matchCat = this.activeCategory === 'All' || d.category === this.activeCategory;
       const matchSearch = !this.search || d.title.toLowerCase().includes(this.search.toLowerCase());
       const matchEmp = !this.filterEmployee || d.employeeId === this.filterEmployee;
-      return matchCat && matchSearch && matchEmp;
-    });
-  }
+      return matchCat && matchSearch && matchEmp; }); }
 
-  onFile(e: Event) {
-    const f = (e.target as HTMLInputElement).files?.[0];
-    if (f) { this.selectedFile = f; this.draft.fileName = f.name; }
-  }
+  onFile(e: Event) { const f = (e.target as HTMLInputElement).files?.[0];
+    if (f) { this.selectedFile = f; this.draft.fileName = f.name; } }
 
-  uploadDoc() {
-    if (!this.draft.title || !this.draft.category || !this.selectedFile) return;
+  uploadDoc() { if (!this.draft.title || !this.draft.category || !this.selectedFile) return;
     this.uploading = true;
     const fd = new FormData();
     fd.append('file', this.selectedFile);
@@ -205,70 +180,44 @@ export class DocumentManagementComponent implements OnInit {
     if (this.draft.employeeId) fd.append('employeeId', this.draft.employeeId);
     if (this.draft.expiryDate) fd.append('expiryDate', this.draft.expiryDate);
     fd.append('accessLevel', this.draft.access);
-    this.http.post(`${this.empApi}/documents`, fd).subscribe({
-      next: () => {
-        this.snack.open('Document uploaded', '', { duration: 2000 });
+    this.http.post(`${this.empApi}/documents`, fd).subscribe({ next: () => { this.snack.open('Document uploaded', '', { duration: 2000 });
         this.uploading = false;
         this.resetDraft();
         this.showUpload = false;
-        this.loadDocs();
-      },
-      error: err => {
-        this.snack.open(err.status === 403 ? 'Access denied' : 'Upload failed', 'Close', { duration: 4000 });
-        this.uploading = false;
-      }
-    });
-  }
+        this.loadDocs(); },
+      error: err => { this.snack.open(err.status === 403 ? 'Access denied' : 'Upload failed', 'Close', { duration: 4000 });
+        this.uploading = false; } }); }
 
-  downloadDoc(doc: any) {
-    this.http.get(`${this.empApi}/documents/${doc.id}/download`, { responseType: 'blob' }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
+  downloadDoc(doc: any) { this.http.get(`${this.empApi}/documents/${doc.id}/download`, { responseType: 'blob' }).subscribe({ next: blob => { const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = doc.title || `document-${doc.id}`;
         a.click();
-        URL.revokeObjectURL(url);
-      },
-      error: () => this.snack.open('Download failed', 'Close', { duration: 3000 })
-    });
-  }
+        URL.revokeObjectURL(url); },
+      error: () => this.snack.open('Download failed', 'Close', { duration: 3000 }) }); }
 
-  deleteDoc(doc: any) {
-    const ref = this.snack.open(`Delete "${doc.title}"?`, 'Delete', { duration: 5000 });
-    ref.onAction().subscribe(() => {
-      this.http.delete(`${this.empApi}/documents/${doc.id}`).subscribe({
-        next: () => { this.snack.open('Document deleted', '', { duration: 2000 }); this.loadDocs(); },
-        error: err => this.snack.open(err.status === 403 ? 'Access denied' : 'Delete failed', 'Close', { duration: 4000 })
-      });
-    });
-  }
+  deleteDoc(doc: any) { const ref = this.snack.open(`Delete "${doc.title}"?`, 'Delete', { duration: 5000 });
+    ref.onAction().subscribe(() => { this.http.delete(`${this.empApi}/documents/${doc.id}`).subscribe({ next: () => { this.snack.open('Document deleted', '', { duration: 2000 }); this.loadDocs(); },
+        error: err => this.snack.open(err.status === 403 ? 'Access denied' : 'Delete failed', 'Close', { duration: 4000 }) }); }); }
 
-  resetDraft() {
-    this.draft = { employeeId: '', title: '', category: '', expiryDate: '', access: 'HR Only', fileName: '' };
-    this.selectedFile = null;
-  }
+  resetDraft() { this.draft = { employeeId: '', title: '', category: '', expiryDate: '', access: 'HR Only', fileName: '' };
+    this.selectedFile = null; }
 
-  typeIcon(t: string): string {
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return 'image';
+  typeIcon(t: string): string { if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return 'image';
     if (t === 'pdf') return 'picture_as_pdf';
     if (['doc', 'docx'].includes(t)) return 'description';
-    return 'attach_file';
-  }
+    return 'attach_file'; }
 
-  typeIconColor(t: string): string {
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return '#10b981';
+  typeIconColor(t: string): string { if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return '#10b981';
     if (t === 'pdf') return '#ef4444';
     if (['doc', 'docx'].includes(t)) return '#3b82f6';
-    return '#6b7280';
-  }
+    return '#6b7280'; }
 
-  typeColor(t: string): string {
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return 'rgba(16,185,129,.1)';
+  typeColor(t: string): string { if (['jpg', 'jpeg', 'png', 'gif'].includes(t)) return 'rgba(16,185,129,.1)';
     if (t === 'pdf') return 'rgba(239,68,68,.1)';
     if (['doc', 'docx'].includes(t)) return 'rgba(59,130,246,.1)';
-    return 'rgba(107,77,240,.1)';
-  }
+    return 'rgba(107,77,240,.1)'; }
 
   isExpired(date: string): boolean { return date ? new Date(date) < new Date() : false; }
 }
+

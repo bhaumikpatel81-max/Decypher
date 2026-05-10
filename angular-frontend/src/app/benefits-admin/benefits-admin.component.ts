@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'app-benefits-admin',
+@Component({ selector: 'app-benefits-admin',
   template: `
     <div class="page-container page-enter">
       <div class="flex justify-between items-center mb-6">
@@ -149,8 +148,7 @@ import { environment } from '../../environments/environment';
     .card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
   `]
 })
-export class BenefitsAdminComponent implements OnInit {
-  private api = `${environment.apiUrl}/api/payroll`;
+export class BenefitsAdminComponent implements OnInit { private api = `${environment.apiUrl}/api/payroll`;
   constructor(private http: HttpClient, private snack: MatSnackBar) {}
   tab = 'catalogue';
   selectedEmpId = '';
@@ -168,63 +166,30 @@ export class BenefitsAdminComponent implements OnInit {
 
   ngOnInit() { this.loadBenefits(); this.loadEmployees(); this.loadClaims(); }
 
-  loadBenefits() {
-    this.http.get<any[]>(`${this.api}/benefits`).subscribe({
-      next: data => {
-        this.benefits = [...(data || []).map(b => ({
-          id: b.id?.toString(), name: b.name, category: b.category || '',
-          icon: b.icon || '🎁', description: b.description || '', cost: b.monthlyCost || 0, enrolled: b.enrolledCount || 0
-        }))];
-      },
-      error: () => this.snack.open('Failed to load benefits', 'Close', { duration: 3000 })
-    });
-  }
+  loadBenefits() { this.http.get<any[]>(`${this.api}/benefits`).subscribe({ next: data => { this.benefits = [...(data || []).map(b => ({ id: b.id?.toString(), name: b.name, category: b.category || '',
+          icon: b.icon || '🎁', description: b.description || '', cost: b.monthlyCost || 0, enrolled: b.enrolledCount || 0 }))]; },
+      error: () => this.snack.open('Failed to load benefits', 'Close', { duration: 3000 }) }); }
 
-  loadEmployees() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({
-      next: data => {
-        this.employees = [...(data || []).map(e => ({
-          id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
-          role: e.designation || '', pointsUsed: 0, flexAllocations: []
-        }))];
-        this.loadEnrollments();
-      },
-      error: () => {}
-    });
-  }
+  loadEmployees() { this.http.get<any[]>(`${environment.apiUrl}/api/employees`).subscribe({ next: data => { this.employees = [...(data || []).map(e => ({ id: e.employeeCode || e.id, name: `${e.firstName} ${e.lastName}`.trim(),
+          role: e.designation || '', pointsUsed: 0, flexAllocations: [] }))];
+        this.loadEnrollments(); },
+      error: () => {} }); }
 
-  loadEnrollments() {
-    this.http.get<any[]>(`${this.api}/benefits/employee/all`).subscribe({
-      next: data => {
-        const map: { [empId: string]: string[] } = {};
-        (data || []).forEach(en => {
-          const empId = en.employeeId?.toString();
+  loadEnrollments() { this.http.get<any[]>(`${this.api}/benefits/employee/all`).subscribe({ next: data => { const map: { [empId: string]: string[] } = {};
+        (data || []).forEach(en => { const empId = en.employeeId?.toString();
           if (!map[empId]) map[empId] = [];
-          map[empId].push(en.benefitId?.toString());
-        });
-        this.enrollments = { ...map };
-      },
-      error: () => {}
-    });
-  }
+          map[empId].push(en.benefitId?.toString()); });
+        this.enrollments = { ...map }; },
+      error: () => {} }); }
 
-  loadClaims() {
-    this.http.get<any[]>(`${this.api}/benefits/claims`).subscribe({
-      next: data => { this.claimsHistory = [...(data || [])]; },
-      error: () => {}
-    });
-  }
+  loadClaims() { this.http.get<any[]>(`${this.api}/benefits/claims`).subscribe({ next: data => { this.claimsHistory = [...(data || [])]; },
+      error: () => {} }); }
 
-  toggleEnrollment(empId: string, benefitId: string) {
-    const enrolled = this.isEnrolled(empId, benefitId);
-    this.http.post(`${this.api}/benefits/enroll`, { employeeId: empId, benefitId, enroll: !enrolled }).subscribe({
-      next: () => {
-        const current = [...(this.enrollments[empId] || [])];
+  toggleEnrollment(empId: string, benefitId: string) { const enrolled = this.isEnrolled(empId, benefitId);
+    this.http.post(`${this.api}/benefits/enroll`, { employeeId: empId, benefitId, enroll: !enrolled }).subscribe({ next: () => { const current = [...(this.enrollments[empId] || [])];
         const updated = enrolled ? current.filter(id => id !== benefitId) : [...current, benefitId];
         this.enrollments = { ...this.enrollments, [empId]: updated };
-        this.snack.open(enrolled ? 'Unenrolled' : 'Enrolled', '', { duration: 1500 });
-      },
-      error: () => this.snack.open('Failed to update enrollment', 'Close', { duration: 3000 })
-    });
-  }
+        this.snack.open(enrolled ? 'Unenrolled' : 'Enrolled', '', { duration: 1500 }); },
+      error: () => this.snack.open('Failed to update enrollment', 'Close', { duration: 3000 }) }); }
 }
+
