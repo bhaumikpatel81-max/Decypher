@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decypher Scout Sidebar</title>
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f5f7fb; color: #1f2937; }
+    .sidebar-shell { padding: 18px; }
+    .sidebar-title { margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+    .sidebar-section { margin-bottom: 16px; padding: 14px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,0.06); }
+    .sidebar-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .sidebar-value { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+    .sidebar-button { width: 100%; text-align: center; padding: 12px 14px; border: none; border-radius: 12px; background: #0d7c7c; color: #fff; cursor: pointer; font-size: 14px; }
+    .sidebar-list { margin: 0; padding: 0; list-style: none; }
+    .sidebar-list li { margin-bottom: 10px; font-size: 14px; }
+    .sidebar-note { font-size: 13px; color: #4b5563; line-height: 1.5; }
+    .sidebar-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sidebar-stat { background: #eef7f8; border-radius: 12px; padding: 12px; text-align: center; }
+    .sidebar-stat strong { display: block; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar-shell">
+    <h1 class="sidebar-title">Decypher Scout</h1>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Connection</div>
+      <div class="sidebar-value" id="sidebar-host">Loading…</div>
+      <div class="sidebar-value" id="sidebar-user">—</div>
+    </div>
+    <div class="sidebar-section sidebar-stats">
+      <div class="sidebar-stat"><strong id="sidebar-today">0</strong>Today</div>
+      <div class="sidebar-stat"><strong id="sidebar-week">0</strong>This week</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Active requisitions</div>
+      <ul class="sidebar-list" id="sidebar-requisitions"><li>Loading…</li></ul>
+    </div>
+    <button class="sidebar-button" id="sidebar-open-dashboard">Open Dashboard</button>
+    <p class="sidebar-note">Open the popup from the browser toolbar to sign in or update your backend host.</p>
+  </div>
+  <script type="module" src="sidebar.js"></script>
+</body>
+</html>

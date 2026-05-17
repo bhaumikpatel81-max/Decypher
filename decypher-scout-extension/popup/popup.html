@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decypher Scout</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-shell">
+    <div class="popup-header">
+      <div class="popup-title">🔵 Decypher Scout v1.0</div>
+      <div class="popup-status" id="popup-status">Checking...</div>
+    </div>
+    <div id="popup-body">
+      <div class="popup-section">
+        <div class="popup-label">Connected to</div>
+        <div id="connected-host">Not connected</div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-label">Logged in as</div>
+        <div id="logged-in-user">—</div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-label">Active requisition</div>
+        <select id="active-requisition"></select>
+      </div>
+      <div class="popup-section" id="login-section">
+        <div class="popup-label">Decypher Backend</div>
+        <input type="text" id="backend-host" placeholder="https://your-decypher-backend.com" />
+        <div class="popup-label">Email</div>
+        <input type="email" id="login-email" placeholder="you@example.com" />
+        <div class="popup-label">Password</div>
+        <input type="password" id="login-password" placeholder="Password" />
+        <button id="login-button">Sign in</button>
+        <div id="login-error" class="popup-error"></div>
+      </div>
+      <div class="popup-grid">
+        <div class="popup-stat"><span id="today-count">0</span><div>Today's Captures</div></div>
+        <div class="popup-stat"><span id="week-count">0</span><div>This Week</div></div>
+      </div>
+      <div class="popup-section">
+        <div class="popup-label">Supported portals</div>
+        <div class="popup-chips">✅ Naukri ✅ LinkedIn ✅ Indeed ✅ Foundit ✅ IIMJobs ✅ Monster</div>
+      </div>
+      <div class="popup-actions">
+        <button id="open-dashboard">Open Decypher Dashboard</button>
+        <button id="logout">Logout</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

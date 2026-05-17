@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "Decypher Scout",
+  "version": "1.0.0",
+  "description": "Capture candidate profiles from any job portal into Decypher",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "sidePanel",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://*.naukri.com/*",
+    "https://*.linkedin.com/*",
+    "https://*.indeed.com/*",
+    "https://*.foundit.in/*",
+    "https://*.iimjobs.com/*",
+    "https://*.monster.com/*",
+    "https://*.shine.com/*",
+    "https://*.timesjobs.com/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.naukri.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.indeed.com/*",
+        "https://*.foundit.in/*",
+        "https://*.iimjobs.com/*",
+        "https://*.monster.com/*",
+        "https://*.shine.com/*"
+      ],
+      "js": ["content/content-main.js"],
+      "css": ["content/styles/scout-ui.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/scout-16.svg",
+      "32": "icons/scout-32.svg",
+      "48": "icons/scout-48.svg",
+      "128": "icons/scout-128.svg"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidebar/sidebar.html"
+  },
+  "icons": {
+    "16": "icons/scout-16.svg",
+    "48": "icons/scout-48.svg",
+    "128": "icons/scout-128.svg"
+  }
+}
